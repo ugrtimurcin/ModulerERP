@@ -1,0 +1,101 @@
+using ModulerERP.SharedKernel.Entities;
+using ModulerERP.HR.Domain.Enums;
+
+namespace ModulerERP.HR.Domain.Entities;
+
+/// <summary>
+/// Employee record matching EmployeeDetails in spec.
+/// Links to SystemCore.Users via UserId.
+/// </summary>
+public class Employee : BaseEntity
+{
+    // inherited: Id (mapped to User.Id or separate?), TenantId, etc.
+    // Spec says "Extended profile for Users". Usually joined by Id or UserId FK.
+    // Modular Monolith -> UserId FK is cleaner decoupling.
+
+    public Guid? UserId { get; private set; } // Link to System User
+    public string IdentityNumber { get; private set; } = string.Empty; // TRNC ID
+    public DateTime? BirthDate { get; private set; }
+    public string JobTitle { get; private set; } = string.Empty;
+    public Guid DepartmentId { get; private set; }
+    public Guid? SupervisorId { get; private set; }
+    public string? QrToken { get; private set; } // Encrypted
+    public string? Iban { get; private set; }
+    public decimal CurrentSalary { get; private set; }
+    public Guid? SalaryCurrencyId { get; private set; }
+    public DateTime? WorkPermitExpDate { get; private set; }
+    
+    // Redundant but helpful basics usually present in Employee tables if User doesn't exist yet
+    public string FirstName { get; private set; } = string.Empty;
+    public string LastName { get; private set; } = string.Empty;
+    public string Email { get; private set; } = string.Empty;
+
+    public EmploymentStatus Status { get; private set; } = EmploymentStatus.Active;
+
+    // Navigation
+    public Department? Department { get; private set; }
+    public Employee? Supervisor { get; private set; }
+    
+    // Collections
+    public ICollection<SalaryHistory> SalaryHistory { get; private set; } = new List<SalaryHistory>();
+    public ICollection<AttendanceLog> AttendanceLogs { get; private set; } = new List<AttendanceLog>();
+    public ICollection<DailyAttendance> DailyAttendances { get; private set; } = new List<DailyAttendance>();
+    public ICollection<LeaveRequest> LeaveRequests { get; private set; } = new List<LeaveRequest>();
+    public ICollection<PeriodCommission> Commissions { get; private set; } = new List<PeriodCommission>();
+    public ICollection<AdvanceRequest> AdvanceRequests { get; private set; } = new List<AdvanceRequest>();
+    public ICollection<PayrollEntry> PayrollEntries { get; private set; } = new List<PayrollEntry>();
+
+    private Employee() { }
+
+    public static Employee Create(
+        Guid tenantId,
+        Guid createdBy,
+        string firstName,
+        string lastName,
+        string email,
+        Guid departmentId,
+        string jobTitle,
+        string identityNumber,
+        decimal salary,
+        Guid? userId = null)
+    {
+        var emp = new Employee
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            DepartmentId = departmentId,
+            JobTitle = jobTitle,
+            IdentityNumber = identityNumber,
+            CurrentSalary = salary,
+            UserId = userId
+        };
+        emp.SetTenant(tenantId);
+        emp.SetCreator(createdBy);
+        return emp;
+    }
+
+    public void UpdateJob(string jobTitle, Guid departmentId, Guid? supervisorId)
+    {
+        JobTitle = jobTitle;
+        DepartmentId = departmentId;
+        SupervisorId = supervisorId;
+    }
+
+    public void UpdatePersonalDetails(string firstName, string lastName, string email, EmploymentStatus status)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+        Email = email;
+        Status = status;
+    }
+
+    public void SetSalary(decimal amount, Guid? currencyId)
+    {
+        CurrentSalary = amount;
+        SalaryCurrencyId = currencyId;
+        // Should trigger history update in Service
+    }
+
+    public void SetQrToken(string token) => QrToken = token;
+}

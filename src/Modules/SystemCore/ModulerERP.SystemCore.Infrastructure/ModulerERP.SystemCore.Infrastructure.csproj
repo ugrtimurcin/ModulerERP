@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0-preview.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModulerERP.SystemCore.Domain\ModulerERP.SystemCore.Domain.csproj" />
+    <ProjectReference Include="..\ModulerERP.SystemCore.Application\ModulerERP.SystemCore.Application.csproj" />
+  </ItemGroup>
+
+</Project>

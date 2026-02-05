@@ -1,0 +1,6 @@
+@ModulerERP.Api_HostAddress = http://localhost:5056
+
+GET {{ModulerERP.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

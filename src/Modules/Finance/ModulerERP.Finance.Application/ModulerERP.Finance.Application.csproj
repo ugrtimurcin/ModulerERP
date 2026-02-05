@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <ProjectReference Include="..\ModulerERP.Finance.Domain\ModulerERP.Finance.Domain.csproj" />
+    <ProjectReference Include="..\..\..\ModulerERP.SharedKernel\ModulerERP.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModulerERP.FixedAssets.Domain\ModulerERP.FixedAssets.Domain.csproj" />
+    <ProjectReference Include="..\ModulerERP.FixedAssets.Application\ModulerERP.FixedAssets.Application.csproj" />
+    <ProjectReference Include="..\..\..\ModulerERP.SharedKernel\ModulerERP.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

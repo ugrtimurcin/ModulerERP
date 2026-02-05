@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModulerERP.SharedKernel\ModulerERP.SharedKernel.csproj" />
+    <ProjectReference Include="..\Modules\SystemCore\ModulerERP.SystemCore.Domain\ModulerERP.SystemCore.Domain.csproj" />
+    <ProjectReference Include="..\Modules\SystemCore\ModulerERP.SystemCore.Application\ModulerERP.SystemCore.Application.csproj" />
+    <ProjectReference Include="..\Modules\SystemCore\ModulerERP.SystemCore.Infrastructure\ModulerERP.SystemCore.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\CRM\ModulerERP.CRM.Infrastructure\ModulerERP.CRM.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Inventory\ModulerERP.Inventory.Infrastructure\ModulerERP.Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Inventory\ModulerERP.Inventory.Application\ModulerERP.Inventory.Application.csproj" />
+    <ProjectReference Include="..\Modules\Sales\ModulerERP.Sales.Infrastructure\ModulerERP.Sales.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Finance\ModulerERP.Finance.Infrastructure\ModulerERP.Finance.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\HR\ModulerERP.HR.Infrastructure\ModulerERP.HR.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\FixedAssets\ModulerERP.FixedAssets.Infrastructure\ModulerERP.FixedAssets.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\FixedAssets\ModulerERP.FixedAssets.Application\ModulerERP.FixedAssets.Application.csproj" />
+    <ProjectReference Include="..\Modules\Manufacturing\ModulerERP.Manufacturing.Infrastructure\ModulerERP.Manufacturing.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Procurement\ModulerERP.Procurement.Infrastructure\ModulerERP.Procurement.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Procurement\ModulerERP.Procurement.Application\ModulerERP.Procurement.Application.csproj" />
+    <ProjectReference Include="..\Modules\ProjectManagement\ModulerERP.ProjectManagement.Infrastructure\ModulerERP.ProjectManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\ProjectManagement\ModulerERP.ProjectManagement.Application\ModulerERP.ProjectManagement.Application.csproj" />
+  </ItemGroup>
+
+</Project>

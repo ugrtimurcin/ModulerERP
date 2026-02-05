@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModulerERP.Sales.Domain\ModulerERP.Sales.Domain.csproj" />
+    <ProjectReference Include="..\ModulerERP.Sales.Application\ModulerERP.Sales.Application.csproj" />
+	<ProjectReference Include="..\..\..\ModulerERP.SharedKernel\ModulerERP.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

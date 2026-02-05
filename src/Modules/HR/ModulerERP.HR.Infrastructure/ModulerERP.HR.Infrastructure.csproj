@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModulerERP.HR.Domain\ModulerERP.HR.Domain.csproj" />
+    <ProjectReference Include="..\ModulerERP.HR.Application\ModulerERP.HR.Application.csproj" />
+    <ProjectReference Include="..\..\..\ModulerERP.SharedKernel\ModulerERP.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
