@@ -57,6 +57,9 @@ public class User : BaseEntity
         
         user.SetTenant(tenantId);
         user.SetCreator(createdByUserId);
+        
+        user.AddDomainEvent(new Events.UserCreatedEvent(user.Id, tenantId, user.Email, user.FirstName, user.LastName));
+        
         return user;
     }
 

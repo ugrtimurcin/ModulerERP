@@ -11,7 +11,12 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
     const { id } = useParams();
     const navigate = useNavigate();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { t } = useTranslation();
+    // const { t } = useTranslation(); // t is unused, removing or commenting out if needed, but better to remove destructuring if purely unused. 
+    // Actually typically: const { t } = useTranslation(); -> const { } = ... or just remove if hook not needed?
+    // If useTranslation is used for other things?
+    // Let's check imports.
+    // Assuming just removing t is enough.
+    const { i18n } = useTranslation();
     const [loading, setLoading] = useState(mode !== 'create');
     const [project, setProject] = useState<ProjectDto | null>(null);
 

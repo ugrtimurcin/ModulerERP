@@ -17,10 +17,14 @@ public class Role : BaseEntity
     /// <summary>For role inheritance - child role inherits parent permissions</summary>
     public Guid? ParentRoleId { get; private set; }
 
+    /// <summary>
+    /// Stored as JSON: ["stock.view", "invoice.create"]
+    /// </summary>
+    public List<string> Permissions { get; set; } = new();
+
     // Navigation
     public Role? ParentRole { get; private set; }
     public ICollection<Role> ChildRoles { get; private set; } = new List<Role>();
-    public ICollection<RolePermission> RolePermissions { get; private set; } = new List<RolePermission>();
 
     private Role() { } // EF Core
 

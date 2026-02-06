@@ -24,7 +24,7 @@ public class RoleService : IRoleService
             .Where(r => r.TenantId == tenantId && !r.IsDeleted)
             .Select(r => new RoleListDto(
                 r.Id, r.Name, r.Description, r.IsSystemRole,
-                r.RolePermissions.Count()
+                r.Permissions.Count
             ))
             .ToListAsync();
     }
@@ -33,12 +33,9 @@ public class RoleService : IRoleService
     {
         return await _context.Roles.IgnoreQueryFilters()
             .Where(r => r.TenantId == tenantId && r.Id == roleId && !r.IsDeleted)
-            .Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
             .Select(r => new RoleDto(
                 r.Id, r.Name, r.Description, r.IsSystemRole,
-                r.RolePermissions.Where(rp => rp.Permission != null).Select(rp => new PermissionDto(
-                    rp.Permission!.Id, rp.Permission.Code, rp.Permission.Description, rp.Permission.ModuleName
-                ))
+                r.Permissions
             ))
             .FirstOrDefaultAsync();
     }
@@ -51,31 +48,30 @@ public class RoleService : IRoleService
 
         return new RoleDto(
             role.Id, role.Name, role.Description, role.IsSystemRole,
-            Enumerable.Empty<PermissionDto>()
+            role.Permissions
         );
     }
 
-    public async Task AssignPermissionAsync(Guid tenantId, Guid roleId, Guid permissionId)
+    public async Task AssignPermissionAsync(Guid tenantId, Guid roleId, string permission)
     {
-        var exists = await _context.RolePermissions
-            .AnyAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId);
+        var role = await _context.Roles.IgnoreQueryFilters()
+             .FirstOrDefaultAsync(r => r.TenantId == tenantId && r.Id == roleId && !r.IsDeleted);
 
-        if (!exists)
+        if (role != null && !role.Permissions.Contains(permission))
         {
-            var rolePermission = RolePermission.Create(roleId, permissionId);
-            _context.RolePermissions.Add(rolePermission);
+            role.Permissions.Add(permission);
             await _context.SaveChangesAsync();
         }
     }
 
-    public async Task RemovePermissionAsync(Guid tenantId, Guid roleId, Guid permissionId)
+    public async Task RemovePermissionAsync(Guid tenantId, Guid roleId, string permission)
     {
-        var rolePermission = await _context.RolePermissions
-            .FirstOrDefaultAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId);
+        var role = await _context.Roles.IgnoreQueryFilters()
+             .FirstOrDefaultAsync(r => r.TenantId == tenantId && r.Id == roleId && !r.IsDeleted);
 
-        if (rolePermission != null)
+        if (role != null && role.Permissions.Contains(permission))
         {
-            _context.RolePermissions.Remove(rolePermission);
+            role.Permissions.Remove(permission);
             await _context.SaveChangesAsync();
         }
     }

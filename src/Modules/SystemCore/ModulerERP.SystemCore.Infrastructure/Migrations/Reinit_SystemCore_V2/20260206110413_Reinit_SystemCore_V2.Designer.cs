@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ModulerERP.SystemCore.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace ModulerERP.SystemCore.Infrastructure.Migrations
+namespace ModulerERP.SystemCore.Infrastructure.Migrations.Reinit_SystemCore_V2
 {
     [DbContext(typeof(SystemCoreDbContext))]
-    partial class SystemCoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260206110413_Reinit_SystemCore_V2")]
+    partial class Reinit_SystemCore_V2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

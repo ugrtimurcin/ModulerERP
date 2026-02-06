@@ -63,6 +63,8 @@ export const useSidebarStore = create<SidebarState>()(
 );
 
 // Auth Store
+import { jwtDecode } from 'jwt-decode';
+
 interface User {
     id: string;
     email: string;
@@ -70,12 +72,13 @@ interface User {
     lastName: string;
     tenantId: string;
     roles: string[];
+    permissions: string[];
 }
 
 interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
-    login: (user: User, accessToken: string, refreshToken: string) => void;
+    login: (user: Omit<User, 'permissions'>, accessToken: string, refreshToken: string) => void;
     logout: () => void;
     setUser: (user: User) => void;
 }
@@ -85,9 +88,21 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             user: null,
             isAuthenticated: false,
-            login: (user, accessToken, refreshToken) => {
+            login: (userData, accessToken, refreshToken) => {
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
+
+                let permissions: string[] = [];
+                try {
+                    const decoded = jwtDecode<{ permissions: string }>(accessToken);
+                    if (decoded.permissions) {
+                        permissions = JSON.parse(decoded.permissions);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse permissions from token", e);
+                }
+
+                const user: User = { ...userData, permissions };
                 set({ user, isAuthenticated: true });
             },
             logout: () => {

@@ -51,8 +51,12 @@ public class AuthService : IAuthService
             return null;
 
         var roles = user.UserRoles.Where(ur => ur.Role != null).Select(ur => ur.Role!.Name).ToList();
+        var permissions = user.UserRoles.Where(ur => ur.Role != null)
+                                        .SelectMany(ur => ur.Role!.Permissions)
+                                        .Distinct()
+                                        .ToList();
 
-        var accessToken = GenerateJwtToken(user.Id, user.TenantId, user.Email, roles);
+        var accessToken = GenerateJwtToken(user.Id, user.TenantId, user.Email, roles, permissions);
         var refreshToken = GenerateRefreshToken();
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
         var refreshExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
@@ -80,6 +84,10 @@ public class AuthService : IAuthService
 
         var user = session.User;
         var roles = user.UserRoles.Where(ur => ur.Role != null).Select(ur => ur.Role!.Name).ToList();
+        var permissions = user.UserRoles.Where(ur => ur.Role != null)
+                                        .SelectMany(ur => ur.Role!.Permissions)
+                                        .Distinct()
+                                        .ToList();
 
         // Rotate refresh token
         session.Revoke();
@@ -88,7 +96,7 @@ public class AuthService : IAuthService
         var newSession = UserSession.Create(user.TenantId, user.Id, newRefreshToken, refreshExpiresAt);
         _context.UserSessions.Add(newSession);
 
-        var accessToken = GenerateJwtToken(user.Id, user.TenantId, user.Email, roles);
+        var accessToken = GenerateJwtToken(user.Id, user.TenantId, user.Email, roles, permissions);
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
 
         await _context.SaveChangesAsync();
@@ -123,7 +131,7 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
     }
 
-    private string GenerateJwtToken(Guid userId, Guid tenantId, string email, IEnumerable<string> roles)
+    private string GenerateJwtToken(Guid userId, Guid tenantId, string email, IEnumerable<string> roles, IEnumerable<string> permissions)
     {
         var claims = new List<Claim>
         {
@@ -135,6 +143,13 @@ public class AuthService : IAuthService
 
         foreach (var role in roles)
             claims.Add(new Claim(ClaimTypes.Role, role));
+
+        // Add permissions as a JSON array string
+        if (permissions.Any())
+        {
+            var permissionsJson = System.Text.Json.JsonSerializer.Serialize(permissions);
+            claims.Add(new Claim("permissions", permissionsJson, System.Text.Json.JsonValueKind.Array.ToString()));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _jwtSettings.Issuer,

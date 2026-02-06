@@ -57,20 +57,20 @@ public class RolesController : BaseApiController
     /// <summary>
     /// Assign permission to role.
     /// </summary>
-    [HttpPost("{roleId:guid}/permissions/{permissionId:guid}")]
-    public async Task<IActionResult> AssignPermission(Guid roleId, Guid permissionId)
+    [HttpPost("{roleId:guid}/permissions/{permission}")]
+    public async Task<IActionResult> AssignPermission(Guid roleId, string permission)
     {
-        await _roleService.AssignPermissionAsync(TenantId, roleId, permissionId);
+        await _roleService.AssignPermissionAsync(TenantId, roleId, permission);
         return Ok(new { success = true, message = "Permission assigned" });
     }
 
     /// <summary>
     /// Remove permission from role.
     /// </summary>
-    [HttpDelete("{roleId:guid}/permissions/{permissionId:guid}")]
-    public async Task<IActionResult> RemovePermission(Guid roleId, Guid permissionId)
+    [HttpDelete("{roleId:guid}/permissions/{permission}")]
+    public async Task<IActionResult> RemovePermission(Guid roleId, string permission)
     {
-        await _roleService.RemovePermissionAsync(TenantId, roleId, permissionId);
+        await _roleService.RemovePermissionAsync(TenantId, roleId, permission);
         return Ok(new { success = true, message = "Permission removed" });
     }
 

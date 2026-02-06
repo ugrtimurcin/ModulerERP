@@ -25,8 +25,8 @@ public interface IRoleService
     Task<IEnumerable<RoleListDto>> GetRolesAsync(Guid tenantId);
     Task<RoleDto?> GetRoleByIdAsync(Guid tenantId, Guid roleId);
     Task<RoleDto> CreateRoleAsync(Guid tenantId, CreateRoleDto dto);
-    Task AssignPermissionAsync(Guid tenantId, Guid roleId, Guid permissionId);
-    Task RemovePermissionAsync(Guid tenantId, Guid roleId, Guid permissionId);
+    Task AssignPermissionAsync(Guid tenantId, Guid roleId, string permission);
+    Task RemovePermissionAsync(Guid tenantId, Guid roleId, string permission);
     Task AssignRoleToUserAsync(Guid tenantId, Guid userId, Guid roleId);
     Task RemoveRoleFromUserAsync(Guid tenantId, Guid userId, Guid roleId);
 }

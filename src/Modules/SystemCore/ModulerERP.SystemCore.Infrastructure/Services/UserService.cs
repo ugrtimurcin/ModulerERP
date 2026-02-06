@@ -13,10 +13,14 @@ namespace ModulerERP.SystemCore.Infrastructure.Services;
 public class UserService : IUserService
 {
     private readonly SystemCoreDbContext _context;
+    private readonly FluentValidation.IValidator<CreateUserDto> _createUserValidator;
 
-    public UserService(SystemCoreDbContext context)
+    public UserService(
+        SystemCoreDbContext context,
+        FluentValidation.IValidator<CreateUserDto> createUserValidator)
     {
         _context = context;
+        _createUserValidator = createUserValidator;
     }
 
     public async Task<PagedResult<UserListDto>> GetUsersAsync(Guid tenantId, int page, int pageSize)
@@ -29,9 +33,11 @@ public class UserService : IUserService
             .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .Select(u => new UserListDto(
                 u.Id, u.Email, u.FirstName, u.LastName,
-                u.IsActive, u.CreatedAt, u.LastLoginDate
+                u.IsActive, u.CreatedAt, u.LastLoginDate,
+                u.UserRoles.Where(ur => ur.Role != null).Select(ur => ur.Role!.Name)
             ))
             .ToListAsync();
 
@@ -69,6 +75,12 @@ public class UserService : IUserService
 
     public async Task<UserDto> CreateUserAsync(Guid tenantId, CreateUserDto dto, Guid createdByUserId)
     {
+        var validationResult = await _createUserValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            throw new FluentValidation.ValidationException(validationResult.Errors);
+        }
+
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
         var user = User.Create(tenantId, dto.Email, passwordHash, dto.FirstName, dto.LastName, createdByUserId);
 

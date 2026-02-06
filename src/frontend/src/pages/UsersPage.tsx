@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { api } from '@/services/api';
 import { DataTable, Button, Modal, Input, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
+import { PermissionGuard } from '@/components/PermissionGuard';
 
 interface User {
     id: string;
@@ -13,6 +14,7 @@ interface User {
     isActive: boolean;
     createdAt: string;
     lastLoginDate: string | null;
+    roles: string[];
 }
 
 interface UserFormData {
@@ -51,7 +53,7 @@ export function UsersPage() {
         setIsLoading(true);
         const result = await api.users.getAll(page, pageSize);
         if (result.success && result.data) {
-            setUsers(result.data.data);
+            setUsers(result.data.data as unknown as User[]);
             setTotal(result.data.totalCount);
         }
         setIsLoading(false);
@@ -158,7 +160,7 @@ export function UsersPage() {
         {
             key: 'user',
             header: t('users.firstName'),
-            render: (user) => (
+            render: (user: User) => (
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-center text-sm font-medium">
                         {user.firstName[0]}
@@ -172,9 +174,22 @@ export function UsersPage() {
             ),
         },
         {
+            key: 'roles',
+            header: t('users.roles'),
+            render: (user: User) => (
+                <div className="flex flex-wrap gap-1">
+                    {user.roles && user.roles.map(role => (
+                        <Badge key={role} variant="info">
+                            {role}
+                        </Badge>
+                    ))}
+                </div>
+            ),
+        },
+        {
             key: 'isActive',
             header: t('common.status'),
-            render: (user) => (
+            render: (user: User) => (
                 <Badge variant={user.isActive ? 'success' : 'error'}>
                     {user.isActive ? t('common.active') : t('common.inactive')}
                 </Badge>
@@ -183,12 +198,12 @@ export function UsersPage() {
         {
             key: 'createdAt',
             header: t('users.createdAt'),
-            render: (user) => new Date(user.createdAt).toLocaleDateString(),
+            render: (user: User) => new Date(user.createdAt).toLocaleDateString(),
         },
         {
             key: 'lastLoginDate',
             header: t('users.lastLogin'),
-            render: (user) =>
+            render: (user: User) =>
                 user.lastLoginDate
                     ? new Date(user.lastLoginDate).toLocaleString()
                     : '-',
@@ -205,10 +220,12 @@ export function UsersPage() {
                         {t('users.subtitle')}
                     </p>
                 </div>
-                <Button onClick={openCreateModal}>
-                    <Plus className="w-4 h-4" />
-                    {t('users.createUser')}
-                </Button>
+                <PermissionGuard permission="users.create">
+                    <Button onClick={openCreateModal}>
+                        <Plus className="w-4 h-4" />
+                        {t('users.createUser')}
+                    </Button>
+                </PermissionGuard>
             </div>
 
             {/* Table */}
@@ -227,20 +244,24 @@ export function UsersPage() {
                 }}
                 actions={(user) => (
                     <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => openEditModal(user)}
-                            className="p-2 rounded-lg hover:bg-[hsl(var(--accent))] transition-colors"
-                            title={t('common.edit')}
-                        >
-                            <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => handleDelete(user)}
-                            className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition-colors"
-                            title={t('common.delete')}
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+                        <PermissionGuard permission="users.edit">
+                            <button
+                                onClick={() => openEditModal(user)}
+                                className="p-2 rounded-lg hover:bg-[hsl(var(--accent))] transition-colors"
+                                title={t('common.edit')}
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="users.delete">
+                            <button
+                                onClick={() => handleDelete(user)}
+                                className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition-colors"
+                                title={t('common.delete')}
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </PermissionGuard>
                     </div>
                 )}
             />

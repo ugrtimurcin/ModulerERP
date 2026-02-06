@@ -82,6 +82,19 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         
         builder.Property(e => e.Description)
             .HasMaxLength(500);
+
+        // Map Permissions list to JSONB column
+        builder.Property(e => e.Permissions)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => DeserializePermissions(v),
+                new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<string>>(
+                    (c1, c2) => System.Text.Json.JsonSerializer.Serialize(c1, (System.Text.Json.JsonSerializerOptions?)null) == System.Text.Json.JsonSerializer.Serialize(c2, (System.Text.Json.JsonSerializerOptions?)null),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()
+                )
+            );
         
         builder.HasIndex(e => new { e.TenantId, e.Name }).IsUnique();
         
@@ -89,52 +102,19 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
             .WithMany(r => r.ChildRoles)
             .HasForeignKey(e => e.ParentRoleId)
             .OnDelete(DeleteBehavior.Restrict);
-        
-        builder.HasMany(e => e.RolePermissions)
-            .WithOne(rp => rp.Role)
-            .HasForeignKey(rp => rp.RoleId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
-}
 
-public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
-{
-    public void Configure(EntityTypeBuilder<Permission> builder)
+    private static List<string> DeserializePermissions(string v)
     {
-        builder.ToTable("Permissions");
-        
-        builder.HasKey(e => e.Id);
-        
-        builder.Property(e => e.Code)
-            .IsRequired()
-            .HasMaxLength(100);
-        
-        builder.Property(e => e.ModuleName)
-            .IsRequired()
-            .HasMaxLength(50);
-        
-        builder.Property(e => e.Description)
-            .IsRequired()
-            .HasMaxLength(500);
-        
-        builder.HasIndex(e => e.Code).IsUnique();
-    }
-}
-
-public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermission>
-{
-    public void Configure(EntityTypeBuilder<RolePermission> builder)
-    {
-        builder.ToTable("RolePermissions");
-        
-        builder.HasKey(e => e.Id);
-        
-        builder.HasIndex(e => new { e.RoleId, e.PermissionId }).IsUnique();
-        
-        builder.HasOne(e => e.Permission)
-            .WithMany()
-            .HasForeignKey(e => e.PermissionId)
-            .OnDelete(DeleteBehavior.Cascade);
+        if (string.IsNullOrEmpty(v)) return new List<string>();
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>();
+        }
+        catch
+        {
+            return new List<string>();
+        }
     }
 }
 

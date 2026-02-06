@@ -122,6 +122,7 @@ export const api = {
     health: () => request<{ status: string; database: string; timestamp: string }>('/health'),
     info: () => request<{ name: string; version: string; environment: string; runtime: string }>('/info'),
     summary: () => request<{ currencies: number; languages: number; users: number; roles: number }>('/summary'),
+    permissions: () => request<string[]>('/system/permissions'),
 
     // Currencies
     getCurrencies: () =>
@@ -163,6 +164,9 @@ export const api = {
         getById: (id: string) => request<any>(`/roles/${id}`),
         create: (data: { name: string; description?: string }) =>
             request<any>('/roles', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id: string, data: { name: string; description?: string; permissions?: string[] }) =>
+            request<any>(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: (id: string) => request<any>(`/roles/${id}`, { method: 'DELETE' }),
     },
 
     // Partners (CRM)

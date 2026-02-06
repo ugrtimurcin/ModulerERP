@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ModulerERP.SystemCore.Infrastructure;
 using ModulerERP.SystemCore.Infrastructure.Persistence;
 using ModulerERP.SystemCore.Infrastructure.Persistence.Seeding;
+using ModulerERP.SystemCore.Application;
 using ModulerERP.CRM.Infrastructure;
 using ModulerERP.Inventory.Infrastructure;
 using ModulerERP.Sales.Infrastructure;
@@ -35,6 +36,7 @@ builder.Services.AddCors(options =>
 
 // Add SystemCore module services (DbContext, Auth, Services)
 builder.Services.AddSystemCoreInfrastructure(builder.Configuration);
+builder.Services.AddSystemCoreApplication();
 
 // Add CRM module services
 builder.Services.AddCRMInfrastructure(builder.Configuration);

@@ -22,14 +22,14 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         
         // DbContext
-        services.AddDbContext<SystemCoreDbContext>((sp, options) =>
-        {
-            options.UseNpgsql(connectionString!, npgsql =>
-            {
-                npgsql.MigrationsAssembly(typeof(SystemCoreDbContext).Assembly.FullName);
-                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "system_core");
-            });
-        });
+        // DbContext
+        services.AddDbContext<SystemCoreDbContext>(options =>
+             options.UseNpgsql(
+                 configuration.GetConnectionString("DefaultConnection"),
+                 b => {
+                     b.MigrationsAssembly(typeof(SystemCoreDbContext).Assembly.FullName);
+                     b.MigrationsHistoryTable("__EFMigrationsHistory", "system_core");
+                 }));
 
         // JWT Settings
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));

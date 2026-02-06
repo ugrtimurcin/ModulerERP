@@ -16,19 +16,22 @@ public class SystemCoreDbContext : DbContext
 {
     private readonly Guid _tenantId;
     private readonly ICurrentUserService _currentUserService;
+    private readonly MediatR.IPublisher _publisher;
 
     public SystemCoreDbContext(
         DbContextOptions<SystemCoreDbContext> options, 
-        ICurrentUserService currentUserService) 
+        ICurrentUserService currentUserService,
+        MediatR.IPublisher publisher) 
         : base(options)
     {
         _currentUserService = currentUserService;
+        _publisher = publisher;
         _tenantId = currentUserService.TenantId;
     }
 
     // Global (non-tenant specific)
     public DbSet<Currency> Currencies => Set<Currency>();
-    public DbSet<Permission> Permissions => Set<Permission>();
+    // public DbSet<Permission> Permissions => Set<Permission>(); // Removed in V2.0
     public DbSet<Language> Languages => Set<Language>();
     public DbSet<Translation> Translations => Set<Translation>();
 
@@ -44,7 +47,6 @@ public class SystemCoreDbContext : DbContext
 
     // Authorization
     public DbSet<Role> Roles => Set<Role>();
-    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
 
     // Centralized Assets
@@ -68,7 +70,7 @@ public class SystemCoreDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // Set default schema
-        modelBuilder.HasDefaultSchema("system_core");
+        modelBuilder.HasDefaultSchema("core");
 
         // Apply configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SystemCoreDbContext).Assembly);
@@ -195,6 +197,9 @@ public class SystemCoreDbContext : DbContext
         // Save changes to generate IDs for new entities
         var result = await base.SaveChangesAsync(cancellationToken);
 
+        // Dispatch Domain Events
+        await DispatchDomainEventsAsync(cancellationToken);
+
         // Now save audit logs
         if (auditEntries.Count > 0)
         {
@@ -203,5 +208,27 @@ public class SystemCoreDbContext : DbContext
         }
 
         return result;
+    }
+
+    private async Task DispatchDomainEventsAsync(CancellationToken cancellationToken)
+    {
+        var entitiesWithEvents = ChangeTracker.Entries<BaseEntity>()
+            .Where(e => e.Entity.DomainEvents.Any())
+            .Select(e => e.Entity)
+            .ToList();
+
+        if (!entitiesWithEvents.Any()) return;
+
+        var events = entitiesWithEvents.SelectMany(e => e.DomainEvents).ToList();
+
+        foreach (var entity in entitiesWithEvents)
+        {
+            entity.ClearDomainEvents();
+        }
+
+        foreach (var domainEvent in events)
+        {
+            await _publisher.Publish(domainEvent, cancellationToken);
+        }
     }
 }

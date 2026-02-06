@@ -19,7 +19,8 @@ public record UserListDto(
     string LastName,
     bool IsActive,
     DateTime CreatedAt,
-    DateTime? LastLoginDate
+    DateTime? LastLoginDate,
+    IEnumerable<string> Roles
 );
 
 public record CreateUserDto(string Email, string Password, string FirstName, string LastName);
@@ -31,7 +32,7 @@ public record RoleDto(
     string Name,
     string? Description,
     bool IsSystemRole,
-    IEnumerable<PermissionDto> Permissions
+    IEnumerable<string> Permissions
 );
 
 public record RoleListDto(
@@ -45,7 +46,7 @@ public record RoleListDto(
 public record CreateRoleDto(string Name, string? Description);
 
 // Permission DTOs
-public record PermissionDto(Guid Id, string Code, string Name, string Module);
+
 
 // Auth DTOs
 public record LoginDto(string Email, string Password);
