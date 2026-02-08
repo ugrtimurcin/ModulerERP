@@ -12,7 +12,8 @@ import type {
     ProgressPaymentDto,
     CreateProgressPaymentDto,
     ProjectDocumentDto,
-    CreateProjectDocumentDto
+    CreateProjectDocumentDto,
+    ProjectFinancialSummaryDto
 } from '../types/project';
 
 export const projectService = {
@@ -50,5 +51,10 @@ export const projectService = {
     documents: {
         getByProject: (projectId: string) => request<Array<ProjectDocumentDto>>(`/projectdocuments/project/${projectId}`),
         create: (data: CreateProjectDocumentDto) => request<ProjectDocumentDto>('/projectdocuments', { method: 'POST', body: JSON.stringify(data) }),
+    },
+
+    // Financials
+    financials: {
+        getSummary: (projectId: string) => request<ProjectFinancialSummaryDto>(`/projectfinancial/${projectId}`),
     }
 };

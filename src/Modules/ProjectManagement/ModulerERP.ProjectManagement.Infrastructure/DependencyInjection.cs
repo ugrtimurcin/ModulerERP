@@ -21,6 +21,9 @@ public static class DependencyInjection
         services.AddScoped<IProjectTransactionService, ProjectTransactionService>();
         services.AddScoped<IProgressPaymentService, ProgressPaymentService>();
         services.AddScoped<IProjectDocumentService, ProjectDocumentService>();
+        services.AddScoped<IProjectFinancialService, ProjectFinancialService>();
+
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
         return services;
     }

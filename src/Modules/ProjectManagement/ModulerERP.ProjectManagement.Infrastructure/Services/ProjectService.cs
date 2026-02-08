@@ -45,8 +45,8 @@ public class ProjectService : IProjectService
             ProjectManagerId = dto.ProjectManagerId,
             ContractCurrencyId = dto.ContractCurrencyId,
             ContractAmount = dto.ContractAmount,
-            StartDate = dto.StartDate,
-            TargetDate = dto.TargetDate,
+            StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc),
+            TargetDate = dto.TargetDate.HasValue ? DateTime.SpecifyKind(dto.TargetDate.Value, DateTimeKind.Utc) : null,
             Status = Domain.Enums.ProjectStatus.Planning,
             CompletionPercentage = 0,
             Budget = new ProjectBudget() 
@@ -71,7 +71,7 @@ public class ProjectService : IProjectService
         project.Name = dto.Name;
         project.Description = dto.Description;
         project.Status = dto.Status;
-        project.ActualFinishDate = dto.ActualFinishDate;
+        project.ActualFinishDate = dto.ActualFinishDate.HasValue ? DateTime.SpecifyKind(dto.ActualFinishDate.Value, DateTimeKind.Utc) : null;
 
         await _context.SaveChangesAsync();
     }

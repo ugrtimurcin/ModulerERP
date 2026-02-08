@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { projectService } from '@/services/projectService';
 import { ProjectStatus } from '@/types/project';
 import type { ProjectDto, CreateProjectDto, UpdateProjectDto } from '@/types/project';
+import { FinancialsTab } from './tabs/FinancialsTab';
+import { PaymentsTab } from './tabs/PaymentsTab';
 
 export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' | 'edit' }) {
     const { id } = useParams();
@@ -16,7 +17,7 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
     // If useTranslation is used for other things?
     // Let's check imports.
     // Assuming just removing t is enough.
-    const { i18n } = useTranslation();
+    // const { i18n } = useTranslation();
     const [loading, setLoading] = useState(mode !== 'create');
     const [project, setProject] = useState<ProjectDto | null>(null);
 
@@ -188,26 +189,12 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                     </div>
                 )}
 
-                {activeTab === 'budget' && (
-                    <div className="bg-[hsl(var(--card))] rounded-xl border p-6">
-                        <h2 className="text-lg font-semibold mb-4">Financial Overview</h2>
-                        <div className="grid gap-4 md:grid-cols-4">
-                            <div className="bg-[hsl(var(--background))] p-4 rounded-lg border">
-                                <div className="text-sm font-medium text-muted-foreground">Total Budget</div>
-                                <div className="text-2xl font-bold mt-2">{project?.budget.totalBudget.toLocaleString()}</div>
-                            </div>
-                            {/* More budget cards */}
-                        </div>
-                    </div>
+                {activeTab === 'budget' && id && (
+                    <FinancialsTab projectId={id} />
                 )}
 
-                {activeTab === 'payments' && (
-                    <div className="bg-[hsl(var(--card))] rounded-xl border p-6">
-                        <h2 className="text-lg font-semibold mb-4">Progress Payments (Hakediş)</h2>
-                        <div className="flex items-center justify-center p-8 text-muted-foreground">
-                            Payment List component will go here.
-                        </div>
-                    </div>
+                {activeTab === 'payments' && id && (
+                    <PaymentsTab projectId={id} />
                 )}
             </div>
         </div>

@@ -170,3 +170,18 @@ export interface CreateProjectDocumentDto {
     systemFileId?: string;
     description: string;
 }
+
+export interface ProjectCostBreakdownDto {
+    type: ProjectTransactionType;
+    amount: number;
+}
+
+export interface ProjectFinancialSummaryDto {
+    projectId: string;
+    contractAmount: number;
+    totalBilled: number;
+    totalCost: number;
+    projectedProfit: number;
+    currencyCode: string;
+    costBreakdown: ProjectCostBreakdownDto[];
+}

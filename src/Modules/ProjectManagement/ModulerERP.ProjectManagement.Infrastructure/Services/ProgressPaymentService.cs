@@ -46,23 +46,27 @@ public class ProgressPaymentService : IProgressPaymentService
 
     public async Task<ProgressPaymentDto> CreateAsync(Guid tenantId, Guid userId, CreateProgressPaymentDto dto)
     {
-        // 1. Calculate Previous Cumulative
+        // 1. Calculate Previous Cumulative (Only APPROVED payments count towards cumulative)
         var previousPayments = await _context.ProgressPayments
             .Where(x => x.TenantId == tenantId && x.ProjectId == dto.ProjectId && !x.IsDeleted)
             .ToListAsync();
 
-        var previousCumulative = previousPayments.Sum(x => x.CurrentAmount);
+        var previousCumulative = previousPayments
+            .Where(x => x.Status == ProgressPaymentStatus.Approved)
+            .Sum(x => x.CurrentAmount);
+            
         var paymentNo = previousPayments.Count + 1;
 
         // 2. Calculate Retention and Net
-        var retentionAmount = dto.CurrentAmount * (dto.RetentionRate / 100);
+        // Use standard rounding if necessary, but decimal is usually fine.
+        var retentionAmount = dto.CurrentAmount * (dto.RetentionRate / 100m);
         var netPayable = dto.CurrentAmount - retentionAmount;
 
         var payment = new ProgressPayment
         {
             ProjectId = dto.ProjectId,
             PaymentNo = paymentNo,
-            Date = dto.Date,
+            Date = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc),
             PreviousCumulativeAmount = previousCumulative,
             CurrentAmount = dto.CurrentAmount,
             RetentionRate = dto.RetentionRate,

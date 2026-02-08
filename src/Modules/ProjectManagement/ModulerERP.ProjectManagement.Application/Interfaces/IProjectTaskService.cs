@@ -6,5 +6,6 @@ public interface IProjectTaskService
 {
     Task<List<ProjectTaskDto>> GetByProjectIdAsync(Guid tenantId, Guid projectId);
     Task<ProjectTaskDto> CreateAsync(Guid tenantId, Guid userId, CreateProjectTaskDto dto);
+    Task UpdateAsync(Guid tenantId, UpdateProjectTaskDto dto);
     Task UpdateProgressAsync(Guid tenantId, UpdateProjectTaskProgressDto dto);
 }

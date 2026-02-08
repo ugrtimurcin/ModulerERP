@@ -41,8 +41,8 @@ public class ProjectTaskService : IProjectTaskService
             ProjectId = dto.ProjectId,
             Name = dto.Name,
             ParentTaskId = dto.ParentTaskId,
-            StartDate = dto.StartDate,
-            DueDate = dto.DueDate,
+            StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc),
+            DueDate = DateTime.SpecifyKind(dto.DueDate, DateTimeKind.Utc),
             CompletionPercentage = 0,
             Status = Domain.Enums.ProjectTaskStatus.Todo,
             AssignedEmployeeId = dto.AssignedEmployeeId,
@@ -58,6 +58,26 @@ public class ProjectTaskService : IProjectTaskService
         return new ProjectTaskDto(
             task.Id, task.ProjectId, task.Name, task.ParentTaskId, task.StartDate, task.DueDate, 
             task.CompletionPercentage, task.Status, task.AssignedEmployeeId, task.AssignedSubcontractorId);
+    }
+
+    public async Task UpdateAsync(Guid tenantId, UpdateProjectTaskDto dto)
+    {
+        var task = await _context.ProjectTasks
+            .FirstOrDefaultAsync(x => x.Id == dto.Id && x.TenantId == tenantId && !x.IsDeleted);
+
+        if (task == null) throw new KeyNotFoundException($"Task {dto.Id} not found.");
+
+        task.Name = dto.Name;
+        task.ParentTaskId = dto.ParentTaskId;
+        task.StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
+        task.DueDate = DateTime.SpecifyKind(dto.DueDate, DateTimeKind.Utc);
+        task.AssignedEmployeeId = dto.AssignedEmployeeId;
+        task.AssignedSubcontractorId = dto.AssignedSubcontractorId;
+
+        // Recalculate Project Progress (in case duration/weighting changes in future, or if we move tasks)
+        await RecalculateProjectProgress(tenantId, task.ProjectId);
+
+        await _context.SaveChangesAsync();
     }
 
     public async Task UpdateProgressAsync(Guid tenantId, UpdateProjectTaskProgressDto dto)

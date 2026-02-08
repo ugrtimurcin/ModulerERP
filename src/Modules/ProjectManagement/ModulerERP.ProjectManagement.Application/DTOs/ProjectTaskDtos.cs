@@ -30,3 +30,13 @@ public record UpdateProjectTaskProgressDto(
     decimal CompletionPercentage,
     ProjectTaskStatus Status
 );
+
+public record UpdateProjectTaskDto(
+    Guid Id,
+    string Name,
+    Guid? ParentTaskId,
+    DateTime StartDate,
+    DateTime DueDate,
+    Guid? AssignedEmployeeId,
+    Guid? AssignedSubcontractorId
+);
