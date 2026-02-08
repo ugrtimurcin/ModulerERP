@@ -40,4 +40,33 @@ public class ProjectTasksController : BaseApiController
             return NotFound();
         }
     }
+    [HttpPut("{id}")]
+    public async Task<ActionResult> Update(Guid id, UpdateProjectTaskDto dto)
+    {
+        if (id != dto.Id) return BadRequest("ID mismatch"); // Assuming DTO has ID, or we ignore it
+        
+        try
+        {
+            await _taskService.UpdateTaskAsync(TenantId, id, dto);
+            return Ok(new { success = true });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(Guid id)
+    {
+        try
+        {
+            await _taskService.DeleteTaskAsync(TenantId, CurrentUserId, id);
+            return Ok(new { success = true });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }

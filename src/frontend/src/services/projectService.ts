@@ -6,6 +6,7 @@ import type {
     ProjectBudget,
     ProjectTaskDto,
     CreateProjectTaskDto,
+    UpdateProjectTaskDto,
     UpdateProjectTaskProgressDto,
     ProjectTransactionDto,
     CreateProjectTransactionDto,
@@ -31,6 +32,8 @@ export const projectService = {
     tasks: {
         getByProject: (projectId: string) => request<Array<ProjectTaskDto>>(`/projecttasks/project/${projectId}`),
         create: (data: CreateProjectTaskDto) => request<ProjectTaskDto>('/projecttasks', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id: string, data: UpdateProjectTaskDto) => request<void>(`/projecttasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: (id: string) => request<void>(`/projecttasks/${id}`, { method: 'DELETE' }),
         updateProgress: (id: string, data: UpdateProjectTaskProgressDto) => request<void>(`/projecttasks/${id}/progress`, { method: 'PUT', body: JSON.stringify(data) }),
     },
 
@@ -51,6 +54,7 @@ export const projectService = {
     documents: {
         getByProject: (projectId: string) => request<Array<ProjectDocumentDto>>(`/projectdocuments/project/${projectId}`),
         create: (data: CreateProjectDocumentDto) => request<ProjectDocumentDto>('/projectdocuments', { method: 'POST', body: JSON.stringify(data) }),
+        delete: (id: string) => request<void>(`/projectdocuments/${id}`, { method: 'DELETE' }),
     },
 
     // Financials

@@ -24,4 +24,17 @@ public class ProjectDocumentsController : BaseApiController
     {
         return OkResult(await _documentService.CreateAsync(TenantId, CurrentUserId, dto));
     }
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(Guid id)
+    {
+        try
+        {
+            await _documentService.DeleteAsync(TenantId, CurrentUserId, id);
+            return Ok(new { success = true });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }

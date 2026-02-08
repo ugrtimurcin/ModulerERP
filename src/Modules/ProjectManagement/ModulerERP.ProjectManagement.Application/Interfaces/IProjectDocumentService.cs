@@ -6,4 +6,5 @@ public interface IProjectDocumentService
 {
     Task<List<ProjectDocumentDto>> GetByProjectIdAsync(Guid tenantId, Guid projectId);
     Task<ProjectDocumentDto> CreateAsync(Guid tenantId, Guid userId, CreateProjectDocumentDto dto);
+    Task DeleteAsync(Guid tenantId, Guid userId, Guid documentId);
 }

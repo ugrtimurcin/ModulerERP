@@ -27,7 +27,8 @@ public static class DependencyInjection
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IFiscalPeriodService, FiscalPeriodService>();
-        services.AddScoped<IExchangeRateService, ExchangeRateService>();
+        services.AddScoped<ModulerERP.Finance.Application.Services.IExchangeRateService, ExchangeRateService>();
+        services.AddScoped<ModulerERP.SharedKernel.Interfaces.IExchangeRateService, ExchangeRateService>();
         services.AddHttpClient<ModulerERP.Finance.Application.Interfaces.IExchangeRateProvider, ModulerERP.Finance.Infrastructure.Services.KktcRateProvider>();
         
         // Register Generic Repositories for Finance Entities

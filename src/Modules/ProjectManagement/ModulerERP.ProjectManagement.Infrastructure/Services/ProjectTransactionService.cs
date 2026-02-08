@@ -9,10 +9,17 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Services;
 public class ProjectTransactionService : IProjectTransactionService
 {
     private readonly ProjectManagementDbContext _context;
+    private readonly ModulerERP.SharedKernel.Interfaces.IExchangeRateService _exchangeRateService;
 
-    public ProjectTransactionService(ProjectManagementDbContext context)
+    // Hardcoded TRY ID from SystemCore Seeder
+    private static readonly Guid TryId = new("00000000-0000-0000-0001-000000000001");
+
+    public ProjectTransactionService(
+        ProjectManagementDbContext context,
+        ModulerERP.SharedKernel.Interfaces.IExchangeRateService exchangeRateService)
     {
         _context = context;
+        _exchangeRateService = exchangeRateService;
     }
 
     public async Task<List<ProjectTransactionDto>> GetByProjectIdAsync(Guid tenantId, Guid projectId)
@@ -39,10 +46,23 @@ public class ProjectTransactionService : IProjectTransactionService
 
     public async Task<ProjectTransactionDto> CreateAsync(Guid tenantId, Guid userId, CreateProjectTransactionDto dto)
     {
-        // Simple implementation: Assuming AmountReporting is calculated by the caller or we trust the ExchangeRate
-        // In a real scenario, we would inject a currency service here to validate or fetch rates.
-        
-        var amountReporting = dto.Amount * dto.ExchangeRate; 
+        decimal rate = dto.ExchangeRate;
+
+        // If rate is not provided or default 1 (and currency is not TRY), fetch it.
+        if ((rate == 0 || rate == 1) && dto.CurrencyId != TryId)
+        {
+            var rateResult = await _exchangeRateService.GetExchangeRateAsync(tenantId, dto.CurrencyId, TryId, DateTime.UtcNow);
+            if (rateResult.IsSuccess)
+            {
+                rate = rateResult.Value;
+            }
+        }
+        else if (dto.CurrencyId == TryId && rate == 0)
+        {
+            rate = 1.0m;
+        }
+
+        var amountReporting = dto.Amount * rate; 
 
         var transaction = new ProjectTransaction
         {
@@ -53,7 +73,7 @@ public class ProjectTransactionService : IProjectTransactionService
             Description = dto.Description,
             Amount = dto.Amount,
             CurrencyId = dto.CurrencyId,
-            ExchangeRate = dto.ExchangeRate,
+            ExchangeRate = rate,
             AmountReporting = amountReporting,
             Type = dto.Type
         };

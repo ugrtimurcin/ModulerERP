@@ -19,7 +19,7 @@ public interface IExchangeRateService
     Task<Result<decimal>> GetExternalRateAsync(DateTime date, string currencyCode, CancellationToken cancellationToken = default);
 }
 
-public class ExchangeRateService : IExchangeRateService
+public class ExchangeRateService : IExchangeRateService, ModulerERP.SharedKernel.Interfaces.IExchangeRateService
 {
     private readonly IRepository<ExchangeRate> _repository;
     private readonly IUnitOfWork _unitOfWork;
@@ -207,5 +207,36 @@ public class ExchangeRateService : IExchangeRateService
             // return Result<decimal>.Success(0m); // DEBUG PROBE
 
         return Result<decimal>.Success(foundRateVal);
+    }
+    public async Task<Result<decimal>> GetExchangeRateAsync(Guid tenantId, Guid fromCurrencyId, Guid toCurrencyId, DateTime date, CancellationToken cancellationToken = default)
+    {
+        if (fromCurrencyId == toCurrencyId)
+            return Result<decimal>.Success(1.0m);
+
+        // Try direct rate
+        var rate = await _repository.FirstOrDefaultAsync(
+            r => r.FromCurrencyId == fromCurrencyId && 
+                 r.ToCurrencyId == toCurrencyId && 
+                 r.RateDate.Date == date.Date,
+            cancellationToken);
+
+        if (rate != null)
+            return Result<decimal>.Success(rate.Rate);
+
+        // Try reverse rate
+        var reverseRate = await _repository.FirstOrDefaultAsync(
+            r => r.FromCurrencyId == toCurrencyId && 
+                 r.ToCurrencyId == fromCurrencyId && 
+                 r.RateDate.Date == date.Date,
+            cancellationToken);
+
+        if (reverseRate != null && reverseRate.Rate != 0)
+            return Result<decimal>.Success(1.0m / reverseRate.Rate);
+
+        // Fallback: Latest rate before date? (Implementation choice: stricter for now)
+        // Or fetch external?
+        // For compliance, we should probably fail if rate not found on exact date.
+        
+        return Result<decimal>.Failure($"Exchange rate not found for {date:d}");
     }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProgressPaymentDto, CreateProgressPaymentDto } from '@/types/project';
 import { projectService } from '@/services/projectService';
 import { Modal } from '@/components/ui/Modal';
@@ -11,6 +12,7 @@ interface PaymentsTabProps {
 }
 
 export function PaymentsTab({ projectId }: PaymentsTabProps) {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
     const [payments, setPayments] = useState<ProgressPaymentDto[]>([]);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -59,11 +61,11 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
         }
     };
 
-    const handleApprove = async (id: string, paymentNo: number) => {
+    const handleApprove = async (id: string) => {
         confirm({
-            title: `Approve Payment #${paymentNo}`,
-            message: 'Are you sure? This will generate invoices and financial records.',
-            confirmText: 'Approve',
+            title: t('common.confirm'),
+            message: t('common.thisActionCannotBeUndone'),
+            confirmText: t('common.approve'),
             onConfirm: async () => {
                 try {
                     await projectService.payments.approve(id);
@@ -75,39 +77,39 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
         });
     };
 
-    if (loading) return <div>Loading payments...</div>;
+    if (loading) return <div>{t('common.loading')}</div>;
 
     const formatCurrency = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val); // Assuming TRY for now or fetch project currency
 
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Progress Payments (Hakediş)</h3>
+                <h3 className="text-lg font-medium">{t('projects.tabs.payments')}</h3>
                 <Button onClick={() => setIsCreateModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Hakediş
+                    {t('projects.payments.createHakedis')}
                 </Button>
             </div>
 
-            <div className="rounded-md border">
+            <div className="rounded-md border bg-card">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
-                            <th className="p-3 text-left">No</th>
-                            <th className="p-3 text-left">Date</th>
-                            <th className="p-3 text-right">Previous Cumulative</th>
-                            <th className="p-3 text-right">Current Amount</th>
+                            <th className="p-3 text-left">{t('projects.payments.paymentNo')}</th>
+                            <th className="p-3 text-left">{t('finance.exchangeRates.date')}</th>
+                            <th className="p-3 text-right">Cumulative</th>
+                            <th className="p-3 text-right">Amount</th>
                             <th className="p-3 text-right">Retention</th>
-                            <th className="p-3 text-right">Net Payable</th>
-                            <th className="p-3 text-center">Status</th>
-                            <th className="p-3 text-right">Actions</th>
+                            <th className="p-3 text-right">{t('projects.payments.netAmount')}</th>
+                            <th className="p-3 text-center">{t('projects.payments.status')}</th>
+                            <th className="p-3 text-right">{t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {payments.length === 0 ? (
                             <tr>
                                 <td colSpan={8} className="p-4 text-center text-muted-foreground">
-                                    No payments found.
+                                    {t('common.noData')}
                                 </td>
                             </tr>
                         ) : (
@@ -129,8 +131,8 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
                                     </td>
                                     <td className="p-3 text-right">
                                         {payment.status === 0 && (
-                                            <Button variant="ghost" size="sm" onClick={() => handleApprove(payment.id, payment.paymentNo)}>
-                                                <Check className="h-4 w-4 mr-1" /> Approve
+                                            <Button variant="ghost" size="sm" onClick={() => handleApprove(payment.id)}>
+                                                <Check className="h-4 w-4 mr-1" /> {t('common.approve')}
                                             </Button>
                                         )}
                                         {payment.status === 1 && (
@@ -149,11 +151,11 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
             <Modal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
-                title="Create Progress Payment"
+                title={t('projects.payments.createHakedis')}
             >
                 <div className="space-y-4 py-4">
                     <Input
-                        label="Date"
+                        label={t('finance.exchangeRates.date')}
                         type="date"
                         value={createForm.date}
                         onChange={(e) => setCreateForm({ ...createForm, date: e.target.value })}
@@ -171,11 +173,9 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
                         onChange={(e) => setCreateForm({ ...createForm, retentionRate: parseFloat(e.target.value) })}
                     />
 
-                    {/* Read-Only info could be added here if we fetched 'Recent Cumulative' beforehand, but backend handles it */}
-
                     <div className="flex justify-end space-x-2 mt-4">
-                        <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleCreate}>Create</Button>
+                        <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button onClick={handleCreate}>{t('common.create')}</Button>
                     </div>
                 </div>
             </Modal>

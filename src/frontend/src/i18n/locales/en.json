@@ -990,5 +990,67 @@
       "recordProduction": "Record Production",
       "productionRecorded": "Production quantity recorded"
     }
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Manage construction and engineering projects",
+    "createProject": "Create Project",
+    "editProject": "Edit Project",
+    "deleteProject": "Delete Project",
+    "projectCreated": "Project created successfully",
+    "projectUpdated": "Project updated successfully",
+    "projectDeleted": "Project deleted successfully",
+    "confirmDeleteProject": "Are you sure you want to delete this project?",
+    "code": "Project Code",
+    "name": "Project Name",
+    "description": "Description",
+    "contractAmount": "Contract Amount",
+    "startDate": "Start Date",
+    "targetDate": "Target Date",
+    "actualFinishDate": "Actual Finish Date",
+    "status": "Status",
+    "completion": "Completion",
+    "client": "Client",
+    "manager": "Project Manager",
+    "tabs": {
+      "details": "Details",
+      "tasks": "WBS & Tasks",
+      "budget": "Budget & Financials",
+      "payments": "Progress Payments",
+      "documents": "Documents"
+    },
+    "financials": {
+      "summary": "Financial Summary",
+      "contractValue": "Contract Value",
+      "billed": "Total Billed",
+      "cost": "Total Cost",
+      "profit": "Profit / Loss",
+      "margin": "Margin",
+      "breakdown": "Cost Breakdown",
+      "currency": "Reporting Currency"
+    },
+    "tasks": {
+      "addTask": "Add Task",
+      "editTask": "Edit Task",
+      "deleteTask": "Delete Task",
+      "taskName": "Task Name",
+      "parentTask": "Parent Task",
+      "assignedTo": "Assigned To",
+      "dueDate": "Due Date",
+      "progress": "Progress"
+    },
+    "documents": {
+      "upload": "Upload Document",
+      "title": "Title",
+      "type": "Type",
+      "file": "File",
+      "noDocuments": "No documents uploaded"
+    },
+    "payments": {
+      "createHakedis": "Create Hakediş",
+      "paymentNo": "Payment No",
+      "netAmount": "Net Amount",
+      "status": "Status"
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { projectService } from '@/services/projectService';
@@ -7,17 +8,13 @@ import { ProjectStatus } from '@/types/project';
 import type { ProjectDto, CreateProjectDto, UpdateProjectDto } from '@/types/project';
 import { FinancialsTab } from './tabs/FinancialsTab';
 import { PaymentsTab } from './tabs/PaymentsTab';
+import { TasksTab } from './tabs/TasksTab';
+import { DocumentsTab } from './tabs/DocumentsTab';
 
 export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' | 'edit' }) {
     const { id } = useParams();
     const navigate = useNavigate();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // const { t } = useTranslation(); // t is unused, removing or commenting out if needed, but better to remove destructuring if purely unused. 
-    // Actually typically: const { t } = useTranslation(); -> const { } = ... or just remove if hook not needed?
-    // If useTranslation is used for other things?
-    // Let's check imports.
-    // Assuming just removing t is enough.
-    // const { i18n } = useTranslation();
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(mode !== 'create');
     const [project, setProject] = useState<ProjectDto | null>(null);
 
@@ -68,7 +65,9 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                 if (response.success && response.data) {
                     navigate(`/projects/${response.data.id}`);
                 }
-            } else if (mode === 'edit' && id) {
+            } else if ((mode === 'edit' || mode === 'view') && id) {
+                // 'view' mode might turn into edit if we allow inline edits or have an edit button
+                // For now assuming we are in edit mode if saving
                 await projectService.projects.update(id, {
                     name: formData.name!,
                     description: formData.description!,
@@ -81,15 +80,15 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div>{t('common.loading')}</div>;
 
     const tabs = [
-        { id: 'details', label: 'Details' },
+        { id: 'details', label: t('projects.tabs.details') },
         ...(mode !== 'create' ? [
-            { id: 'tasks', label: 'Tasks (WBS)' },
-            { id: 'budget', label: 'Budget & Costs' },
-            { id: 'payments', label: 'Progress Payments' },
-            { id: 'documents', label: 'Documents' }
+            { id: 'tasks', label: t('projects.tabs.tasks') },
+            { id: 'budget', label: t('projects.tabs.budget') },
+            { id: 'payments', label: t('projects.tabs.payments') },
+            { id: 'documents', label: t('projects.tabs.documents') }
         ] : [])
     ];
 
@@ -102,17 +101,17 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                     </Button>
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
-                            {mode === 'create' ? 'New Project' : project?.name}
+                            {mode === 'create' ? t('projects.createProject') : project?.name}
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            {mode === 'create' ? 'Create a new project' : project?.code}
+                            {mode === 'create' ? t('projects.subtitle') : project?.code}
                         </p>
                     </div>
                 </div>
                 <div className="flex space-x-2">
                     <Button onClick={handleSave}>
                         <Save className="mr-2 h-4 w-4" />
-                        Save
+                        {t('common.save')}
                     </Button>
                 </div>
             </div>
@@ -135,11 +134,11 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
             <div className="mt-6">
                 {activeTab === 'details' && (
                     <div className="bg-[hsl(var(--card))] rounded-xl border p-6">
-                        <h2 className="text-lg font-semibold mb-4">Project Information</h2>
+                        <h2 className="text-lg font-semibold mb-4">{t('projects.tabs.details')}</h2>
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <Input
-                                    label="Code"
+                                    label={t('projects.code')}
                                     value={formData.code}
                                     onChange={e => setFormData({ ...formData, code: e.target.value })}
                                     disabled={mode !== 'create'}
@@ -147,21 +146,21 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                             </div>
                             <div className="space-y-2">
                                 <Input
-                                    label="Name"
+                                    label={t('projects.name')}
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2 md:col-span-2">
                                 <Input
-                                    label="Description"
+                                    label={t('projects.description')}
                                     value={formData.description}
                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Input
-                                    label="Contract Amount"
+                                    label={t('projects.contractAmount')}
                                     type="number"
                                     value={formData.contractAmount}
                                     onChange={e => setFormData({ ...formData, contractAmount: parseFloat(e.target.value) })}
@@ -170,7 +169,7 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                             </div>
                             <div className="space-y-2">
                                 <Input
-                                    label="Start Date"
+                                    label={t('projects.startDate')}
                                     type="date"
                                     value={formData.startDate}
                                     onChange={e => setFormData({ ...formData, startDate: e.target.value })}
@@ -180,13 +179,8 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                     </div>
                 )}
 
-                {activeTab === 'tasks' && (
-                    <div className="bg-[hsl(var(--card))] rounded-xl border p-6">
-                        <h2 className="text-lg font-semibold mb-4">Work Breakdown Structure</h2>
-                        <div className="flex items-center justify-center p-8 text-muted-foreground">
-                            Task Tree component will go here.
-                        </div>
-                    </div>
+                {activeTab === 'tasks' && id && (
+                    <TasksTab projectId={id} />
                 )}
 
                 {activeTab === 'budget' && id && (
@@ -195,6 +189,10 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
 
                 {activeTab === 'payments' && id && (
                     <PaymentsTab projectId={id} />
+                )}
+
+                {activeTab === 'documents' && id && (
+                    <DocumentsTab projectId={id} />
                 )}
             </div>
         </div>

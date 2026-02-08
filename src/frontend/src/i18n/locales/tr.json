@@ -839,5 +839,67 @@
             "stolen": "Çalıntı/Kayıp",
             "donation": "Bağış"
         }
+    },
+    "projects": {
+        "title": "Projeler",
+        "subtitle": "İnşaat ve mühendislik projelerini yönetin",
+        "createProject": "Proje Oluştur",
+        "editProject": "Proje Düzenle",
+        "deleteProject": "Proje Sil",
+        "projectCreated": "Proje başarıyla oluşturuldu",
+        "projectUpdated": "Proje başarıyla güncellendi",
+        "projectDeleted": "Proje başarıyla silindi",
+        "confirmDeleteProject": "Bu projeyi silmek istediğinizden emin misiniz?",
+        "code": "Proje Kodu",
+        "name": "Proje Adı",
+        "description": "Açıklama",
+        "contractAmount": "Sözleşme Tutarı",
+        "startDate": "Başlangıç Tarihi",
+        "targetDate": "Hedef Bitiş Tarihi",
+        "actualFinishDate": "Gerçekleşen Bitiş",
+        "status": "Durum",
+        "completion": "Tamamlanma",
+        "client": "Müşteri",
+        "manager": "Proje Yöneticisi",
+        "tabs": {
+            "details": "Detaylar",
+            "tasks": "WBS & Görevler",
+            "budget": "Bütçe & Finansallar",
+            "payments": "Hakedişler",
+            "documents": "Dokümanlar"
+        },
+        "financials": {
+            "summary": "Finansal Özet",
+            "contractValue": "Sözleşme Değeri",
+            "billed": "Toplam Hakediş",
+            "cost": "Toplam Maliyet",
+            "profit": "Kâr / Zarar",
+            "margin": "Marj",
+            "breakdown": "Maliyet Dağılımı",
+            "currency": "Raporlama Para Birimi"
+        },
+        "tasks": {
+            "addTask": "Görev Ekle",
+            "editTask": "Görev Düzenle",
+            "deleteTask": "Görev Sil",
+            "taskName": "Görev Adı",
+            "parentTask": "Üst Görev",
+            "assignedTo": "Atanan Kişi",
+            "dueDate": "Bitiş Tarihi",
+            "progress": "İlerleme"
+        },
+        "documents": {
+            "upload": "Doküman Yükle",
+            "title": "Başlık",
+            "type": "Tür",
+            "file": "Dosya",
+            "noDocuments": "Doküman bulunamadı"
+        },
+        "payments": {
+            "createHakedis": "Hakediş Oluştur",
+            "paymentNo": "Hakediş No",
+            "netAmount": "Net Tutar",
+            "status": "Durum"
+        }
     }
 }

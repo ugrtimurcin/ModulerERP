@@ -98,6 +98,17 @@ export interface CreateProjectTaskDto {
     assignedSubcontractorId?: string;
 }
 
+export interface UpdateProjectTaskDto {
+    id: string;
+    projectId: string;
+    name: string;
+    parentTaskId?: string;
+    startDate: string;
+    dueDate: string;
+    assignedEmployeeId?: string;
+    assignedSubcontractorId?: string;
+}
+
 export interface UpdateProjectTaskProgressDto {
     taskId: string;
     completionPercentage: number;

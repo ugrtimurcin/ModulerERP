@@ -60,12 +60,12 @@ public class ProjectTaskService : IProjectTaskService
             task.CompletionPercentage, task.Status, task.AssignedEmployeeId, task.AssignedSubcontractorId);
     }
 
-    public async Task UpdateAsync(Guid tenantId, UpdateProjectTaskDto dto)
+    public async Task UpdateTaskAsync(Guid tenantId, Guid taskId, UpdateProjectTaskDto dto)
     {
         var task = await _context.ProjectTasks
-            .FirstOrDefaultAsync(x => x.Id == dto.Id && x.TenantId == tenantId && !x.IsDeleted);
+            .FirstOrDefaultAsync(x => x.Id == taskId && x.TenantId == tenantId && !x.IsDeleted);
 
-        if (task == null) throw new KeyNotFoundException($"Task {dto.Id} not found.");
+        if (task == null) throw new KeyNotFoundException($"Task {taskId} not found.");
 
         task.Name = dto.Name;
         task.ParentTaskId = dto.ParentTaskId;
@@ -77,6 +77,30 @@ public class ProjectTaskService : IProjectTaskService
         // Recalculate Project Progress (in case duration/weighting changes in future, or if we move tasks)
         await RecalculateProjectProgress(tenantId, task.ProjectId);
 
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteTaskAsync(Guid tenantId, Guid userId, Guid taskId)
+    {
+        var task = await _context.ProjectTasks
+            .FirstOrDefaultAsync(x => x.Id == taskId && x.TenantId == tenantId && !x.IsDeleted);
+
+        if (task == null) throw new KeyNotFoundException($"Task {taskId} not found.");
+
+        // Soft delete using BaseEntity method
+        task.Delete(userId);
+        
+        // Also soft delete children
+        var children = await _context.ProjectTasks
+            .Where(x => x.ParentTaskId == taskId && x.TenantId == tenantId && !x.IsDeleted)
+            .ToListAsync();
+            
+        foreach(var child in children)
+        {
+            child.Delete(userId);
+        }
+
+        await RecalculateProjectProgress(tenantId, task.ProjectId);
         await _context.SaveChangesAsync();
     }
 

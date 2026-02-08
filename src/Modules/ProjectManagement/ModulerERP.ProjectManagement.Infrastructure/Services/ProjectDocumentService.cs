@@ -55,4 +55,15 @@ public class ProjectDocumentService : IProjectDocumentService
             doc.Id, doc.ProjectId, doc.Title, doc.DocumentType, doc.FileUrl, 
             doc.SystemFileId, doc.Description, doc.CreatedAt);
     }
+    public async Task DeleteAsync(Guid tenantId, Guid userId, Guid documentId)
+    {
+        var doc = await _context.ProjectDocuments
+            .FirstOrDefaultAsync(x => x.Id == documentId && x.TenantId == tenantId && !x.IsDeleted);
+
+        if (doc == null) throw new KeyNotFoundException($"Document {documentId} not found.");
+
+        doc.Delete(userId);
+        
+        await _context.SaveChangesAsync();
+    }
 }
