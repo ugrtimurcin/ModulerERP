@@ -6,4 +6,5 @@ public interface IProjectTransactionService
 {
     Task<List<ProjectTransactionDto>> GetByProjectIdAsync(Guid tenantId, Guid projectId);
     Task<ProjectTransactionDto> CreateAsync(Guid tenantId, Guid userId, CreateProjectTransactionDto dto);
+    Task AddTransactionAsync(Guid tenantId, CreateProjectTransactionDto dto); // For integration consumers
 }

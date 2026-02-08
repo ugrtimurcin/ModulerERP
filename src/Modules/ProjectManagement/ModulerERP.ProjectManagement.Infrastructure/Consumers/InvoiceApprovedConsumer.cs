@@ -1,8 +1,8 @@
 using MediatR;
-using ModulerERP.ProjectManagement.Application.DTOs;
+using ModulerERP.SharedKernel.IntegrationEvents; 
 using ModulerERP.ProjectManagement.Application.Interfaces;
+using ModulerERP.ProjectManagement.Application.DTOs;
 using ModulerERP.ProjectManagement.Domain.Enums;
-using ModulerERP.SharedKernel.IntegrationEvents;
 
 namespace ModulerERP.ProjectManagement.Infrastructure.Consumers;
 
@@ -17,22 +17,22 @@ public class InvoiceApprovedConsumer : INotificationHandler<InvoiceApprovedEvent
 
     public async Task Handle(InvoiceApprovedEvent notification, CancellationToken cancellationToken)
     {
+        // 1. Validation: Only process if a ProjectId was selected on the Invoice
         if (notification.ProjectId.HasValue)
         {
-            var dto = new CreateProjectTransactionDto(
+            // 2. Create the Project Expense
+            await _transactionService.AddTransactionAsync(notification.TenantId, new CreateProjectTransactionDto(
                 notification.ProjectId.Value,
-                null, // TaskId
-                "Invoice", // SourceModule
+                null, // ProjectTaskId
+                "Procurement", // SourceModule
                 notification.InvoiceId, // SourceRecordId
-                $"Invoice Approved", // Description
+                $"Invoice #{notification.InvoiceNumber} - Supplier: {notification.SupplierName}", // Description
                 notification.Amount,
                 notification.CurrencyId,
-                1.0m, // TODO: Implement Exchange Rate Service
-                ProjectTransactionType.GeneralExpense
-            );
-
-            // Using Guid.Empty for UserId as this is a system action
-            await _transactionService.CreateAsync(notification.TenantId, Guid.Empty, dto);
+                0, // Exchange Rate 0 to let service fetch it
+                ProjectTransactionType.Expense,
+                notification.Date
+            ));
         }
     }
 }

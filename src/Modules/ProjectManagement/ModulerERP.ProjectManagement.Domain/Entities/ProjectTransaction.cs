@@ -18,6 +18,7 @@ public class ProjectTransaction : BaseEntity
     public Guid CurrencyId { get; set; } // Original Currency
     public decimal ExchangeRate { get; set; }
     public decimal AmountReporting { get; set; } // Converted to Tenant's Functional Currency (TRY)
+    public DateTime Date { get; set; }
 
     public ProjectTransactionType Type { get; set; }
 }

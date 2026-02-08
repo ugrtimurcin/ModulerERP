@@ -46,9 +46,19 @@ public class ProjectTransactionService : IProjectTransactionService
 
     public async Task<ProjectTransactionDto> CreateAsync(Guid tenantId, Guid userId, CreateProjectTransactionDto dto)
     {
+        return await CreateInternalAsync(tenantId, userId, dto);
+    }
+
+    public async Task AddTransactionAsync(Guid tenantId, CreateProjectTransactionDto dto)
+    {
+        // For integration, we use System User (Guid.Empty) or similar
+        await CreateInternalAsync(tenantId, Guid.Empty, dto);
+    }
+
+    private async Task<ProjectTransactionDto> CreateInternalAsync(Guid tenantId, Guid userId, CreateProjectTransactionDto dto)
+    {
         decimal rate = dto.ExchangeRate;
 
-        // If rate is not provided or default 1 (and currency is not TRY), fetch it.
         if ((rate == 0 || rate == 1) && dto.CurrencyId != TryId)
         {
             var rateResult = await _exchangeRateService.GetExchangeRateAsync(tenantId, dto.CurrencyId, TryId, DateTime.UtcNow);
@@ -75,11 +85,15 @@ public class ProjectTransactionService : IProjectTransactionService
             CurrencyId = dto.CurrencyId,
             ExchangeRate = rate,
             AmountReporting = amountReporting,
-            Type = dto.Type
+            Type = dto.Type,
+            Date = dto.Date // Use the date from DTO
         };
 
         transaction.SetTenant(tenantId);
-        transaction.SetCreator(userId);
+        if (userId != Guid.Empty)
+        {
+            transaction.SetCreator(userId);
+        }
 
         _context.ProjectTransactions.Add(transaction);
         await _context.SaveChangesAsync();
@@ -96,7 +110,7 @@ public class ProjectTransactionService : IProjectTransactionService
             transaction.ExchangeRate,
             transaction.AmountReporting,
             transaction.Type,
-            transaction.CreatedAt
+            transaction.Date // Use Date instead of CreatedAt for the main date
         );
     }
 }

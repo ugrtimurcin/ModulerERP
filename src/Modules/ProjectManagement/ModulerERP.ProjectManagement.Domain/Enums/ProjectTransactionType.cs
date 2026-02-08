@@ -5,5 +5,6 @@ public enum ProjectTransactionType
     Material,
     Labor,
     Subcontractor,
-    GeneralExpense
+    GeneralExpense,
+    Expense
 }

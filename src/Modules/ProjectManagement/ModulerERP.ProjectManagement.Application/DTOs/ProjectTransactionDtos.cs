@@ -26,5 +26,6 @@ public record CreateProjectTransactionDto(
     decimal Amount,
     Guid CurrencyId,
     decimal ExchangeRate,
-    ProjectTransactionType Type
+    ProjectTransactionType Type,
+    DateTime Date
 );
