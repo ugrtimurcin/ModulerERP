@@ -3,7 +3,9 @@ import type {
     ProjectDto,
     CreateProjectDto,
     UpdateProjectDto,
-    ProjectBudget,
+    ProjectBudgetLineDto,
+    CreateBudgetLineDto,
+    UpdateBudgetLineDto,
     ProjectTaskDto,
     CreateProjectTaskDto,
     UpdateProjectTaskDto,
@@ -14,7 +16,9 @@ import type {
     CreateProgressPaymentDto,
     ProjectDocumentDto,
     CreateProjectDocumentDto,
-    ProjectFinancialSummaryDto
+    ProjectFinancialSummaryDto,
+    ProjectChangeOrderDto,
+    CreateChangeOrderDto
 } from '../types/project';
 
 export const projectService = {
@@ -24,8 +28,12 @@ export const projectService = {
         getById: (id: string) => request<ProjectDto>(`/projects/${id}`),
         create: (data: CreateProjectDto) => request<ProjectDto>('/projects', { method: 'POST', body: JSON.stringify(data) }),
         update: (id: string, data: UpdateProjectDto) => request<void>(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        updateBudget: (id: string, data: ProjectBudget) => request<void>(`/projects/${id}/budget`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: string) => request<void>(`/projects/${id}`, { method: 'DELETE' }),
+
+        // Budget Limits
+        addBudgetLine: (id: string, data: CreateBudgetLineDto) => request<ProjectBudgetLineDto>(`/projects/${id}/budget-lines`, { method: 'POST', body: JSON.stringify(data) }),
+        updateBudgetLine: (id: string, lineId: string, data: UpdateBudgetLineDto) => request<void>(`/projects/${id}/budget-lines/${lineId}`, { method: 'PUT', body: JSON.stringify(data) }),
+        deleteBudgetLine: (id: string, lineId: string) => request<void>(`/projects/${id}/budget-lines/${lineId}`, { method: 'DELETE' }),
     },
 
     // Tasks
@@ -60,5 +68,13 @@ export const projectService = {
     // Financials
     financials: {
         getSummary: (projectId: string) => request<ProjectFinancialSummaryDto>(`/projectfinancial/${projectId}`),
+    },
+
+    // Change Orders (Zeyilnames)
+    changeOrders: {
+        getByProject: (projectId: string) => request<Array<ProjectChangeOrderDto>>(`/projectchangeorders/project/${projectId}`),
+        create: (data: CreateChangeOrderDto) => request<ProjectChangeOrderDto>('/projectchangeorders', { method: 'POST', body: JSON.stringify(data) }),
+        approve: (id: string) => request<void>(`/projectchangeorders/${id}/approve`, { method: 'POST' }),
+        reject: (id: string) => request<void>(`/projectchangeorders/${id}/reject`, { method: 'POST' })
     }
 };

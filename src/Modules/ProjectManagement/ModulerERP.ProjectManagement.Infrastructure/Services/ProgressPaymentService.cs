@@ -38,6 +38,9 @@ public class ProgressPaymentService : IProgressPaymentService
                 x.CurrentAmount,
                 x.RetentionRate,
                 x.RetentionAmount,
+                x.MaterialOnSiteAmount,
+                x.AdvanceDeductionAmount,
+                x.TaxWithholdingAmount,
                 x.NetPayableAmount,
                 x.Status
             ))
@@ -58,9 +61,16 @@ public class ProgressPaymentService : IProgressPaymentService
         var paymentNo = previousPayments.Count + 1;
 
         // 2. Calculate Retention and Net
-        // Use standard rounding if necessary, but decimal is usually fine.
-        var retentionAmount = dto.CurrentAmount * (dto.RetentionRate / 100m);
-        var netPayable = dto.CurrentAmount - retentionAmount;
+        // Gross = CurrentAmount + MaterialOnSiteAmount
+        // Deductions = Retention + Advance + Tax
+        
+        var retentionBase = dto.CurrentAmount; // Usually retention is on the Work Done, sometimes on Material too. Assuming Work Done for now.
+        var retentionAmount = retentionBase * (dto.RetentionRate / 100m);
+        
+        var grossAmount = dto.CurrentAmount + dto.MaterialOnSiteAmount;
+        var totalDeductions = retentionAmount + dto.AdvanceDeductionAmount + dto.TaxWithholdingAmount;
+        
+        var netPayable = grossAmount - totalDeductions;
 
         var payment = new ProgressPayment
         {
@@ -71,6 +81,9 @@ public class ProgressPaymentService : IProgressPaymentService
             CurrentAmount = dto.CurrentAmount,
             RetentionRate = dto.RetentionRate,
             RetentionAmount = retentionAmount,
+            MaterialOnSiteAmount = dto.MaterialOnSiteAmount,
+            AdvanceDeductionAmount = dto.AdvanceDeductionAmount,
+            TaxWithholdingAmount = dto.TaxWithholdingAmount,
             NetPayableAmount = netPayable,
             Status = ProgressPaymentStatus.Draft
         };
@@ -84,7 +97,8 @@ public class ProgressPaymentService : IProgressPaymentService
         return new ProgressPaymentDto(
             payment.Id, payment.ProjectId, payment.PaymentNo, payment.Date, 
             payment.PreviousCumulativeAmount, payment.CurrentAmount, payment.RetentionRate, 
-            payment.RetentionAmount, payment.NetPayableAmount, payment.Status);
+            payment.RetentionAmount, payment.MaterialOnSiteAmount, payment.AdvanceDeductionAmount, 
+            payment.TaxWithholdingAmount, payment.NetPayableAmount, payment.Status);
     }
 
     public async Task ApproveAsync(Guid tenantId, Guid id)

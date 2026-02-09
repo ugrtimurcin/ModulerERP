@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ModulerERP.ProjectManagement.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
+namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations.ProjectManagement
 {
     [DbContext(typeof(ProjectManagementDbContext))]
-    partial class ProjectManagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209103425_RefactorBudgeting")]
+    partial class RefactorBudgeting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,9 +31,6 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<decimal>("AdvanceDeductionAmount")
-                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -56,9 +56,6 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<decimal>("MaterialOnSiteAmount")
-                        .HasColumnType("numeric");
-
                     b.Property<decimal>("NetPayableAmount")
                         .HasColumnType("numeric");
 
@@ -79,9 +76,6 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
-
-                    b.Property<decimal>("TaxWithholdingAmount")
-                        .HasColumnType("numeric");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -241,79 +235,6 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("ProjectBudgetLines", "pm");
-                });
-
-            modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ProjectChangeOrder", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("AmountChange")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime?>("ApprovalDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ApproverId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("OrderNo")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("RequestDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("TimeExtensionDays")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("ProjectChangeOrders", "pm");
                 });
 
             modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ProjectDocument", b =>
@@ -569,20 +490,9 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ProjectChangeOrder", b =>
-                {
-                    b.HasOne("ModulerERP.ProjectManagement.Domain.Entities.Project", null)
-                        .WithMany("ChangeOrders")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.Project", b =>
                 {
                     b.Navigation("BudgetLines");
-
-                    b.Navigation("ChangeOrders");
                 });
 #pragma warning restore 612, 618
         }

@@ -24,9 +24,31 @@ public class Project : BaseEntity
     public DateTime? ActualFinishDate { get; set; }
 
     // State
+    // State
     public ProjectStatus Status { get; set; }
     public decimal CompletionPercentage { get; set; }
     
-    // Owned Entity
-    public ProjectBudget Budget { get; set; } = new();
+    // Budgeting (V2.0)
+    public ICollection<ProjectBudgetLine> BudgetLines { get; set; } = new List<ProjectBudgetLine>();
+
+    public decimal GetTotalBudget()
+    {
+        return BudgetLines.Sum(x => x.TotalAmount);
+    }
+    
+    // Change Management (Zeyilname)
+    public ICollection<ProjectChangeOrder> ChangeOrders { get; set; } = new List<ProjectChangeOrder>();
+    
+    public void ApplyChangeOrder(ProjectChangeOrder order)
+    {
+        if (order.Status != ChangeOrderStatus.Approved)
+            throw new InvalidOperationException("Cannot apply unapproved change order.");
+            
+        ContractAmount += order.AmountChange;
+        
+        if (TargetDate.HasValue && order.TimeExtensionDays != 0)
+        {
+            TargetDate = TargetDate.Value.AddDays(order.TimeExtensionDays);
+        }
+    }
 }

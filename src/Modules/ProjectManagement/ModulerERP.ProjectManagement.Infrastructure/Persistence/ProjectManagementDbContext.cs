@@ -14,6 +14,8 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
     public DbSet<ProjectTransaction> ProjectTransactions => Set<ProjectTransaction>();
     public DbSet<ProgressPayment> ProgressPayments => Set<ProgressPayment>();
     public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
+    public DbSet<ProjectBudgetLine> ProjectBudgetLines => Set<ProjectBudgetLine>();
+    public DbSet<ProjectChangeOrder> ProjectChangeOrders => Set<ProjectChangeOrder>();
 
     // Shared Audit Log (mapped to system_core schema)
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -44,11 +46,25 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.NewValues).HasColumnType("jsonb");
         });
         
-        // Configure Project Budget as Owned Entity
-        modelBuilder.Entity<Project>(entity =>
+        // Configure Project Budget Lines
+        modelBuilder.Entity<ProjectBudgetLine>(entity =>
         {
-            entity.OwnsOne(p => p.Budget);
+            entity.Property(e => e.Quantity).HasPrecision(18, 4);
+            entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
         });
+
+        // Configure Project Change Orders
+        modelBuilder.Entity<ProjectChangeOrder>(entity =>
+        {
+            entity.Property(e => e.AmountChange).HasPrecision(18, 2);
+        });
+      
+        // Removed ProjectBudget Owned Entity configuration
+        // modelBuilder.Entity<Project>(entity =>
+        // {
+        //    entity.OwnsOne(p => p.Budget);
+        // });
 
         // Apply configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProjectManagementDbContext).Assembly);

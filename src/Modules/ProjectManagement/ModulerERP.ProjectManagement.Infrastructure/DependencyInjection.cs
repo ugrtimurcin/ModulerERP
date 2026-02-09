@@ -11,16 +11,17 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddProjectManagementInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-        services.AddDbContext<ProjectManagementDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            services.AddDbContext<ProjectManagementDbContext>(options =>
+            options.UseNpgsql(
+                configuration.GetConnectionString("DefaultConnection"),
+                b => b.MigrationsAssembly(typeof(ProjectManagementDbContext).Assembly.FullName)));
 
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IProjectTaskService, ProjectTaskService>();
         services.AddScoped<IProjectTransactionService, ProjectTransactionService>();
         services.AddScoped<IProgressPaymentService, ProgressPaymentService>();
         services.AddScoped<IProjectDocumentService, ProjectDocumentService>();
+        services.AddScoped<IProjectChangeOrderService, ProjectChangeOrderService>();
         services.AddScoped<IProjectFinancialService, ProjectFinancialService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));

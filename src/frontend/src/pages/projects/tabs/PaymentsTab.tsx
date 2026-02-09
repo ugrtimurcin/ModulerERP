@@ -50,7 +50,10 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
                 projectId,
                 date: createForm.date,
                 currentAmount: typeof createForm.currentAmount === 'string' ? parseFloat(createForm.currentAmount) : createForm.currentAmount,
-                retentionRate: typeof createForm.retentionRate === 'string' ? parseFloat(createForm.retentionRate) : createForm.retentionRate
+                retentionRate: typeof createForm.retentionRate === 'string' ? parseFloat(createForm.retentionRate) : createForm.retentionRate,
+                materialOnSiteAmount: typeof createForm.materialOnSiteAmount === 'string' ? parseFloat(createForm.materialOnSiteAmount) : (createForm.materialOnSiteAmount || 0),
+                advanceDeductionAmount: typeof createForm.advanceDeductionAmount === 'string' ? parseFloat(createForm.advanceDeductionAmount) : (createForm.advanceDeductionAmount || 0),
+                taxWithholdingAmount: typeof createForm.taxWithholdingAmount === 'string' ? parseFloat(createForm.taxWithholdingAmount) : (createForm.taxWithholdingAmount || 0)
             } as CreateProgressPaymentDto);
 
             setIsCreateModalOpen(false);
@@ -154,24 +157,82 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
                 title={t('projects.payments.createHakedis')}
             >
                 <div className="space-y-4 py-4">
-                    <Input
-                        label={t('finance.exchangeRates.date')}
-                        type="date"
-                        value={createForm.date}
-                        onChange={(e) => setCreateForm({ ...createForm, date: e.target.value })}
-                    />
-                    <Input
-                        label="Current Amount"
-                        type="number"
-                        value={createForm.currentAmount}
-                        onChange={(e) => setCreateForm({ ...createForm, currentAmount: parseFloat(e.target.value) })}
-                    />
-                    <Input
-                        label="Retention Rate (%)"
-                        type="number"
-                        value={createForm.retentionRate}
-                        onChange={(e) => setCreateForm({ ...createForm, retentionRate: parseFloat(e.target.value) })}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label={t('finance.exchangeRates.date')}
+                            type="date"
+                            value={createForm.date}
+                            onChange={(e) => setCreateForm({ ...createForm, date: e.target.value })}
+                        />
+                        <Input
+                            label="Retention Rate (%)"
+                            type="number"
+                            value={createForm.retentionRate}
+                            onChange={(e) => setCreateForm({ ...createForm, retentionRate: parseFloat(e.target.value) })}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <h4 className="font-medium text-sm border-b pb-1">Progress Details</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Input
+                                label="Current Work Amount"
+                                type="number"
+                                value={createForm.currentAmount}
+                                onChange={(e) => setCreateForm({ ...createForm, currentAmount: parseFloat(e.target.value) })}
+                            />
+                            <Input
+                                label={t('projects.payments.materialOnSite')}
+                                type="number"
+                                value={createForm.materialOnSiteAmount || 0}
+                                onChange={(e) => setCreateForm({ ...createForm, materialOnSiteAmount: parseFloat(e.target.value) })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h4 className="font-medium text-sm border-b pb-1">Deductions</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Input
+                                label={t('projects.payments.advanceDeduction')}
+                                type="number"
+                                value={createForm.advanceDeductionAmount || 0}
+                                onChange={(e) => setCreateForm({ ...createForm, advanceDeductionAmount: parseFloat(e.target.value) })}
+                            />
+                            <Input
+                                label={t('projects.payments.taxWithholding')}
+                                type="number"
+                                value={createForm.taxWithholdingAmount || 0}
+                                onChange={(e) => setCreateForm({ ...createForm, taxWithholdingAmount: parseFloat(e.target.value) })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-muted p-3 rounded-md space-y-1 text-sm">
+                        <div className="flex justify-between">
+                            <span>Gross Amount:</span>
+                            <span>{new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format((createForm.currentAmount || 0) + (createForm.materialOnSiteAmount || 0))}</span>
+                        </div>
+                        <div className="flex justify-between text-red-500">
+                            <span>Retention ({createForm.retentionRate}%):</span>
+                            <span>-{new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format((createForm.currentAmount || 0) * ((createForm.retentionRate || 0) / 100))}</span>
+                        </div>
+                        <div className="flex justify-between text-red-500">
+                            <span>Other Deductions:</span>
+                            <span>-{new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format((createForm.advanceDeductionAmount || 0) + (createForm.taxWithholdingAmount || 0))}</span>
+                        </div>
+                        <div className="flex justify-between font-bold border-t pt-1 mt-1">
+                            <span>{t('projects.payments.netAmount')}:</span>
+                            <span className="text-green-600">
+                                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
+                                    ((createForm.currentAmount || 0) + (createForm.materialOnSiteAmount || 0)) -
+                                    ((createForm.currentAmount || 0) * ((createForm.retentionRate || 0) / 100)) -
+                                    (createForm.advanceDeductionAmount || 0) -
+                                    (createForm.taxWithholdingAmount || 0)
+                                )}
+                            </span>
+                        </div>
+                    </div>
 
                     <div className="flex justify-end space-x-2 mt-4">
                         <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>{t('common.cancel')}</Button>

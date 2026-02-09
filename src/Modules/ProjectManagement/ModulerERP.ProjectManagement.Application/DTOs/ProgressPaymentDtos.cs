@@ -11,6 +11,9 @@ public record ProgressPaymentDto(
     decimal CurrentAmount,
     decimal RetentionRate,
     decimal RetentionAmount,
+    decimal MaterialOnSiteAmount,
+    decimal AdvanceDeductionAmount,
+    decimal TaxWithholdingAmount,
     decimal NetPayableAmount,
     ProgressPaymentStatus Status
 );
@@ -19,5 +22,8 @@ public record CreateProgressPaymentDto(
     Guid ProjectId,
     DateTime Date,
     decimal CurrentAmount,
+    decimal MaterialOnSiteAmount,
+    decimal AdvanceDeductionAmount,
+    decimal TaxWithholdingAmount,
     decimal RetentionRate
 );

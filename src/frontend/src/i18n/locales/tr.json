@@ -899,7 +899,21 @@
             "createHakedis": "Hakediş Oluştur",
             "paymentNo": "Hakediş No",
             "netAmount": "Net Tutar",
+            "materialOnSite": "İhzar (Malzeme)",
+            "advanceDeduction": "Avans Kesintisi",
+            "taxWithholding": "Stopaj (%3)",
             "status": "Durum"
+        },
+        "changeOrders": {
+            "create": "Zeyilname Oluştur",
+            "createTitle": "Yeni Zeyilname Talebi",
+            "formTitle": "Başlık",
+            "description": "Açıklama",
+            "amountChange": "Tutar Değişimi (+/-)",
+            "timeExtension": "Süre Uzatımı (Gün)",
+            "title": "Başlık",
+            "approveConfirmation": "Bu zeyilnameyi onaylamak istediğinizden emin misiniz? Sözleşme tutarı ve süresi güncellenecektir.",
+            "rejectConfirmation": "Bu zeyilnameyi reddetmek istediğinizden emin misiniz?"
         }
     }
 }

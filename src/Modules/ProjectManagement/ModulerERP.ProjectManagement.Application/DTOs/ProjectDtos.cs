@@ -17,7 +17,9 @@ public record ProjectDto(
     DateTime? ActualFinishDate,
     ProjectStatus Status,
     decimal CompletionPercentage,
-    ProjectBudgetDto Budget
+    // Budgeting V2
+    List<ProjectBudgetLineDto> BudgetLines,
+    decimal TotalBudget
 );
 
 public record CreateProjectDto(
@@ -39,10 +41,33 @@ public record UpdateProjectDto(
     DateTime? ActualFinishDate
 );
 
-public record ProjectBudgetDto(
-    decimal TotalBudget,
-    decimal MaterialBudget,
-    decimal LaborBudget,
-    decimal SubcontractorBudget,
-    decimal ExpenseBudget
+public record ProjectBudgetLineDto(
+    Guid Id,
+    Guid ProjectId,
+    string CostCode,
+    string Description,
+    decimal Quantity,
+    Guid UnitOfMeasureId,
+    decimal UnitPrice,
+    decimal TotalAmount,
+    BudgetCategory Category
+);
+
+public record CreateBudgetLineDto(
+    Guid ProjectId,
+    string CostCode,
+    string Description,
+    decimal Quantity,
+    Guid UnitOfMeasureId,
+    decimal UnitPrice,
+    BudgetCategory Category
+);
+
+public record UpdateBudgetLineDto(
+    string CostCode,
+    string Description,
+    decimal Quantity,
+    Guid UnitOfMeasureId,
+    decimal UnitPrice,
+    BudgetCategory Category
 );

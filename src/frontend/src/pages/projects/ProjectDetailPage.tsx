@@ -10,6 +10,7 @@ import { FinancialsTab } from './tabs/FinancialsTab';
 import { PaymentsTab } from './tabs/PaymentsTab';
 import { TasksTab } from './tabs/TasksTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
+import { ChangeOrdersTab } from './tabs/ChangeOrdersTab';
 
 export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' | 'edit' }) {
     const { id } = useParams();
@@ -87,7 +88,9 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
         ...(mode !== 'create' ? [
             { id: 'tasks', label: t('projects.tabs.tasks') },
             { id: 'budget', label: t('projects.tabs.budget') },
+            { id: 'budget', label: t('projects.tabs.budget') },
             { id: 'payments', label: t('projects.tabs.payments') },
+            { id: 'changeOrders', label: t('projects.tabs.changeOrders') },
             { id: 'documents', label: t('projects.tabs.documents') }
         ] : [])
     ];
@@ -189,6 +192,10 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
 
                 {activeTab === 'payments' && id && (
                     <PaymentsTab projectId={id} />
+                )}
+
+                {activeTab === 'changeOrders' && id && (
+                    <ChangeOrdersTab projectId={id} />
                 )}
 
                 {activeTab === 'documents' && id && (

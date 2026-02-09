@@ -30,12 +30,45 @@ export const ProjectTransactionType = {
 } as const;
 export type ProjectTransactionType = typeof ProjectTransactionType[keyof typeof ProjectTransactionType];
 
-export interface ProjectBudget {
-    totalBudget: number;
-    materialBudget: number;
-    laborBudget: number;
-    subcontractorBudget: number;
-    expenseBudget: number;
+export const BudgetCategory = {
+    Material: 0,
+    Labor: 1,
+    Subcontractor: 2,
+    Expense: 3,
+    Equipment: 4,
+    Overhead: 5
+} as const;
+export type BudgetCategory = typeof BudgetCategory[keyof typeof BudgetCategory];
+
+export interface ProjectBudgetLineDto {
+    id: string;
+    projectId: string;
+    costCode: string;
+    description: string;
+    quantity: number;
+    unitOfMeasureId: string;
+    unitPrice: number;
+    totalAmount: number;
+    category: BudgetCategory;
+}
+
+export interface CreateBudgetLineDto {
+    projectId: string;
+    costCode: string;
+    description: string;
+    quantity: number;
+    unitOfMeasureId: string;
+    unitPrice: number;
+    category: BudgetCategory;
+}
+
+export interface UpdateBudgetLineDto {
+    costCode: string;
+    description: string;
+    quantity: number;
+    unitOfMeasureId: string;
+    unitPrice: number;
+    category: BudgetCategory;
 }
 
 export interface ProjectDto {
@@ -52,7 +85,8 @@ export interface ProjectDto {
     actualFinishDate?: string;
     status: ProjectStatus;
     completionPercentage: number;
-    budget: ProjectBudget;
+    budgetLines: ProjectBudgetLineDto[];
+    totalBudget: number;
 }
 
 export interface CreateProjectDto {
@@ -151,6 +185,9 @@ export interface ProgressPaymentDto {
     currentAmount: number;
     retentionRate: number;
     retentionAmount: number;
+    materialOnSiteAmount: number;
+    advanceDeductionAmount: number;
+    taxWithholdingAmount: number;
     netPayableAmount: number;
     status: ProgressPaymentStatus;
 }
@@ -159,6 +196,9 @@ export interface CreateProgressPaymentDto {
     projectId: string;
     date: string;
     currentAmount: number;
+    materialOnSiteAmount: number;
+    advanceDeductionAmount: number;
+    taxWithholdingAmount: number;
     retentionRate: number;
 }
 
@@ -195,4 +235,26 @@ export interface ProjectFinancialSummaryDto {
     projectedProfit: number;
     currencyCode: string;
     costBreakdown: ProjectCostBreakdownDto[];
+}
+
+export interface ProjectChangeOrderDto {
+    id: string;
+    projectId: string;
+    orderNo: number;
+    title: string;
+    description: string;
+    amountChange: number;
+    timeExtensionDays: number;
+    status: number;
+    requestDate: string;
+    approvalDate: string;
+    approverId?: string;
+}
+
+export interface CreateChangeOrderDto {
+    projectId: string;
+    title: string;
+    description: string;
+    amountChange: number;
+    timeExtensionDays: number;
 }

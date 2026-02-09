@@ -52,18 +52,39 @@ public class ProjectsController : BaseApiController
         }
     }
 
-    [HttpPut("{id}/budget")]
-    public async Task<ActionResult> UpdateBudget(Guid id, ProjectBudgetDto dto)
+    [HttpPost("{id}/budget-lines")]
+    public async Task<ActionResult<ProjectBudgetLineDto>> AddBudgetLine(Guid id, CreateBudgetLineDto dto)
     {
         try
         {
-            await _projectService.UpdateBudgetAsync(TenantId, id, dto);
+            var result = await _projectService.AddBudgetLineAsync(TenantId, id, dto);
+            return OkResult(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpPut("{id}/budget-lines/{lineId}")]
+    public async Task<ActionResult> UpdateBudgetLine(Guid id, Guid lineId, UpdateBudgetLineDto dto)
+    {
+        try
+        {
+            await _projectService.UpdateBudgetLineAsync(TenantId, id, lineId, dto);
             return Ok(new { success = true });
         }
         catch (KeyNotFoundException)
         {
             return NotFound();
         }
+    }
+
+    [HttpDelete("{id}/budget-lines/{lineId}")]
+    public async Task<ActionResult> DeleteBudgetLine(Guid id, Guid lineId)
+    {
+        await _projectService.DeleteBudgetLineAsync(TenantId, id, lineId);
+        return Ok(new { success = true });
     }
 
     [HttpDelete("{id}")]
