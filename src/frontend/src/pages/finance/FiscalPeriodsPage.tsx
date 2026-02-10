@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Calendar, Lock, Unlock, Plus } from 'lucide-react';
 import { api } from '../../services/api';
 import { DataTable, Button, useToast } from '@/components/ui';
@@ -26,6 +27,7 @@ interface FiscalPeriodDto {
 }
 
 const FiscalPeriodsPage: React.FC = () => {
+    const { t } = useTranslation();
     const toast = useToast();
     const [periods, setPeriods] = useState<FiscalPeriodDto[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,11 +44,11 @@ const FiscalPeriodsPage: React.FC = () => {
             }
         } catch (error) {
             console.error(error);
-            toast.error('Error', 'Failed to load periods');
+            toast.error(t('common.error'), t('common.loadFailed'));
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [toast, t]);
 
     useEffect(() => {
         loadData();
@@ -56,13 +58,13 @@ const FiscalPeriodsPage: React.FC = () => {
         try {
             const res = await api.finance.fiscalPeriods.generate(generateYear);
             if (res.success) { // ApiResponse is { success: boolean, data?: T, error?: string }
-                toast.success('Success', `Periods for ${generateYear} generated.`);
+                toast.success(t('common.success'), t('finance.periods.generated', { year: generateYear }));
                 loadData();
             } else {
-                toast.error('Error', res.error || 'Failed to generate');
+                toast.error(t('common.error'), res.error || t('finance.periods.generateFailed'));
             }
         } catch (error) {
-            toast.error('Error', 'Failed to generate');
+            toast.error(t('common.error'), t('finance.periods.generateFailed'));
         }
     };
 
@@ -75,51 +77,56 @@ const FiscalPeriodsPage: React.FC = () => {
             };
             const res = await api.finance.fiscalPeriods.update(id, payload);
             if (res.success) {
-                toast.success('Success', 'Status updated');
+                toast.success(t('common.success'), t('finance.periods.statusUpdated'));
                 loadData();
             }
         } catch (error) {
-            toast.error('Error', 'Update failed');
+            toast.error(t('common.error'), t('common.updateFailed'));
         }
     }
 
     const columns: Column<FiscalPeriodDto>[] = [
-        { key: 'code', header: 'Code', render: (row) => <span className="font-mono">{row.code}</span> },
-        { key: 'name', header: 'Name' },
+        { key: 'code', header: t('finance.periods.code'), render: (row) => <span className="font-mono">{row.code}</span> },
+        { key: 'name', header: t('finance.periods.name') },
         {
             key: 'startDate',
-            header: 'Start Date',
+            header: t('finance.periods.startDate'),
             render: (row) => new Date(row.startDate).toLocaleDateString()
         },
         {
             key: 'endDate',
-            header: 'End Date',
+            header: t('finance.periods.endDate'),
             render: (row) => new Date(row.endDate).toLocaleDateString()
         },
         {
             key: 'status',
-            header: 'Status',
+            header: t('finance.periods.status'),
             render: (row) => {
                 let color = 'bg-gray-100 text-gray-800';
                 if (row.status === 'Open') color = 'bg-green-100 text-green-800';
                 if (row.status === 'Closed') color = 'bg-yellow-100 text-yellow-800';
                 if (row.status === 'Locked') color = 'bg-red-100 text-red-800';
+
+                // Map status string to translated status
+                const statusKey = row.status as keyof typeof PeriodStatus | string;
+                // If row.status is "Open", we want t('finance.periods.statuses.Open')
+
                 return (
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>
-                        {row.status}
+                        {t(`finance.periods.statuses.${statusKey}`)}
                     </span>
                 );
             }
         },
         {
             key: 'id',
-            header: 'Actions',
+            header: t('common.actions'),
             render: (row) => (
                 <div className="flex gap-2">
                     {row.status !== 'Open' && (
                         <button
                             onClick={() => handleStatusChange(row.id, PeriodStatus.Open)}
-                            className="p-1 hover:bg-gray-100 rounded text-green-600" title="Reopen"
+                            className="p-1 hover:bg-gray-100 rounded text-green-600" title={t('finance.periods.reopen')}
                         >
                             <Unlock className="w-4 h-4" />
                         </button>
@@ -127,7 +134,7 @@ const FiscalPeriodsPage: React.FC = () => {
                     {row.status === 'Open' && (
                         <button
                             onClick={() => handleStatusChange(row.id, PeriodStatus.Closed)}
-                            className="p-1 hover:bg-gray-100 rounded text-yellow-600" title="Close"
+                            className="p-1 hover:bg-gray-100 rounded text-yellow-600" title={t('finance.periods.close')}
                         >
                             <Calendar className="w-4 h-4" />
                         </button>
@@ -135,7 +142,7 @@ const FiscalPeriodsPage: React.FC = () => {
                     {row.status !== 'Locked' && (
                         <button
                             onClick={() => handleStatusChange(row.id, PeriodStatus.Locked)}
-                            className="p-1 hover:bg-gray-100 rounded text-red-600" title="Lock"
+                            className="p-1 hover:bg-gray-100 rounded text-red-600" title={t('finance.periods.lock')}
                         >
                             <Lock className="w-4 h-4" />
                         </button>
@@ -149,8 +156,8 @@ const FiscalPeriodsPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold">Fiscal Periods</h1>
-                    <p className="text-[hsl(var(--muted-foreground))]">Manage accounting periods</p>
+                    <h1 className="text-2xl font-bold">{t('finance.periods.title')}</h1>
+                    <p className="text-[hsl(var(--muted-foreground))]">{t('finance.periods.subtitle')}</p>
                 </div>
                 <div className="flex gap-2 items-center">
                     <input
@@ -161,7 +168,7 @@ const FiscalPeriodsPage: React.FC = () => {
                     />
                     <Button onClick={handleGenerate}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Generate {generateYear}
+                        {t('finance.periods.generate')} {generateYear}
                     </Button>
                 </div>
             </div>

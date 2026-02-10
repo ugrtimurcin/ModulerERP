@@ -52,12 +52,12 @@ public class ProjectsController : BaseApiController
         }
     }
 
-    [HttpPost("{id}/budget-lines")]
-    public async Task<ActionResult<ProjectBudgetLineDto>> AddBudgetLine(Guid id, CreateBudgetLineDto dto)
+    [HttpPost("{id}/boq-items")]
+    public async Task<ActionResult<BillOfQuantitiesItemDto>> AddBoQItem(Guid id, CreateBoQItemDto dto)
     {
         try
         {
-            var result = await _projectService.AddBudgetLineAsync(TenantId, id, dto);
+            var result = await _projectService.AddBoQItemAsync(TenantId, id, dto);
             return OkResult(result);
         }
         catch (KeyNotFoundException)
@@ -66,12 +66,12 @@ public class ProjectsController : BaseApiController
         }
     }
 
-    [HttpPut("{id}/budget-lines/{lineId}")]
-    public async Task<ActionResult> UpdateBudgetLine(Guid id, Guid lineId, UpdateBudgetLineDto dto)
+    [HttpPut("{id}/boq-items/{itemId}")]
+    public async Task<ActionResult> UpdateBoQItem(Guid id, Guid itemId, UpdateBoQItemDto dto)
     {
         try
         {
-            await _projectService.UpdateBudgetLineAsync(TenantId, id, lineId, dto);
+            await _projectService.UpdateBoQItemAsync(TenantId, id, itemId, dto);
             return Ok(new { success = true });
         }
         catch (KeyNotFoundException)
@@ -80,10 +80,10 @@ public class ProjectsController : BaseApiController
         }
     }
 
-    [HttpDelete("{id}/budget-lines/{lineId}")]
-    public async Task<ActionResult> DeleteBudgetLine(Guid id, Guid lineId)
+    [HttpDelete("{id}/boq-items/{itemId}")]
+    public async Task<ActionResult> DeleteBoQItem(Guid id, Guid itemId)
     {
-        await _projectService.DeleteBudgetLineAsync(TenantId, id, lineId);
+        await _projectService.DeleteBoQItemAsync(TenantId, id, itemId);
         return Ok(new { success = true });
     }
 

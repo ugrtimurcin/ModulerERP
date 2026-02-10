@@ -1,6 +1,7 @@
 using ModulerERP.ProjectManagement.Domain.Enums;
 using ModulerERP.SharedKernel.Entities;
 using ModulerERP.SharedKernel.Interfaces;
+using ModulerERP.SharedKernel.ValueObjects;
 
 namespace ModulerERP.ProjectManagement.Domain.Entities;
 
@@ -13,10 +14,18 @@ public class Project : BaseEntity
     // Relationships
     public Guid? CustomerId { get; set; }
     public Guid? ProjectManagerId { get; set; }
+    public Guid? VirtualWarehouseId { get; set; } // Linked to Inventory
 
     // Commercial
     public Guid ContractCurrencyId { get; set; }
     public decimal ContractAmount { get; set; }
+    
+    // TRNC Financial Settings
+    public decimal DefaultRetentionRate { get; set; } = 0.10m; // 10%
+    public decimal DefaultWithholdingTaxRate { get; set; } = 0.04m; // 4%
+
+    // Location
+    public Address? SiteAddress { get; set; }
 
     // Dates
     public DateTime StartDate { get; set; }
@@ -24,16 +33,20 @@ public class Project : BaseEntity
     public DateTime? ActualFinishDate { get; set; }
 
     // State
-    // State
     public ProjectStatus Status { get; set; }
     public decimal CompletionPercentage { get; set; }
     
-    // Budgeting (V2.0)
-    public ICollection<ProjectBudgetLine> BudgetLines { get; set; } = new List<ProjectBudgetLine>();
+    // Budgeting (V2.0 - BoQ)
+    public ICollection<BillOfQuantitiesItem> BoQItems { get; set; } = new List<BillOfQuantitiesItem>();
 
-    public decimal GetTotalBudget()
+    public decimal GetTotalContractAmount()
     {
-        return BudgetLines.Sum(x => x.TotalAmount);
+        return BoQItems.Sum(x => x.TotalContractAmount);
+    }
+
+    public decimal GetTotalEstimatedCost()
+    {
+        return BoQItems.Sum(x => x.TotalEstimatedCost);
     }
     
     // Change Management (Zeyilname)

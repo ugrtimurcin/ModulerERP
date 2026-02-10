@@ -85,7 +85,7 @@ export function CommissionRulesPage() {
         {
             key: 'minTargetAmount',
             header: t('hr.minTarget'),
-            render: (r) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(r.minTargetAmount)
+            render: (r) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(r.minTargetAmount)
         },
         {
             key: 'percentage',

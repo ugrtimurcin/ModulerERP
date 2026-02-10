@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, DollarSign } from 'lucide-react';
 import { api } from '../../services/api';
 import { DataTable, Button, useToast } from '@/components/ui';
@@ -31,6 +32,7 @@ const PAYMENT_METHODS = [
 ];
 
 const PaymentsPage: React.FC = () => {
+    const { t } = useTranslation();
     const toast = useToast();
 
     // State
@@ -70,11 +72,11 @@ const PaymentsPage: React.FC = () => {
 
         } catch (error) {
             console.error(error);
-            toast.error('Error', 'Failed to load data');
+            toast.error(t('common.error'), t('common.loadFailed'));
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [toast, t]);
 
     useEffect(() => {
         loadData();
@@ -108,49 +110,74 @@ const PaymentsPage: React.FC = () => {
 
             const res = await api.finance.payments.create(payload);
             if (res.success) {
-                toast.success('Success', 'Payment recorded');
+                toast.success(t('common.success'), t('finance.payments.created', 'Payment recorded'));
                 setIsDialogOpen(false);
                 loadData();
             } else {
-                toast.error('Error', res.error || 'Failed to create payment');
+                toast.error(t('common.error'), res.error || t('finance.payments.createFailed', 'Failed to create payment'));
             }
         } catch (error) {
-            toast.error('Error', 'Unexpected error');
+            toast.error(t('common.error'), t('common.unexpectedError'));
         }
     };
 
     const columns: Column<PaymentDto>[] = [
-        { key: 'paymentNumber', header: 'Number', render: (row) => <span className="font-mono">{row.paymentNumber}</span> },
+        { key: 'paymentNumber', header: t('common.number'), render: (row) => <span className="font-mono">{row.paymentNumber}</span> },
         {
             key: 'paymentDate',
-            header: 'Date',
+            header: t('finance.payments.date'),
             render: (row) => new Date(row.paymentDate).toLocaleDateString()
         },
         {
             key: 'direction',
-            header: 'Direction',
-            render: (row) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.direction === 'Incoming' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {row.direction}
-                </span>
-            )
+            header: t('finance.payments.direction'),
+            render: (row) => {
+                // Direction comes as string "Incoming" or "Outgoing" from backend usually, or mapped?
+                // DTO says string.
+                // If it matches keys in en.json (Incoming, Outgoing), we can try to map.
+                // The keys in json are "1" and "2".
+                // Let's assume the string matches the english label or map it.
+                // Or better, use the enum value if available. But here we have strings.
+                // Quick translation if string matches 'Incoming' / 'Outgoing'
+                const dirMap: Record<string, string> = { "Incoming": "1", "Outgoing": "2" };
+                const key = dirMap[row.direction] || "1";
+                const label = t(`finance.payments.directions.${key}`);
+
+                return (
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.direction === 'Incoming' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {label}
+                    </span>
+                );
+            }
         },
-        { key: 'partnerId', header: 'Partner', render: (row) => partners.find(p => p.id === row.partnerId)?.name || 'Unknown' },
-        { key: 'amount', header: 'Amount', render: (row) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TRY' }).format(row.amount) }, // Hardcoded currency for now
-        { key: 'method', header: 'Method' },
-        { key: 'status', header: 'Status' }
+        { key: 'partnerId', header: t('finance.payments.partner'), render: (row) => partners.find(p => p.id === row.partnerId)?.name || t('common.unknown') },
+        { key: 'amount', header: t('finance.payments.amount'), render: (row) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TRY' }).format(row.amount) }, // Hardcoded currency for now
+        {
+            key: 'method',
+            header: t('finance.payments.method'),
+            render: (row) => {
+                // row.method is likely string "Cash", "Bank Transfer" etc.
+                const methodMap: Record<string, string> = {
+                    "Cash": "1", "Bank Transfer": "2", "Check": "3", "Credit Card": "4", "Other": "5"
+                };
+                // Allow reverse lookup or direct if integer? DTO says string.
+                const key = methodMap[row.method] || "5";
+                return t(`finance.payments.methods.${key}`);
+            }
+        },
+        { key: 'status', header: t('finance.payments.status') }
     ];
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold">Payments</h1>
-                    <p className="text-[hsl(var(--muted-foreground))]">Manage incoming and outgoing payments</p>
+                    <h1 className="text-2xl font-bold">{t('finance.payments.title')}</h1>
+                    <p className="text-[hsl(var(--muted-foreground))]">{t('finance.payments.subtitle')}</p>
                 </div>
                 <Button onClick={handleCreate}>
                     <Plus className="w-4 h-4 mr-2" />
-                    New Payment
+                    {t('finance.payments.create')}
                 </Button>
             </div>
 
@@ -167,14 +194,14 @@ const PaymentsPage: React.FC = () => {
                         <div className="p-6 border-b dark:border-gray-700 flex justify-between items-center">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 <DollarSign className="w-5 h-5 text-green-600" />
-                                Record Payment
+                                {t('finance.payments.record')}
                             </h2>
                             <button onClick={() => setIsDialogOpen(false)} className="text-gray-500 hover:text-gray-700">&times;</button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Payment Date</label>
+                                    <label className="block text-sm font-medium mb-1">{t('finance.payments.date')}</label>
                                     <input
                                         type="date" required
                                         className="w-full p-2 border rounded-md dark:bg-gray-900"
@@ -183,32 +210,32 @@ const PaymentsPage: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Direction</label>
+                                    <label className="block text-sm font-medium mb-1">{t('finance.payments.direction')}</label>
                                     <select
                                         className="w-full p-2 border rounded-md dark:bg-gray-900"
                                         value={formData.direction}
                                         onChange={e => setFormData({ ...formData, direction: Number(e.target.value) })}
                                     >
-                                        {PAYMENT_DIRECTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                                        {PAYMENT_DIRECTIONS.map(d => <option key={d.value} value={d.value}>{t(`finance.payments.directions.${d.value}`)}</option>)}
                                     </select>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Partner</label>
+                                    <label className="block text-sm font-medium mb-1">{t('finance.payments.partner')}</label>
                                     <select
                                         required
                                         className="w-full p-2 border rounded-md dark:bg-gray-900"
                                         value={formData.partnerId}
                                         onChange={e => setFormData({ ...formData, partnerId: e.target.value })}
                                     >
-                                        <option value="">Select Partner</option>
+                                        <option value="">{t('common.select')}</option>
                                         {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Amount</label>
+                                    <label className="block text-sm font-medium mb-1">{t('finance.payments.amount')}</label>
                                     <input
                                         type="number" step="0.01" required
                                         className="w-full p-2 border rounded-md dark:bg-gray-900"
@@ -220,31 +247,31 @@ const PaymentsPage: React.FC = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Payment Method</label>
+                                    <label className="block text-sm font-medium mb-1">{t('finance.payments.method')}</label>
                                     <select
                                         className="w-full p-2 border rounded-md dark:bg-gray-900"
                                         value={formData.method}
                                         onChange={e => setFormData({ ...formData, method: Number(e.target.value) })}
                                     >
-                                        {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                                        {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{t(`finance.payments.methods.${m.value}`)}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Bank/Cash Account</label>
+                                    <label className="block text-sm font-medium mb-1">{t('finance.payments.account')}</label>
                                     <select
                                         required
                                         className="w-full p-2 border rounded-md dark:bg-gray-900"
                                         value={formData.accountId}
                                         onChange={e => setFormData({ ...formData, accountId: e.target.value })}
                                     >
-                                        <option value="">Select Account</option>
+                                        <option value="">{t('common.select')}</option>
                                         {accounts.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
                                     </select>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">Reference Number</label>
+                                <label className="block text-sm font-medium mb-1">{t('finance.payments.reference')}</label>
                                 <input
                                     type="text"
                                     className="w-full p-2 border rounded-md dark:bg-gray-900"
@@ -259,10 +286,10 @@ const PaymentsPage: React.FC = () => {
                                     onClick={() => setIsDialogOpen(false)}
                                     className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                                 >
-                                    Cancel
+                                    {t('common.cancel')}
                                 </button>
                                 <Button type="submit" disabled={loading}>
-                                    Record Payment
+                                    {t('finance.payments.record')}
                                 </Button>
                             </div>
                         </form>

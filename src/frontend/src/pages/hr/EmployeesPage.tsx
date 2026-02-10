@@ -112,12 +112,12 @@ export function EmployeesPage() {
 
     const getStatusBadge = (status: number) => {
         const variants: Record<number, { variant: 'success' | 'warning' | 'error' | 'default', label: string }> = {
-            0: { variant: 'success', label: 'Active' },
-            1: { variant: 'warning', label: 'On Leave' },
-            2: { variant: 'error', label: 'Terminated' },
-            3: { variant: 'default', label: 'Suspended' },
+            0: { variant: 'success', label: t('hr.statuses.active') },
+            1: { variant: 'warning', label: t('hr.statuses.onLeave') },
+            2: { variant: 'error', label: t('hr.statuses.terminated') },
+            3: { variant: 'default', label: t('hr.statuses.suspended') },
         };
-        const config = variants[status] || { variant: 'default', label: 'Unknown' };
+        const config = variants[status] || { variant: 'default', label: t('common.unknown') };
         return <Badge variant={config.variant}>{config.label}</Badge>;
     };
 

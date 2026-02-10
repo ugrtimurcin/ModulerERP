@@ -17,9 +17,10 @@ public record ProjectDto(
     DateTime? ActualFinishDate,
     ProjectStatus Status,
     decimal CompletionPercentage,
-    // Budgeting V2
-    List<ProjectBudgetLineDto> BudgetLines,
-    decimal TotalBudget
+    // Budgeting V2 (BoQ)
+    List<BillOfQuantitiesItemDto> BoQItems,
+    decimal TotalContractAmount, // Calculated from BoQ
+    decimal TotalEstimatedCost   // Calculated from BoQ
 );
 
 public record CreateProjectDto(
@@ -41,33 +42,39 @@ public record UpdateProjectDto(
     DateTime? ActualFinishDate
 );
 
-public record ProjectBudgetLineDto(
+public record BillOfQuantitiesItemDto(
     Guid Id,
     Guid ProjectId,
-    string CostCode,
+    Guid? ParentId,
+    string ItemCode,
     string Description,
     decimal Quantity,
     Guid UnitOfMeasureId,
-    decimal UnitPrice,
-    decimal TotalAmount,
+    decimal ContractUnitPrice,
+    decimal EstimatedUnitCost,
+    decimal TotalContractAmount,
+    decimal TotalEstimatedCost,
     BudgetCategory Category
 );
 
-public record CreateBudgetLineDto(
+public record CreateBoQItemDto(
     Guid ProjectId,
-    string CostCode,
+    Guid? ParentId,
+    string ItemCode,
     string Description,
     decimal Quantity,
     Guid UnitOfMeasureId,
-    decimal UnitPrice,
+    decimal ContractUnitPrice,
+    decimal EstimatedUnitCost,
     BudgetCategory Category
 );
 
-public record UpdateBudgetLineDto(
-    string CostCode,
+public record UpdateBoQItemDto(
+    string ItemCode,
     string Description,
     decimal Quantity,
     Guid UnitOfMeasureId,
-    decimal UnitPrice,
+    decimal ContractUnitPrice,
+    decimal EstimatedUnitCost,
     BudgetCategory Category
 );

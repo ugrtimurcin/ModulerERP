@@ -80,7 +80,7 @@ export function WorkShiftsPage() {
         {
             key: 'breakMinutes',
             header: t('hr.breakMinutes'),
-            render: (s) => <span>{s.breakMinutes} min</span>
+            render: (s) => <span>{s.breakMinutes} {t('hr.units.min')}</span>
         },
     ];
 

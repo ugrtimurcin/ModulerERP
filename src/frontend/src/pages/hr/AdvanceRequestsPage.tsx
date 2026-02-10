@@ -79,14 +79,29 @@ export function AdvanceRequestsPage() {
     };
 
     const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'Pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-            case 'Approved': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-            case 'Paid': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-            case 'Rejected': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-            case 'Deducted': return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-            default: return 'bg-gray-100';
+        // Status from backend name is English "Approved", "Pending" etc.
+        // We need to match it to translate.
+        // If status matches key, translate.
+        // Key mapping:
+        type StatusKey = 'Pending' | 'Approved' | 'Paid' | 'Rejected' | 'Deducted';
+        const key = status as StatusKey;
+
+        // Visual
+        let color = 'bg-gray-100';
+        switch (key) {
+            case 'Pending': color = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'; break;
+            case 'Approved': color = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'; break;
+            case 'Paid': color = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'; break;
+            case 'Rejected': color = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'; break;
+            case 'Deducted': color = 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'; break;
         }
+
+        // Translation
+        // const labelKey = key.toLowerCase() as keyof typeof t; 
+        // const label = t(`hr.advanceStatuses.${labelKey}`) || status;
+
+        return color;
+        // Original code returned color CLASS STRING.
     };
 
     const columns: Column<AdvanceRequest>[] = [
@@ -116,7 +131,7 @@ export function AdvanceRequestsPage() {
             header: t('common.status'),
             render: (r) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(r.statusName)}`}>
-                    {r.statusName}
+                    {t(`hr.advanceStatuses.${r.statusName.toLowerCase()}`) || r.statusName}
                 </span>
             )
         },

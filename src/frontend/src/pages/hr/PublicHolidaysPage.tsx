@@ -75,7 +75,7 @@ export function PublicHolidaysPage() {
                     </div>
                     <div>
                         <span className="font-semibold block">{h.name}</span>
-                        {h.isHalfDay && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Half Day</span>}
+                        {h.isHalfDay && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">{t('hr.isHalfDay')}</span>}
                     </div>
                 </div>
             ),

@@ -25,18 +25,20 @@ interface UomFormData {
     isActive: boolean;
 }
 
-const UOM_TYPES = [
-    { value: 1, label: 'Unit', icon: Layers },
-    { value: 2, label: 'Weight', icon: Scale },
-    { value: 3, label: 'Volume', icon: Archive }, // Box? Archive? 
-    { value: 4, label: 'Length', icon: Ruler },
-    { value: 5, label: 'Area', icon: Box },
-];
+
 
 export function UnitOfMeasuresPage() {
     const { t } = useTranslation();
     const toast = useToast();
     const dialog = useDialog();
+
+    const UOM_TYPES = [
+        { value: 1, label: t('inventory.uomTypes.1'), icon: Layers },
+        { value: 2, label: t('inventory.uomTypes.2'), icon: Scale },
+        { value: 3, label: t('inventory.uomTypes.3'), icon: Archive },
+        { value: 4, label: t('inventory.uomTypes.4'), icon: Ruler },
+        { value: 5, label: t('inventory.uomTypes.5'), icon: Box },
+    ];
 
     const [uoms, setUoms] = useState<UnitOfMeasure[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +60,7 @@ export function UnitOfMeasuresPage() {
         conversionFactor: 1,
         isActive: true,
     });
-    const [formErrors, setFormErrors] = useState<Partial<UomFormData>>({});
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     const loadUoms = useCallback(async () => {
         setIsLoading(true);
@@ -115,7 +117,7 @@ export function UnitOfMeasuresPage() {
     };
 
     const validateForm = (): boolean => {
-        const errors: Partial<UomFormData> = {};
+        const errors: Record<string, string> = {};
         if (!formData.code.trim()) {
             errors.code = t('common.required');
         }
@@ -123,8 +125,7 @@ export function UnitOfMeasuresPage() {
             errors.name = t('common.required');
         }
         if (formData.baseUnitId && formData.conversionFactor <= 0) {
-            // Factor must be > 0
-            // errors.conversionFactor = "Must be greater than 0"; // TODO: Translation
+            errors.conversionFactor = t('common.greaterThanZero');
         }
 
         setFormErrors(errors);
@@ -303,7 +304,7 @@ export function UnitOfMeasuresPage() {
                             required
                         />
                         <Input
-                            label="Name"
+                            label={t('common.name')}
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             error={formErrors.name}

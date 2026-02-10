@@ -43,9 +43,9 @@ export function PayrollPage() {
 
     const handleRunPayroll = async () => {
         const ok = await dialog.confirm({
-            title: 'Run Payroll',
-            message: `Generate payroll for ${getMonthName(new Date().getMonth())} ${new Date().getFullYear()}?`,
-            confirmText: 'Run Payroll',
+            title: t('hr.dialogs.runPayrollTitle'),
+            message: t('hr.dialogs.runPayrollMsg', { month: getMonthName(new Date().getMonth()), year: new Date().getFullYear() }),
+            confirmText: t('hr.runPayroll'),
         });
         if (!ok) return;
 
@@ -61,15 +61,16 @@ export function PayrollPage() {
     };
 
     const getMonthName = (month: number) => {
+        // Use browser locale naturally, or force specific locale if needed
         return new Date(2000, month, 1).toLocaleString('default', { month: 'long' });
     };
 
     const getStatusBadge = (status: number) => {
         const configs: Record<number, { variant: 'success' | 'warning' | 'info' | 'default', label: string }> = {
-            0: { variant: 'warning', label: 'Draft' },
-            1: { variant: 'info', label: 'Processing' },
-            2: { variant: 'success', label: 'Completed' },
-            3: { variant: 'default', label: 'Cancelled' },
+            0: { variant: 'warning', label: t('hr.payrollStatuses.draft') },
+            1: { variant: 'info', label: t('hr.payrollStatuses.processing') },
+            2: { variant: 'success', label: t('hr.payrollStatuses.completed') },
+            3: { variant: 'default', label: t('hr.payrollStatuses.cancelled') },
         };
         const cfg = configs[status] || configs[0];
         return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
@@ -77,7 +78,10 @@ export function PayrollPage() {
 
     const formatCurrency = (amount: number, code: string = 'TRY') => {
         if (amount === undefined || amount === null) return '-';
-        return `${code} ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Try to respect locale for currency formatting
+        // If code is TRY, use tr-TR, otherwise en-US or default
+        const locale = code === 'TRY' ? 'tr-TR' : 'en-US';
+        return new Intl.NumberFormat(locale, { style: 'currency', currency: code }).format(amount);
     };
 
     const columns: Column<PayrollRun>[] = [
@@ -93,7 +97,7 @@ export function PayrollPage() {
                         <p className="font-semibold">{getMonthName(run.periodMonth - 1)} {run.periodYear}</p>
                         {run.processedAt && (
                             <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                                Processed: {new Date(run.processedAt).toLocaleDateString()}
+                                {t('common.processed')}: {new Date(run.processedAt).toLocaleDateString()}
                             </p>
                         )}
                     </div>
@@ -124,7 +128,7 @@ export function PayrollPage() {
             header: t('hr.deductions'),
             render: (run) => (
                 <span className="font-mono text-red-600">
-                    -{formatCurrency(run.totalDeductions, run.currencyCode)}
+                    {formatCurrency(run.totalDeductions * -1, run.currencyCode)}
                 </span>
             ),
         },
@@ -181,7 +185,7 @@ export function PayrollPage() {
                             <DollarSign className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">YTD Gross</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.stats.ytdGross')}</p>
                             <p className="text-xl font-bold">{formatCurrency(totalGross)}</p>
                         </div>
                     </div>
@@ -192,7 +196,7 @@ export function PayrollPage() {
                             <FileText className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">YTD Net</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.stats.ytdNet')}</p>
                             <p className="text-xl font-bold">{formatCurrency(totalNet)}</p>
                         </div>
                     </div>
@@ -203,7 +207,7 @@ export function PayrollPage() {
                             <Calendar className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Payroll Runs</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.stats.payrollRuns')}</p>
                             <p className="text-xl font-bold">{runs.length}</p>
                         </div>
                     </div>

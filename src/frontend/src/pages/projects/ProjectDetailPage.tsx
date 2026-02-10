@@ -6,11 +6,12 @@ import { Button, Input } from '@/components/ui';
 import { projectService } from '@/services/projectService';
 import { ProjectStatus } from '@/types/project';
 import type { ProjectDto, CreateProjectDto, UpdateProjectDto } from '@/types/project';
-import { FinancialsTab } from './tabs/FinancialsTab';
 import { PaymentsTab } from './tabs/PaymentsTab';
 import { TasksTab } from './tabs/TasksTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
 import { ChangeOrdersTab } from './tabs/ChangeOrdersTab';
+import { BoQTab } from './tabs/BoQTab';
+import { DailyLogTab } from './tabs/DailyLogTab';
 
 export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' | 'edit' }) {
     const { id } = useParams();
@@ -87,8 +88,8 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
         { id: 'details', label: t('projects.tabs.details') },
         ...(mode !== 'create' ? [
             { id: 'tasks', label: t('projects.tabs.tasks') },
-            { id: 'budget', label: t('projects.tabs.budget') },
-            { id: 'budget', label: t('projects.tabs.budget') },
+            { id: 'boq', label: t('projects.tabs.boq') },
+            { id: 'daily-logs', label: t('projects.tabs.dailyLogs') },
             { id: 'payments', label: t('projects.tabs.payments') },
             { id: 'changeOrders', label: t('projects.tabs.changeOrders') },
             { id: 'documents', label: t('projects.tabs.documents') }
@@ -186,8 +187,12 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                     <TasksTab projectId={id} />
                 )}
 
-                {activeTab === 'budget' && id && (
-                    <FinancialsTab projectId={id} />
+                {activeTab === 'boq' && id && (
+                    <BoQTab projectId={id} />
+                )}
+
+                {activeTab === 'daily-logs' && id && (
+                    <DailyLogTab projectId={id} />
                 )}
 
                 {activeTab === 'payments' && id && (

@@ -13,9 +13,17 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
     public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
     public DbSet<ProjectTransaction> ProjectTransactions => Set<ProjectTransaction>();
     public DbSet<ProgressPayment> ProgressPayments => Set<ProgressPayment>();
+    public DbSet<ProgressPaymentDetail> ProgressPaymentDetails => Set<ProgressPaymentDetail>();
     public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
-    public DbSet<ProjectBudgetLine> ProjectBudgetLines => Set<ProjectBudgetLine>();
+    public DbSet<BillOfQuantitiesItem> BillOfQuantitiesItems => Set<BillOfQuantitiesItem>();
     public DbSet<ProjectChangeOrder> ProjectChangeOrders => Set<ProjectChangeOrder>();
+    public DbSet<ProjectResource> ProjectResources => Set<ProjectResource>();
+    public DbSet<DailyLog> DailyLogs => Set<DailyLog>();
+    public DbSet<DailyLogResourceUsage> DailyLogResourceUsages => Set<DailyLogResourceUsage>();
+    public DbSet<DailyLogMaterialUsage> DailyLogMaterialUsages => Set<DailyLogMaterialUsage>();
+    public DbSet<MaterialRequest> MaterialRequests => Set<MaterialRequest>();
+    public DbSet<MaterialRequestItem> MaterialRequestItems => Set<MaterialRequestItem>();
+    public DbSet<SubcontractorContract> SubcontractorContracts => Set<SubcontractorContract>();
 
     // Shared Audit Log (mapped to system_core schema)
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -46,12 +54,74 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.NewValues).HasColumnType("jsonb");
         });
         
-        // Configure Project Budget Lines
-        modelBuilder.Entity<ProjectBudgetLine>(entity =>
+        // Configure Project
+        modelBuilder.Entity<Project>(entity =>
+        {
+            entity.OwnsOne(p => p.SiteAddress);
+            entity.Property(e => e.ContractAmount).HasPrecision(18, 2);
+            entity.Property(e => e.DefaultRetentionRate).HasPrecision(5, 4);
+            entity.Property(e => e.DefaultWithholdingTaxRate).HasPrecision(5, 4);
+        });
+
+        // Configure Bill of Quantities (BoQ)
+        modelBuilder.Entity<BillOfQuantitiesItem>(entity =>
         {
             entity.Property(e => e.Quantity).HasPrecision(18, 4);
+            entity.Property(e => e.ContractUnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.EstimatedUnitCost).HasPrecision(18, 2);
+        });
+
+        // Configure Progress Payments
+        modelBuilder.Entity<ProgressPayment>(entity =>
+        {
+            entity.Property(e => e.GrossWorkAmount).HasPrecision(18, 2);
+            entity.Property(e => e.MaterialOnSiteAmount).HasPrecision(18, 2);
+            entity.Property(e => e.CumulativeTotalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.PreviousCumulativeAmount).HasPrecision(18, 2);
+            entity.Property(e => e.PeriodDeltaAmount).HasPrecision(18, 2);
+            entity.Property(e => e.RetentionAmount).HasPrecision(18, 2);
+            entity.Property(e => e.WithholdingTaxAmount).HasPrecision(18, 2);
+            entity.Property(e => e.AdvanceDeductionAmount).HasPrecision(18, 2);
+            entity.Property(e => e.NetPayableAmount).HasPrecision(18, 2);
+            
+            entity.Property(e => e.RetentionRate).HasPrecision(5, 4);
+            entity.Property(e => e.WithholdingTaxRate).HasPrecision(5, 4);
+        });
+
+        // Configure Progress Payment Details
+        modelBuilder.Entity<ProgressPaymentDetail>(entity =>
+        {
+            entity.Property(e => e.PreviousCumulativeQuantity).HasPrecision(18, 4);
+            entity.Property(e => e.CumulativeQuantity).HasPrecision(18, 4);
             entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
-            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+        });
+
+        // Configure Project Resources
+        modelBuilder.Entity<ProjectResource>(entity =>
+        {
+             entity.Property(e => e.HourlyCost).HasPrecision(18, 2);
+        });
+
+        // Configure Daily Logs
+        modelBuilder.Entity<DailyLogResourceUsage>(entity =>
+        {
+             entity.Property(e => e.HoursWorked).HasPrecision(18, 2);
+        });
+        modelBuilder.Entity<DailyLogMaterialUsage>(entity =>
+        {
+             entity.Property(e => e.Quantity).HasPrecision(18, 4);
+        });
+        
+        // Configure Material Requests
+        modelBuilder.Entity<MaterialRequestItem>(entity =>
+        {
+             entity.Property(e => e.Quantity).HasPrecision(18, 4);
+        });
+
+        // Configure Subcontractor Contracts
+        modelBuilder.Entity<SubcontractorContract>(entity =>
+        {
+             entity.Property(e => e.ContractAmount).HasPrecision(18, 2);
         });
 
         // Configure Project Change Orders

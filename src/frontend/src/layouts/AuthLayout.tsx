@@ -1,7 +1,9 @@
 import { Outlet, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores';
 
 export function AuthLayout() {
+    const { t } = useTranslation();
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     if (isAuthenticated) {
@@ -20,26 +22,26 @@ export function AuthLayout() {
             {/* Right side - Branding */}
             <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-indigo-600 to-purple-700 items-center justify-center p-12">
                 <div className="text-white text-center">
-                    <h1 className="text-4xl font-bold mb-4">ModulerERP</h1>
+                    <h1 className="text-4xl font-bold mb-4">{t('auth.brandTitle')}</h1>
                     <p className="text-lg opacity-90 max-w-md">
-                        TRNC Enterprise Resource Planning - Modular Monolith Architecture
+                        {t('auth.brandSubtitle')}
                     </p>
                     <div className="mt-12 grid grid-cols-2 gap-6 text-left">
                         <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                            <h3 className="font-semibold mb-1">9 Modules</h3>
-                            <p className="text-sm opacity-75">Complete ERP functionality</p>
+                            <h3 className="font-semibold mb-1">{t('auth.features.modules.title')}</h3>
+                            <p className="text-sm opacity-75">{t('auth.features.modules.desc')}</p>
                         </div>
                         <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                            <h3 className="font-semibold mb-1">86 Entities</h3>
-                            <p className="text-sm opacity-75">Comprehensive domain model</p>
+                            <h3 className="font-semibold mb-1">{t('auth.features.entities.title')}</h3>
+                            <p className="text-sm opacity-75">{t('auth.features.entities.desc')}</p>
                         </div>
                         <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                            <h3 className="font-semibold mb-1">Multi-Currency</h3>
-                            <p className="text-sm opacity-75">TRY, USD, EUR, GBP support</p>
+                            <h3 className="font-semibold mb-1">{t('auth.features.multiCurrency.title')}</h3>
+                            <p className="text-sm opacity-75">{t('auth.features.multiCurrency.desc')}</p>
                         </div>
                         <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                            <h3 className="font-semibold mb-1">Multi-Tenant</h3>
-                            <p className="text-sm opacity-75">Isolated tenant data</p>
+                            <h3 className="font-semibold mb-1">{t('auth.features.multiTenant.title')}</h3>
+                            <p className="text-sm opacity-75">{t('auth.features.multiTenant.desc')}</p>
                         </div>
                     </div>
                 </div>

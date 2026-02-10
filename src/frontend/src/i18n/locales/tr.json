@@ -40,8 +40,12 @@
         "from": "Kimden / Nereden",
         "to": "Kime / Nereye",
         "optional": "İsteğe Bağlı",
-        "tryAgain": "Tekrar Dene",
-        "anErrorOccurred": "Bir hata oluştu"
+        "period": "Dönem",
+        "periodStart": "Dönem Başlangıcı",
+        "periodEnd": "Dönem Bitişi",
+        "date": "Tarih",
+        "addSubItem": "Alt Kalem Ekle",
+        "close": "Kapat"
     },
     "auth": {
         "signIn": "Giriş Yap",
@@ -49,13 +53,33 @@
         "signOut": "Çıkış Yap",
         "email": "E-posta",
         "password": "Şifre",
-        "forgotPassword": "Şifremi Unuttum",
+        "forgotPassword": "Şifremi Unuttum?",
         "rememberMe": "Beni hatırla",
         "dontHaveAccount": "Hesabınız yok mu?",
         "alreadyHaveAccount": "Zaten hesabınız var mı?",
         "enterCredentials": "Sisteme erişmek için kimlik bilgilerinizi girin",
         "invalidCredentials": "Geçersiz e-posta veya şifre",
-        "demo": "Demo: admin@erp.local / Admin123!"
+        "demo": "Demo: admin@erp.local / Admin123!",
+        "brandTitle": "ModulerERP",
+        "brandSubtitle": "KKTC Kurumsal Kaynak Planlama - Modüler Monolit Mimari",
+        "features": {
+            "modules": {
+                "title": "9 Modül",
+                "desc": "Tam kapsamlı ERP fonksiyonları"
+            },
+            "entities": {
+                "title": "86 Varlık",
+                "desc": "Kapsamlı alan modeli"
+            },
+            "multiCurrency": {
+                "title": "Çoklu Para Birimi",
+                "desc": "TRY, USD, EUR, GBP desteği"
+            },
+            "multiTenant": {
+                "title": "Çoklu Kiracı",
+                "desc": "İzole kiracı verileri"
+            }
+        }
     },
     "nav": {
         "dashboard": "Kontrol Paneli",
@@ -69,11 +93,16 @@
         "contacts": "Kişiler",
         "leads": "Potansiyel Müşteriler",
         "opportunities": "Fırsatlar",
+        "tickets": "Destek Talepleri",
+        "tags": "Etiketler",
         "inventory": "Stok",
         "products": "Ürünler",
         "categories": "Kategoriler",
         "warehouses": "Depolar",
+        "brands": "Markalar",
         "stockLevels": "Stok Seviyeleri",
+        "stockMovements": "Stok Hareketleri",
+        "uom": "Ölçü Birimleri",
         "sales": "Satış",
         "quotes": "Teklifler",
         "orders": "Siparişler",
@@ -81,8 +110,12 @@
         "shipments": "Sevkiyatlar",
         "procurement": "Satın Alma",
         "requisitions": "Talepler",
+        "rfqs": "Teklif İstekleri (RFQ)",
+        "purchaseQuotes": "Satın Alma Teklifleri",
         "purchaseOrders": "Satın Alma Siparişleri",
         "goodsReceipts": "Mal Kabul",
+        "qualityControl": "Kalite Kontrol",
+        "purchaseReturns": "İadeler",
         "finance": "Finans",
         "accounts": "Hesaplar",
         "journalEntries": "Yevmiye Kayıtları",
@@ -96,12 +129,16 @@
         "payroll": "Bordro",
         "workShifts": "Çalışma Vardiyaları",
         "advanceRequests": "Avans Talepleri",
+        "publicHolidays": "Resmi Tatiller",
+        "commissionRules": "Komisyon Kuralları",
+        "attendanceLogs": "Devam Kayıtları",
         "fixedAssets": "Sabit Kıymetler",
         "assets": "Demirbaşlar",
         "assetCategories": "Demirbaş Kategorileri",
         "manufacturing": "Üretim",
         "bom": "Malzeme Listesi",
         "productionOrders": "Üretim Emirleri",
+        "projects": "Projeler",
         "reports": "Raporlar",
         "salesReports": "Satış Raporları",
         "inventoryReports": "Stok Raporları",
@@ -266,7 +303,9 @@
         "Contacted": "İletişime Geçildi",
         "Qualified": "Kalifiye",
         "Junk": "Gereksiz",
-        "Converted": "Dönüştürüldü"
+        "Converted": "Dönüştürüldü",
+        "titlePlaceholder": "Bay/Bayan",
+        "sourcePlaceholder": "örn. Web Sitesi, LinkedIn"
     },
     "opportunities": {
         "title": "Fırsatlar",
@@ -311,9 +350,23 @@
         "date": "Tarih & Saat",
         "isScheduled": "Takip gerekli mi?",
         "scheduled": "Planlandı",
-        "description": "Açıklama"
+        "description": "Açıklama",
+        "noActivities": "Aktivite bulunamadı"
     },
     "inventory": {
+        "productTypes": {
+            "1": "Stoklu",
+            "2": "Hizmet",
+            "3": "Stoksuz"
+        },
+        "uomTypes": {
+            "1": "Adet",
+            "2": "Ağırlık",
+            "3": "Hacim",
+            "4": "Uzunluk",
+            "5": "Alan"
+        },
+        "confirmDeleteUom": "Bu ölçü birimini silmek istediğinizden emin misiniz?",
         "categories": "Ürün Kategorileri",
         "categoriesSubtitle": "Ürün hiyerarşisi ve sınıflandırmasını yönetin",
         "createCategory": "Kategori Oluştur",
@@ -496,6 +549,63 @@
             "selectDateAndCurrency": "Lütfen tarih ve para birimi seçiniz",
             "fromCurrency": "Kaynak Para Birimi",
             "toCurrency": "Hedef Para Birimi (Baz)"
+        },
+        "accounts": {
+            "title": "Hesap Planı",
+            "subtitle": "Genel muhasebe hesaplarını yönetin",
+            "create": "Yeni Hesap",
+            "edit": "Hesap Düzenle",
+            "code": "Kod",
+            "name": "Ad",
+            "type": "Tip",
+            "parent": "Üst Hesap",
+            "isHeader": "Başlık Hesabı",
+            "description": "Açıklama",
+            "types": {
+                "1": "Varlık",
+                "2": "Yükümlülük",
+                "3": "Özkaynak",
+                "4": "Gelir",
+                "5": "Gider"
+            }
+        },
+        "payments": {
+            "title": "Ödemeler",
+            "subtitle": "Gelen ve giden ödemeleri yönetin",
+            "create": "Yeni Ödeme",
+            "record": "Ödeme Kaydet",
+            "date": "Ödeme Tarihi",
+            "amount": "Tutar",
+            "direction": "Yön",
+            "method": "Yöntem",
+            "partner": "İş Ortağı",
+            "account": "Hesap",
+            "reference": "Referans No",
+            "status": "Durum",
+            "directions": {
+                "1": "Gelen (Tahsilat)",
+                "2": "Giden (Ödeme)"
+            },
+            "methods": {
+                "1": "Nakit",
+                "2": "Banka Transferi",
+                "3": "Çek",
+                "4": "Kredi Kartı",
+                "5": "Diğer"
+            }
+        },
+        "periods": {
+            "title": "Mali Dönemler",
+            "subtitle": "Muhasebe dönemlerini yönetin",
+            "generate": "Oluştur",
+            "startDate": "Başlangıç",
+            "endDate": "Bitiş",
+            "status": "Durum",
+            "statuses": {
+                "Open": "Açık",
+                "Closed": "Kapalı",
+                "Locked": "Kilitli"
+            }
         },
         "journalEntries": {
             "title": "Yevmiye Kayıtları",
@@ -725,8 +835,59 @@
         "location": "Konum",
         "employee": "Çalışan",
         "employeeNotFound": "Çalışan Bulunamadı",
-        "scanError": "Error occurred / Bir hata meydana geldi",
-        "scanSuccess": "Tarama Başarılı"
+        "scanError": "Bir hata meydana geldi",
+        "scanSuccess": "Tarama Başarılı",
+        "statuses": {
+            "active": "Aktif",
+            "onLeave": "İzinli",
+            "terminated": "Ayrıldı",
+            "suspended": "Askıya Alındı"
+        },
+        "attendanceStatuses": {
+            "present": "Mevcut",
+            "absent": "Devamsız",
+            "late": "Geç Kaldı",
+            "leave": "İzinli",
+            "holiday": "Tatil"
+        },
+        "leaveStatuses": {
+            "pending": "Beklemede",
+            "approved": "Onaylandı",
+            "rejected": "Reddedildi",
+            "cancelled": "İptal Edildi"
+        },
+        "payrollStatuses": {
+            "draft": "Taslak",
+            "processing": "İşleniyor",
+            "completed": "Tamamlandı",
+            "cancelled": "İptal Edildi"
+        },
+        "advanceStatuses": {
+            "pending": "Beklemede",
+            "approved": "Onaylandı",
+            "paid": "Ödendi",
+            "rejected": "Reddedildi",
+            "deducted": "Maaştan Kesildi"
+        },
+        "stats": {
+            "total": "Toplam",
+            "ytdGross": "Yİ Brüt",
+            "ytdNet": "Yİ Net",
+            "payrollRuns": "Bordro Sayısı"
+        },
+        "dialogs": {
+            "approveLeaveTitle": "İzin Talebini Onayla",
+            "approveLeaveMsg": "{{name}} için {{days}} gün izni onaylıyor musunuz?",
+            "rejectLeaveTitle": "İzin Talebini Reddet",
+            "rejectLeaveMsg": "{{name}} kişisinin izin talebini reddediyor musunuz?",
+            "runPayrollTitle": "Bordro Oluştur",
+            "runPayrollMsg": "{{month}} {{year}} dönemi için bordro oluşturulsun mu?"
+        },
+        "units": {
+            "min": "dk",
+            "h": "s",
+            "m": "d"
+        }
     },
     "fixedAssets": {
         "assets": "Demirbaşlar",
@@ -840,6 +1001,17 @@
             "donation": "Bağış"
         }
     },
+    "budget": {
+        "category": "Bütçe Kategorisi",
+        "categories": {
+            "material": "Malzeme",
+            "labor": "İşçilik",
+            "subcontractor": "Taşeron",
+            "equipment": "Ekipman",
+            "expense": "Gider",
+            "overhead": "Genel Gider"
+        }
+    },
     "projects": {
         "title": "Projeler",
         "subtitle": "İnşaat ve mühendislik projelerini yönetin",
@@ -896,13 +1068,50 @@
             "noDocuments": "Doküman bulunamadı"
         },
         "payments": {
+            "title": "Hakedişler",
             "createHakedis": "Hakediş Oluştur",
             "paymentNo": "Hakediş No",
+            "grossAmount": "Brüt Tutar",
+            "deductions": "Kesintiler",
             "netAmount": "Net Tutar",
-            "materialOnSite": "İhzar (Malzeme)",
+            "status": "Durum",
+            "materialOnSite": "Sahadaki Malzeme",
             "advanceDeduction": "Avans Kesintisi",
-            "taxWithholding": "Stopaj (%3)",
-            "status": "Durum"
+            "invoice": "Faturala",
+            "paymentTitle": "Hakediş #{{number}}",
+            "statuses": {
+                "draft": "Taslak",
+                "approved": "Onaylandı",
+                "invoiced": "Faturalandı"
+            },
+            "grid": {
+                "code": "Kod",
+                "description": "Açıklama",
+                "prevQty": "Önceki Mik.",
+                "cumulQty": "Kümülatif Mik.",
+                "periodQty": "Dönem Mik.",
+                "price": "Birim Fiyat",
+                "periodAmt": "Dönem Tutarı",
+                "totalAmt": "Toplam Tutar"
+            }
+        },
+        "dailyLogs": {
+            "title": "Günlük Raporlar",
+            "addDailyLog": "Günlük Rapor Ekle",
+            "weather": "Hava Durumu",
+            "resources": "Kaynaklar",
+            "confirmApprove": "Bu günlük raporu onaylamak istediğinizden emin misiniz?",
+            "approved": "Günlük Rapor Onaylandı"
+        },
+        "boq": {
+            "title": "Metraj Cetveli (BoQ)",
+            "addItem": "Kalem Ekle",
+            "editItem": "Kalem Düzenle",
+            "itemCode": "Poz No",
+            "unitPrice": "Birim Fiyat (Gelir)",
+            "unitCost": "Birim Maliyet (Gider)",
+            "income": "Gelir",
+            "expense": "Gider"
         },
         "changeOrders": {
             "create": "Zeyilname Oluştur",

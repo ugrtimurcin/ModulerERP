@@ -3,9 +3,6 @@ import type {
     ProjectDto,
     CreateProjectDto,
     UpdateProjectDto,
-    ProjectBudgetLineDto,
-    CreateBudgetLineDto,
-    UpdateBudgetLineDto,
     ProjectTaskDto,
     CreateProjectTaskDto,
     UpdateProjectTaskDto,
@@ -18,7 +15,11 @@ import type {
     CreateProjectDocumentDto,
     ProjectFinancialSummaryDto,
     ProjectChangeOrderDto,
-    CreateChangeOrderDto
+    CreateChangeOrderDto,
+    BillOfQuantitiesItemDto,
+    CreateBoQItemDto,
+    UpdateBoQItemDto,
+    UpdateProgressPaymentDetailDto
 } from '../types/project';
 
 export const projectService = {
@@ -30,10 +31,10 @@ export const projectService = {
         update: (id: string, data: UpdateProjectDto) => request<void>(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: string) => request<void>(`/projects/${id}`, { method: 'DELETE' }),
 
-        // Budget Limits
-        addBudgetLine: (id: string, data: CreateBudgetLineDto) => request<ProjectBudgetLineDto>(`/projects/${id}/budget-lines`, { method: 'POST', body: JSON.stringify(data) }),
-        updateBudgetLine: (id: string, lineId: string, data: UpdateBudgetLineDto) => request<void>(`/projects/${id}/budget-lines/${lineId}`, { method: 'PUT', body: JSON.stringify(data) }),
-        deleteBudgetLine: (id: string, lineId: string) => request<void>(`/projects/${id}/budget-lines/${lineId}`, { method: 'DELETE' }),
+        // Bill of Quantities (BoQ)
+        addBoQItem: (id: string, data: CreateBoQItemDto) => request<BillOfQuantitiesItemDto>(`/projects/${id}/boq-items`, { method: 'POST', body: JSON.stringify(data) }),
+        updateBoQItem: (id: string, itemId: string, data: UpdateBoQItemDto) => request<void>(`/projects/${id}/boq-items/${itemId}`, { method: 'PUT', body: JSON.stringify(data) }),
+        deleteBoQItem: (id: string, itemId: string) => request<void>(`/projects/${id}/boq-items/${itemId}`, { method: 'DELETE' }),
     },
 
     // Tasks
@@ -53,9 +54,10 @@ export const projectService = {
 
     // Progress Payments (Hakediş)
     payments: {
-        getByProject: (projectId: string) => request<Array<ProgressPaymentDto>>(`/progresspayments/project/${projectId}`),
-        create: (data: CreateProgressPaymentDto) => request<ProgressPaymentDto>('/progresspayments', { method: 'POST', body: JSON.stringify(data) }),
-        approve: (id: string) => request<void>(`/progresspayments/${id}/approve`, { method: 'POST' }),
+        getByProject: (projectId: string) => request<Array<ProgressPaymentDto>>(`/projects/${projectId}/payments`),
+        create: (data: CreateProgressPaymentDto) => request<ProgressPaymentDto>(`/projects/${data.projectId}/payments`, { method: 'POST', body: JSON.stringify(data) }),
+        approve: (projectId: string, id: string) => request<void>(`/projects/${projectId}/payments/${id}/approve`, { method: 'POST' }),
+        updateDetail: (projectId: string, id: string, data: UpdateProgressPaymentDetailDto) => request<void>(`/projects/${projectId}/payments/${id}/details`, { method: 'PUT', body: JSON.stringify(data) }),
     },
 
     // Documents

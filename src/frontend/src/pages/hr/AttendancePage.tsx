@@ -47,16 +47,16 @@ export function AttendancePage() {
     const formatDuration = (mins: number) => {
         const hours = Math.floor(mins / 60);
         const minutes = mins % 60;
-        return `${hours}h ${minutes}m`;
+        return `${hours}${t('hr.units.h')} ${minutes}${t('hr.units.m')}`;
     };
 
     const getStatusBadge = (status: number) => {
         const configs: Record<number, { variant: 'success' | 'warning' | 'error' | 'default', label: string }> = {
-            0: { variant: 'success', label: 'Present' },
-            1: { variant: 'error', label: 'Absent' },
-            2: { variant: 'warning', label: 'Late' },
-            3: { variant: 'default', label: 'Leave' },
-            4: { variant: 'default', label: 'Holiday' },
+            0: { variant: 'success', label: t('hr.attendanceStatuses.present') },
+            1: { variant: 'error', label: t('hr.attendanceStatuses.absent') },
+            2: { variant: 'warning', label: t('hr.attendanceStatuses.late') },
+            3: { variant: 'default', label: t('hr.attendanceStatuses.leave') },
+            4: { variant: 'default', label: t('hr.attendanceStatuses.holiday') },
         };
         const cfg = configs[status] || configs[0];
         return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
@@ -147,7 +147,7 @@ export function AttendancePage() {
                             <Users className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Total</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.stats.total')}</p>
                             <p className="text-2xl font-bold">{records.length}</p>
                         </div>
                     </div>
@@ -158,7 +158,7 @@ export function AttendancePage() {
                             <CheckCircle2 className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Present</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.attendanceStatuses.present')}</p>
                             <p className="text-2xl font-bold">{presentCount}</p>
                         </div>
                     </div>
@@ -169,7 +169,7 @@ export function AttendancePage() {
                             <XCircle className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Absent</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.attendanceStatuses.absent')}</p>
                             <p className="text-2xl font-bold">{absentCount}</p>
                         </div>
                     </div>
@@ -180,7 +180,7 @@ export function AttendancePage() {
                             <AlertCircle className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Late</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.attendanceStatuses.late')}</p>
                             <p className="text-2xl font-bold">{lateCount}</p>
                         </div>
                     </div>

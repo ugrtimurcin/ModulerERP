@@ -9,7 +9,7 @@ public interface IProjectService
     Task<ProjectDto> CreateAsync(Guid tenantId, Guid userId, CreateProjectDto dto);
     Task UpdateAsync(Guid tenantId, Guid id, UpdateProjectDto dto);
     Task DeleteAsync(Guid tenantId, Guid id);
-    Task<ProjectBudgetLineDto> AddBudgetLineAsync(Guid tenantId, Guid projectId, CreateBudgetLineDto dto);
-    Task UpdateBudgetLineAsync(Guid tenantId, Guid projectId, Guid lineId, UpdateBudgetLineDto dto);
-    Task DeleteBudgetLineAsync(Guid tenantId, Guid projectId, Guid lineId);
+    Task<BillOfQuantitiesItemDto> AddBoQItemAsync(Guid tenantId, Guid projectId, CreateBoQItemDto dto);
+    Task UpdateBoQItemAsync(Guid tenantId, Guid projectId, Guid itemId, UpdateBoQItemDto dto);
+    Task DeleteBoQItemAsync(Guid tenantId, Guid projectId, Guid itemId);
 }

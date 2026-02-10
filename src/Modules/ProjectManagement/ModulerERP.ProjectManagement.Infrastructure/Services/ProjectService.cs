@@ -9,16 +9,18 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Services;
 public class ProjectService : IProjectService
 {
     private readonly ProjectManagementDbContext _context;
+    private readonly MediatR.IPublisher _publisher;
 
-    public ProjectService(ProjectManagementDbContext context)
+    public ProjectService(ProjectManagementDbContext context, MediatR.IPublisher publisher)
     {
         _context = context;
+        _publisher = publisher;
     }
 
     public async Task<List<ProjectDto>> GetAllAsync(Guid tenantId)
     {
         return await _context.Projects
-            .Include(x => x.BudgetLines)
+            .Include(x => x.BoQItems)
             .Where(x => x.TenantId == tenantId && !x.IsDeleted)
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => MapToDto(x))
@@ -28,7 +30,7 @@ public class ProjectService : IProjectService
     public async Task<ProjectDto> GetByIdAsync(Guid tenantId, Guid id)
     {
         var project = await _context.Projects
-            .Include(x => x.BudgetLines)
+            .Include(x => x.BoQItems)
             .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId && !x.IsDeleted);
 
         if (project == null) throw new KeyNotFoundException($"Project {id} not found.");
@@ -51,7 +53,7 @@ public class ProjectService : IProjectService
             TargetDate = dto.TargetDate.HasValue ? DateTime.SpecifyKind(dto.TargetDate.Value, DateTimeKind.Utc) : null,
             Status = Domain.Enums.ProjectStatus.Planning,
             CompletionPercentage = 0
-            // BudgetLines initialized as empty
+            // BoQItems initialized as empty
         };
 
         project.SetTenant(tenantId);
@@ -59,6 +61,14 @@ public class ProjectService : IProjectService
 
         _context.Projects.Add(project);
         await _context.SaveChangesAsync();
+        
+        // Publish Event
+        await _publisher.Publish(new ModulerERP.SharedKernel.IntegrationEvents.ProjectCreatedEvent(
+            tenantId,
+            project.Id,
+            project.Code,
+            project.Name
+        ));
 
         return MapToDto(project);
     }
@@ -89,72 +99,76 @@ public class ProjectService : IProjectService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<ProjectBudgetLineDto> AddBudgetLineAsync(Guid tenantId, Guid projectId, CreateBudgetLineDto dto)
+    public async Task<BillOfQuantitiesItemDto> AddBoQItemAsync(Guid tenantId, Guid projectId, CreateBoQItemDto dto)
     {
         var project = await _context.Projects
             .FirstOrDefaultAsync(x => x.Id == projectId && x.TenantId == tenantId && !x.IsDeleted);
 
         if (project == null) throw new KeyNotFoundException($"Project {projectId} not found.");
 
-        var line = new ProjectBudgetLine
+        var item = new BillOfQuantitiesItem
         {
             ProjectId = projectId,
-            CostCode = dto.CostCode,
+            ParentId = dto.ParentId,
+            ItemCode = dto.ItemCode,
             Description = dto.Description,
             Quantity = dto.Quantity,
-            UnitPrice = dto.UnitPrice,
             UnitOfMeasureId = dto.UnitOfMeasureId,
+            ContractUnitPrice = dto.ContractUnitPrice,
+            EstimatedUnitCost = dto.EstimatedUnitCost,
             Category = dto.Category
         };
         
-        line.CalculateTotal();
-        line.SetTenant(tenantId);
-        line.SetCreator(Guid.Empty); // TODO: Pass user ID
+        item.SetTenant(tenantId);
+        item.SetCreator(Guid.Empty); // TODO: Pass user ID
 
-        _context.ProjectBudgetLines.Add(line);
+        _context.BillOfQuantitiesItems.Add(item);
         await _context.SaveChangesAsync();
 
-        return new ProjectBudgetLineDto(
-            line.Id,
-            line.ProjectId,
-            line.CostCode,
-            line.Description,
-            line.Quantity,
-            line.UnitOfMeasureId,
-            line.UnitPrice,
-            line.TotalAmount,
-            line.Category
+        return new BillOfQuantitiesItemDto(
+            item.Id,
+            item.ProjectId,
+            item.ParentId,
+            item.ItemCode,
+            item.Description,
+            item.Quantity,
+            item.UnitOfMeasureId,
+            item.ContractUnitPrice,
+            item.EstimatedUnitCost,
+            item.TotalContractAmount,
+            item.TotalEstimatedCost,
+            item.Category
         );
     }
 
-    public async Task UpdateBudgetLineAsync(Guid tenantId, Guid projectId, Guid lineId, UpdateBudgetLineDto dto)
+    public async Task UpdateBoQItemAsync(Guid tenantId, Guid projectId, Guid itemId, UpdateBoQItemDto dto)
     {
-        var line = await _context.ProjectBudgetLines
-            .FirstOrDefaultAsync(x => x.Id == lineId && x.ProjectId == projectId && x.TenantId == tenantId && !x.IsDeleted);
+        var item = await _context.BillOfQuantitiesItems
+            .FirstOrDefaultAsync(x => x.Id == itemId && x.ProjectId == projectId && x.TenantId == tenantId && !x.IsDeleted);
 
-        if (line == null) throw new KeyNotFoundException($"Budget Line {lineId} not found.");
+        if (item == null) throw new KeyNotFoundException($"BoQ Item {itemId} not found.");
 
-        line.CostCode = dto.CostCode;
-        line.Description = dto.Description;
-        line.Quantity = dto.Quantity;
-        line.UnitPrice = dto.UnitPrice;
-        line.UnitOfMeasureId = dto.UnitOfMeasureId;
-        line.Category = dto.Category;
+        item.ItemCode = dto.ItemCode;
+        item.Description = dto.Description;
+        item.Quantity = dto.Quantity;
+        item.ContractUnitPrice = dto.ContractUnitPrice;
+        item.EstimatedUnitCost = dto.EstimatedUnitCost;
+        item.UnitOfMeasureId = dto.UnitOfMeasureId;
+        item.Category = dto.Category;
         
-        line.CalculateTotal();
-        // line.SetUpdater(userId);
+        // item.SetUpdater(userId);
 
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteBudgetLineAsync(Guid tenantId, Guid projectId, Guid lineId)
+    public async Task DeleteBoQItemAsync(Guid tenantId, Guid projectId, Guid itemId)
     {
-        var line = await _context.ProjectBudgetLines
-            .FirstOrDefaultAsync(x => x.Id == lineId && x.ProjectId == projectId && x.TenantId == tenantId && !x.IsDeleted);
+        var item = await _context.BillOfQuantitiesItems
+            .FirstOrDefaultAsync(x => x.Id == itemId && x.ProjectId == projectId && x.TenantId == tenantId && !x.IsDeleted);
 
-        if (line == null) return;
+        if (item == null) return;
 
-        line.Delete(Guid.Empty); // TODO: Pass user ID
+        item.Delete(Guid.Empty); // TODO: Pass user ID
         await _context.SaveChangesAsync();
     }
 
@@ -174,18 +188,22 @@ public class ProjectService : IProjectService
             p.ActualFinishDate,
             p.Status,
             p.CompletionPercentage,
-            p.BudgetLines.Select(b => new ProjectBudgetLineDto(
+            p.BoQItems.Select(b => new BillOfQuantitiesItemDto(
                 b.Id,
                 b.ProjectId,
-                b.CostCode,
+                b.ParentId,
+                b.ItemCode,
                 b.Description,
                 b.Quantity,
                 b.UnitOfMeasureId,
-                b.UnitPrice,
-                b.TotalAmount,
+                b.ContractUnitPrice,
+                b.EstimatedUnitCost,
+                b.TotalContractAmount,
+                b.TotalEstimatedCost,
                 b.Category
             )).ToList(),
-            p.GetTotalBudget()
+            p.GetTotalContractAmount(),
+            p.GetTotalEstimatedCost()
         );
     }
 }

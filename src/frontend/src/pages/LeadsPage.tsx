@@ -373,7 +373,7 @@ export function LeadsPage() {
                                 label={t('common.title')}
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                placeholder="Mr./Mrs."
+                                placeholder={t('leads.titlePlaceholder')}
                             />
                         </div>
                         <div className="flex-1">

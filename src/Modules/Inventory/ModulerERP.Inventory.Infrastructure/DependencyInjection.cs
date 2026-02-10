@@ -52,6 +52,8 @@ public static class DependencyInjection
         services.AddScoped<IProductBatchService, ProductBatchService>();
         services.AddScoped<IAttributeService, AttributeService>();
 
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
         return services;
     }
 }

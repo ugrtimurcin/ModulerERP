@@ -90,19 +90,12 @@ export function ProductsPage() {
             key: 'type',
             header: t('inventory.type'),
             render: (product) => {
-                // Mapping enum to text (1=Inventory, 2=Service, 3=NonInventory)
-                // Ideally this mapping should be centralized or use translations directly if keys matched enum names
-                const types: Record<number, string> = {
-                    1: 'Inventory',
-                    2: 'Service',
-                    3: 'Non-Inventory'
-                };
-                return <span className="text-sm">{types[product.type] || product.type}</span>;
+                return <span className="text-sm">{t(`inventory.productTypes.${product.type}`)}</span>;
             }
         },
         {
             key: 'unitOfMeasureCode',
-            header: 'UOM', // TODO translation
+            header: t('inventory.uom'),
         },
         {
             key: 'salesPrice',

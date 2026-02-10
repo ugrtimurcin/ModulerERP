@@ -15,6 +15,85 @@ export const ProjectTaskStatus = {
 } as const;
 export type ProjectTaskStatus = typeof ProjectTaskStatus[keyof typeof ProjectTaskStatus];
 
+// Daily Log Types
+
+export interface DailyLogDto {
+    id: string;
+    projectId: string;
+    date: string; // DateTime
+    weatherCondition: string;
+    siteManagerNote: string;
+    isApproved: boolean;
+    approvalDate?: string;
+    approvedByUserId?: string;
+    resourceUsages: DailyLogResourceUsageDto[];
+    materialUsages: DailyLogMaterialUsageDto[];
+}
+
+export interface DailyLogResourceUsageDto {
+    id: string;
+    projectResourceId: string;
+    projectTaskId?: string;
+    hoursWorked: number;
+    description: string;
+}
+
+export interface DailyLogMaterialUsageDto {
+    id: string;
+    productId: string;
+    quantity: number;
+    unitOfMeasureId: string;
+    location: string;
+}
+
+export interface CreateDailyLogDto {
+    projectId: string;
+    date: string;
+    weatherCondition: string;
+    siteManagerNote: string;
+    resourceUsages: CreateResourceUsageDto[];
+    materialUsages: CreateMaterialUsageDto[];
+}
+
+export interface CreateResourceUsageDto {
+    projectResourceId: string;
+    projectTaskId?: string;
+    hoursWorked: number;
+    description: string;
+}
+
+export interface CreateMaterialUsageDto {
+    productId: string;
+    quantity: number;
+    unitOfMeasureId: string;
+    location: string;
+}
+
+// Project Resource Types
+
+export interface ProjectResourceDto {
+    id: string;
+    projectId: string;
+    employeeId?: string;
+    employeeName?: string;
+    assetId?: string;
+    assetName?: string;
+    role: string;
+    hourlyCost: number;
+    currencyId: string;
+    // Helper to display generic name
+    name?: string;
+}
+
+export interface CreateProjectResourceDto {
+    projectId: string;
+    employeeId?: string;
+    assetId?: string;
+    role: string;
+    hourlyCost: number;
+    currencyId: string;
+}
+
 export const ProgressPaymentStatus = {
     Draft: 0,
     Approved: 1,
@@ -40,34 +119,42 @@ export const BudgetCategory = {
 } as const;
 export type BudgetCategory = typeof BudgetCategory[keyof typeof BudgetCategory];
 
-export interface ProjectBudgetLineDto {
+export interface BillOfQuantitiesItemDto {
     id: string;
     projectId: string;
-    costCode: string;
+    parentId?: string;
+    itemCode: string;
     description: string;
     quantity: number;
     unitOfMeasureId: string;
-    unitPrice: number;
-    totalAmount: number;
+    contractUnitPrice: number;
+    estimatedUnitCost: number;
+    totalContractAmount: number;
+    totalEstimatedCost: number;
     category: BudgetCategory;
+    // For UI hierarchy
+    children?: BillOfQuantitiesItemDto[];
 }
 
-export interface CreateBudgetLineDto {
+export interface CreateBoQItemDto {
     projectId: string;
-    costCode: string;
+    parentId?: string;
+    itemCode: string;
     description: string;
     quantity: number;
     unitOfMeasureId: string;
-    unitPrice: number;
+    contractUnitPrice: number;
+    estimatedUnitCost: number;
     category: BudgetCategory;
 }
 
-export interface UpdateBudgetLineDto {
-    costCode: string;
+export interface UpdateBoQItemDto {
+    itemCode: string;
     description: string;
     quantity: number;
     unitOfMeasureId: string;
-    unitPrice: number;
+    contractUnitPrice: number;
+    estimatedUnitCost: number;
     category: BudgetCategory;
 }
 
@@ -85,8 +172,10 @@ export interface ProjectDto {
     actualFinishDate?: string;
     status: ProjectStatus;
     completionPercentage: number;
-    budgetLines: ProjectBudgetLineDto[];
-    totalBudget: number;
+    // Budgeting V2 (BoQ)
+    boQItems: BillOfQuantitiesItemDto[];
+    totalContractAmount: number;
+    totalEstimatedCost: number;
 }
 
 export interface CreateProjectDto {
@@ -181,25 +270,51 @@ export interface ProgressPaymentDto {
     projectId: string;
     paymentNo: number;
     date: string;
+    periodStart: string;
+    periodEnd: string;
+    grossWorkAmount: number;
+    materialOnSiteAmount: number;
+    cumulativeTotalAmount: number;
     previousCumulativeAmount: number;
-    currentAmount: number;
+    periodDeltaAmount: number;
     retentionRate: number;
     retentionAmount: number;
-    materialOnSiteAmount: number;
+    withholdingTaxRate: number;
+    withholdingTaxAmount: number;
     advanceDeductionAmount: number;
-    taxWithholdingAmount: number;
     netPayableAmount: number;
+    isExpense: boolean;
     status: ProgressPaymentStatus;
+    details?: ProgressPaymentDetailDto[];
+}
+
+export interface ProgressPaymentDetailDto {
+    id: string;
+    progressPaymentId: string;
+    billOfQuantitiesItemId: string;
+    itemCode: string;
+    description: string;
+    previousCumulativeQuantity: number;
+    cumulativeQuantity: number;
+    periodQuantity: number;
+    unitPrice: number;
+    totalAmount: number;
+    periodAmount: number;
+}
+
+export interface UpdateProgressPaymentDetailDto {
+    id: string;
+    cumulativeQuantity: number;
 }
 
 export interface CreateProgressPaymentDto {
     projectId: string;
     date: string;
-    currentAmount: number;
+    periodStart: string;
+    periodEnd: string;
     materialOnSiteAmount: number;
     advanceDeductionAmount: number;
-    taxWithholdingAmount: number;
-    retentionRate: number;
+    isExpense: boolean;
 }
 
 export interface ProjectDocumentDto {

@@ -42,9 +42,9 @@ export function LeaveRequestsPage() {
 
     const handleApprove = async (req: LeaveRequest) => {
         const ok = await dialog.confirm({
-            title: 'Approve Leave Request',
-            message: `Approve ${req.days} days leave for ${req.employeeName}?`,
-            confirmText: 'Approve',
+            title: t('hr.dialogs.approveLeaveTitle'),
+            message: t('hr.dialogs.approveLeaveMsg', { days: req.days, name: req.employeeName }),
+            confirmText: t('hr.approve'),
         });
         if (!ok) return;
 
@@ -57,9 +57,9 @@ export function LeaveRequestsPage() {
 
     const handleReject = async (req: LeaveRequest) => {
         const ok = await dialog.confirm({
-            title: 'Reject Leave Request',
-            message: `Reject leave request from ${req.employeeName}?`,
-            confirmText: 'Reject',
+            title: t('hr.dialogs.rejectLeaveTitle'),
+            message: t('hr.dialogs.rejectLeaveMsg', { name: req.employeeName }),
+            confirmText: t('hr.reject'),
         });
         if (!ok) return;
 
@@ -72,22 +72,22 @@ export function LeaveRequestsPage() {
 
     const getLeaveTypeBadge = (type: number) => {
         const types: Record<number, string> = {
-            0: 'Annual',
-            1: 'Sick',
-            2: 'Unpaid',
-            3: 'Maternity',
-            4: 'Paternity',
-            5: 'Bereavement',
+            0: t('hr.leaveTypes.annual'),
+            1: t('hr.leaveTypes.sick'),
+            2: t('hr.leaveTypes.unpaid'),
+            3: t('hr.leaveTypes.maternity'),
+            4: t('hr.leaveTypes.paternity'),
+            5: t('hr.leaveTypes.bereavement'),
         };
-        return <Badge variant="default">{types[type] || 'Other'}</Badge>;
+        return <Badge variant="default">{types[type] || t('common.unknown')}</Badge>;
     };
 
     const getStatusBadge = (status: number) => {
         const configs: Record<number, { variant: 'success' | 'warning' | 'error' | 'default', label: string }> = {
-            0: { variant: 'warning', label: 'Pending' },
-            1: { variant: 'success', label: 'Approved' },
-            2: { variant: 'error', label: 'Rejected' },
-            3: { variant: 'default', label: 'Cancelled' },
+            0: { variant: 'warning', label: t('hr.leaveStatuses.pending') },
+            1: { variant: 'success', label: t('hr.leaveStatuses.approved') },
+            2: { variant: 'error', label: t('hr.leaveStatuses.rejected') },
+            3: { variant: 'default', label: t('hr.leaveStatuses.cancelled') },
         };
         const cfg = configs[status] || configs[0];
         return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
@@ -121,7 +121,7 @@ export function LeaveRequestsPage() {
             render: (req) => (
                 <div className="text-sm">
                     <p>{new Date(req.startDate).toLocaleDateString()}</p>
-                    <p className="text-[hsl(var(--muted-foreground))]">to {new Date(req.endDate).toLocaleDateString()}</p>
+                    <p className="text-[hsl(var(--muted-foreground))]">{t('common.to')} {new Date(req.endDate).toLocaleDateString()}</p>
                 </div>
             ),
         },
@@ -161,7 +161,7 @@ export function LeaveRequestsPage() {
                             <Clock className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Pending</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.leaveStatuses.pending')}</p>
                             <p className="text-2xl font-bold">{pendingCount}</p>
                         </div>
                     </div>
@@ -172,7 +172,7 @@ export function LeaveRequestsPage() {
                             <CheckCircle className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Approved</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.leaveStatuses.approved')}</p>
                             <p className="text-2xl font-bold">{approvedCount}</p>
                         </div>
                     </div>
@@ -183,7 +183,7 @@ export function LeaveRequestsPage() {
                             <Calendar className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">Total</p>
+                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.stats.total')}</p>
                             <p className="text-2xl font-bold">{requests.length}</p>
                         </div>
                     </div>
