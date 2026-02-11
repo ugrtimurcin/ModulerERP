@@ -41,6 +41,9 @@ public class Asset : BaseEntity
     
     /// <summary>Location/Branch</summary>
     public Guid? LocationId { get; private set; }
+
+    /// <summary>Text description of location (e.g. Project Name)</summary>
+    public string? LocationDescription { get; private set; }
     
     /// <summary>Department using the asset</summary>
     public Guid? DepartmentId { get; private set; }
@@ -106,11 +109,12 @@ public class Asset : BaseEntity
         DisposalReason = reason;
     }
 
-    public void Assign(Guid? departmentId, Guid? employeeId, Guid? locationId)
+    public void Assign(Guid? departmentId, Guid? employeeId, Guid? locationId, string? locationDescription = null)
     {
         DepartmentId = departmentId;
         AssignedEmployeeId = employeeId;
         LocationId = locationId;
+        LocationDescription = locationDescription;
         Status = AssetStatus.Assigned;
     }
     

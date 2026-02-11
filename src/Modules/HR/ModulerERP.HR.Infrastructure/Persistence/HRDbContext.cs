@@ -42,7 +42,7 @@ public class HRDbContext : DbContext, IUnitOfWork
         // Map AuditLog to system_core table
         modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.ToTable("AuditLogs", "system_core");
+            entity.ToTable("AuditLogs", "core", t => t.ExcludeFromMigrations());
             entity.HasKey(e => e.Id);
             entity.Property(e => e.OldValues).HasColumnType("jsonb");
             entity.Property(e => e.NewValues).HasColumnType("jsonb");

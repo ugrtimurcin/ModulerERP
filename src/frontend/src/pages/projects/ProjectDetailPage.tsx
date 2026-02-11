@@ -8,10 +8,12 @@ import { ProjectStatus } from '@/types/project';
 import type { ProjectDto, CreateProjectDto, UpdateProjectDto } from '@/types/project';
 import { PaymentsTab } from './tabs/PaymentsTab';
 import { TasksTab } from './tabs/TasksTab';
+import { ResourcesTab } from './tabs/ResourcesTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
 import { ChangeOrdersTab } from './tabs/ChangeOrdersTab';
 import { BoQTab } from './tabs/BoQTab';
 import { DailyLogTab } from './tabs/DailyLogTab';
+import { RateCardsTab } from './tabs/RateCardsTab';
 
 export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' | 'edit' }) {
     const { id } = useParams();
@@ -88,10 +90,12 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
         { id: 'details', label: t('projects.tabs.details') },
         ...(mode !== 'create' ? [
             { id: 'tasks', label: t('projects.tabs.tasks') },
+            { id: 'resources', label: t('projects.tabs.resources') },
             { id: 'boq', label: t('projects.tabs.boq') },
             { id: 'daily-logs', label: t('projects.tabs.dailyLogs') },
             { id: 'payments', label: t('projects.tabs.payments') },
             { id: 'changeOrders', label: t('projects.tabs.changeOrders') },
+            { id: 'rateCards', label: t('projects.tabs.rateCards') }, // New
             { id: 'documents', label: t('projects.tabs.documents') }
         ] : [])
     ];
@@ -187,6 +191,10 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                     <TasksTab projectId={id} />
                 )}
 
+                {activeTab === 'resources' && id && (
+                    <ResourcesTab projectId={id} />
+                )}
+
                 {activeTab === 'boq' && id && (
                     <BoQTab projectId={id} />
                 )}
@@ -201,6 +209,10 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
 
                 {activeTab === 'changeOrders' && id && (
                     <ChangeOrdersTab projectId={id} />
+                )}
+
+                {activeTab === 'rateCards' && id && (
+                    <RateCardsTab projectId={id} />
                 )}
 
                 {activeTab === 'documents' && id && (

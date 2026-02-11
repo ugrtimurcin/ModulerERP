@@ -122,6 +122,19 @@ public class FixedAssetsController : BaseApiController
         }
     }
 
+    [HttpGet("assets/lookup")]
+    public async Task<IActionResult> GetAssetsLookup(CancellationToken ct)
+    {
+        var assets = await _service.GetAssetsAsync(TenantId, ct);
+        var result = assets.Select(a => new 
+        { 
+            a.Id, 
+            a.Name, 
+            a.SerialNumber 
+        });
+        return Ok(new { success = true, data = result });
+    }
+
     #endregion
 
     #region Asset Lifecycle - Lists

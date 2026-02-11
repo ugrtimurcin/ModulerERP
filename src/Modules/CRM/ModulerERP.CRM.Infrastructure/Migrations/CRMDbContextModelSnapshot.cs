@@ -794,7 +794,10 @@ namespace ModulerERP.CRM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs", "system_core");
+                    b.ToTable("AuditLogs", "core", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ModulerERP.CRM.Domain.Entities.Activity", b =>

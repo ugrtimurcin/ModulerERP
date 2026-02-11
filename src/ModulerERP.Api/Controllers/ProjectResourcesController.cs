@@ -13,7 +13,7 @@ public class ProjectResourcesController : BaseApiController
         _resourceService = resourceService;
     }
 
-    [HttpGet("project/{projectId}")]
+    [HttpGet("/api/projects/{projectId}/resources")]
     public async Task<ActionResult<List<ProjectResourceDto>>> GetByProject(Guid projectId)
     {
         return OkResult(await _resourceService.GetByProjectIdAsync(TenantId, projectId));

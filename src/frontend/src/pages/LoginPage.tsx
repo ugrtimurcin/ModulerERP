@@ -104,10 +104,6 @@ export function LoginPage() {
                     )}
                 </button>
             </form>
-
-            <p className="mt-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
-                {t('auth.demo')}
-            </p>
         </div>
     );
 }

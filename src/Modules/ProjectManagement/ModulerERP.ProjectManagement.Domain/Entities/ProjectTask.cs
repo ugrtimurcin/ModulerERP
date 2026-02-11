@@ -19,7 +19,6 @@ public class ProjectTask : BaseEntity
     public decimal CompletionPercentage { get; set; } // 0 to 100
     public ProjectTaskStatus Status { get; set; }
 
-    // Assignment
-    public Guid? AssignedEmployeeId { get; set; }
-    public Guid? AssignedSubcontractorId { get; set; }
+    // Assignment - Many-to-Many via ProjectTaskResource
+    public ICollection<ProjectTaskResource> Resources { get; set; } = new List<ProjectTaskResource>();
 }

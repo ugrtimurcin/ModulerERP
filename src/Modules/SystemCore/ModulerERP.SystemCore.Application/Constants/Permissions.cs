@@ -22,6 +22,7 @@ public static class Permissions
     {
         public const string View = "tenants.view";
         public const string Register = "tenants.register";
+        public const string Manage = "tenants.manage";
     }
     
     public static IEnumerable<string> GetAll()

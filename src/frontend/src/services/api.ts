@@ -607,6 +607,21 @@ export const api = {
         }
     },
 
+    // HR - Employees
+    employees: {
+        getAll: (page = 1, pageSize = 20) => request<PagedResult<any>>(`/hr/employees?page=${page}&pageSize=${pageSize}`),
+        getById: (id: string) => request<any>(`/hr/employees/${id}`),
+        // Add minimal lookups if needed
+        getLookup: () => request<Array<{ id: string; firstName: string; lastName: string; position: string }>>('/hr/employees/lookup'),
+    },
+
+    // Fixed Assets
+    assets: {
+        getAll: (page = 1, pageSize = 20) => request<PagedResult<any>>(`/fixedassets/assets?page=${page}&pageSize=${pageSize}`),
+        getById: (id: string) => request<any>(`/fixedassets/assets/${id}`),
+        getLookup: () => request<Array<{ id: string; name: string; serialNumber: string }>>('/fixedassets/assets/lookup'),
+    },
+
     // Manufacturing - Bill of Materials
     bom: {
         getAll: (page = 1, pageSize = 20, search?: string) =>

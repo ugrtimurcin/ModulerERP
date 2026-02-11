@@ -206,9 +206,14 @@ export interface ProjectTaskDto {
     dueDate: string;
     completionPercentage: number;
     status: ProjectTaskStatus;
-    assignedEmployeeId?: string;
-    assignedSubcontractorId?: string;
+    assignedResources: TaskResourceDto[];
     children: ProjectTaskDto[];
+}
+
+export interface TaskResourceDto {
+    projectResourceId: string;
+    role: string;
+    allocationPercent: number;
 }
 
 export interface CreateProjectTaskDto {
@@ -217,8 +222,7 @@ export interface CreateProjectTaskDto {
     parentTaskId?: string;
     startDate: string;
     dueDate: string;
-    assignedEmployeeId?: string;
-    assignedSubcontractorId?: string;
+    assignedResourceIds: string[];
 }
 
 export interface UpdateProjectTaskDto {
@@ -228,8 +232,7 @@ export interface UpdateProjectTaskDto {
     parentTaskId?: string;
     startDate: string;
     dueDate: string;
-    assignedEmployeeId?: string;
-    assignedSubcontractorId?: string;
+    assignedResourceIds: string[];
 }
 
 export interface UpdateProjectTaskProgressDto {
@@ -372,4 +375,35 @@ export interface CreateChangeOrderDto {
     description: string;
     amountChange: number;
     timeExtensionDays: number;
+}
+
+// Rate Cards
+export interface ResourceRateCardDto {
+    id: string;
+    projectId?: string;
+    employeeId?: string;
+    employeeName?: string;
+    assetId?: string;
+    assetName?: string;
+    hourlyRate: number;
+    currencyId: string;
+    effectiveFrom: string; // ISO Date
+    effectiveTo?: string;  // ISO Date
+}
+
+export interface CreateResourceRateCardDto {
+    projectId?: string;
+    employeeId?: string;
+    assetId?: string;
+    hourlyRate: number;
+    currencyId: string;
+    effectiveFrom: string;
+    effectiveTo?: string;
+}
+
+export interface UpdateResourceRateCardDto {
+    hourlyRate: number;
+    currencyId: string;
+    effectiveFrom: string;
+    effectiveTo?: string;
 }

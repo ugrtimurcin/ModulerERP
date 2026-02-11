@@ -868,6 +868,12 @@ namespace ModulerERP.Procurement.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ProjectTaskId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("PurchaseOrderLineId")
                         .HasColumnType("uuid");
 
@@ -935,7 +941,10 @@ namespace ModulerERP.Procurement.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs", "system_core");
+                    b.ToTable("AuditLogs", "core", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ModulerERP.Procurement.Domain.Entities.GoodsReceipt", b =>

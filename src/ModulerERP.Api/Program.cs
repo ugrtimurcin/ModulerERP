@@ -20,14 +20,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
+
+
 builder.Services.AddScoped<ModulerERP.SharedKernel.Interfaces.ICurrentUserService, ModulerERP.Api.Services.CurrentUserService>();
+builder.Services.AddScoped<ModulerERP.ProjectManagement.Application.Interfaces.IResourceCostProvider, ModulerERP.Api.Services.ResourceCostProvider>();
+
+
 
 // Configure CORS for React frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Vite default port
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175") // Vite default port
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -79,29 +84,66 @@ if (app.Environment.IsDevelopment())
     app.UseCors("DevCors");
     
     // Auto-apply migrations and seed in development
-    // using (var scope = app.Services.CreateScope())
-    // {
-    //     var context = scope.ServiceProvider.GetRequiredService<SystemCoreDbContext>();
-    //     var crmContext = scope.ServiceProvider.GetRequiredService<ModulerERP.CRM.Infrastructure.Persistence.CRMDbContext>();
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<SystemCoreDbContext>();
         
-    //     // NOTE: Set to true to reset database schema (delete and recreate)
-    //     var resetDatabase = false;
-    //     if (resetDatabase)
-    //     {
-    //         await context.Database.EnsureDeletedAsync();
-    //     }
+        // Apply migrations
+        await context.Database.MigrateAsync();
         
-    //     // Apply migrations
-    //     await context.Database.MigrateAsync();
-    //     await crmContext.Database.MigrateAsync();
-        
-    //     // Seed initial data if empty
-    //     // Seed initial data if empty
-    //     /* 
-    //      * Seeding logic removed to prevent conflicts with existing database.
-    //      * The database is expected to be already populated or managed externally.
-    //      */
-    // }
+        // Check for --seed argument
+        if (args.Contains("--seed"))
+        {
+            // Seed Currencies if missing
+            if (!await context.Currencies.AnyAsync())
+            {
+                context.Currencies.AddRange(SystemCoreSeeder.GetCurrencies());
+                await context.SaveChangesAsync();
+                Console.WriteLine("Seeded Currencies.");
+            }
+
+            // Seed Languages if missing
+            if (!await context.Languages.AnyAsync())
+            {
+                context.Languages.AddRange(SystemCoreSeeder.GetLanguages());
+                await context.SaveChangesAsync();
+                Console.WriteLine("Seeded Languages.");
+            }
+
+            var rootTenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == SystemCoreSeeder.RootTenantId);
+            if (rootTenant == null)
+            {
+                context.Tenants.Add(SystemCoreSeeder.GetRootTenant());
+                context.Roles.Add(SystemCoreSeeder.GetAdminRole());
+                context.Users.Add(SystemCoreSeeder.GetAdminUser());
+                
+                // Assign role
+                context.UserRoles.Add(ModulerERP.SystemCore.Domain.Entities.UserRole.Create(
+                    SystemCoreSeeder.RootTenantId, 
+                    SystemCoreSeeder.AdminUserId, 
+                    SystemCoreSeeder.AdminRoleId));
+
+                try
+                {
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("Seeding completed: Root Tenant and Admin User created.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Seeding failed: {ex.Message}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                    }
+                    throw;
+                }
+            }
+            else
+            {
+                 Console.WriteLine("Seeding skipped: Root Tenant already exists.");
+            }
+        }
+    }
 }
 
 app.UseHttpsRedirection();

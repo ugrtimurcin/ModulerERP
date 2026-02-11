@@ -303,7 +303,7 @@ export function ProductDetailPage({ mode }: ProductDetailPageProps) {
                                 `}
                             >
                                 <Tag className="w-4 h-4" />
-                                {t('inventory.prices')}
+                                {t('inventory.prices.title')}"
                             </button>
                             <button
                                 onClick={() => setActiveTab('stock')}

@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IProjectFinancialService, ProjectFinancialService>();
         services.AddScoped<IDailyLogService, DailyLogService>();
         services.AddScoped<IProjectResourceService, ProjectResourceService>();
+        services.AddScoped<IResourceRateCardService, ResourceRateCardService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 

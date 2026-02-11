@@ -830,12 +830,6 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AssignedEmployeeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("AssignedSubcontractorId")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal>("CompletionPercentage")
                         .HasColumnType("numeric");
 
@@ -888,6 +882,59 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProjectTasks", "pm");
+                });
+
+            modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ProjectTaskResource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AllocationPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProjectResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectTaskId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectResourceId");
+
+                    b.HasIndex("ProjectTaskId", "ProjectResourceId")
+                        .IsUnique();
+
+                    b.ToTable("ProjectTaskResources", "pm");
                 });
 
             modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ProjectTransaction", b =>
@@ -961,6 +1008,66 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProjectTransactions", "pm");
+                });
+
+            modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ResourceRateCard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CurrencyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("EmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("HourlyRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ResourceRateCards", "pm");
                 });
 
             modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.SubcontractorContract", b =>
@@ -1070,7 +1177,10 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs", "system_core");
+                    b.ToTable("AuditLogs", "core", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.BillOfQuantitiesItem", b =>
@@ -1181,6 +1291,25 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ProjectTaskResource", b =>
+                {
+                    b.HasOne("ModulerERP.ProjectManagement.Domain.Entities.ProjectResource", "ProjectResource")
+                        .WithMany()
+                        .HasForeignKey("ProjectResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ModulerERP.ProjectManagement.Domain.Entities.ProjectTask", "ProjectTask")
+                        .WithMany("Resources")
+                        .HasForeignKey("ProjectTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProjectResource");
+
+                    b.Navigation("ProjectTask");
+                });
+
             modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.DailyLog", b =>
                 {
                     b.Navigation("MaterialUsages");
@@ -1203,6 +1332,11 @@ namespace ModulerERP.ProjectManagement.Infrastructure.Persistence.Migrations
                     b.Navigation("BoQItems");
 
                     b.Navigation("ChangeOrders");
+                });
+
+            modelBuilder.Entity("ModulerERP.ProjectManagement.Domain.Entities.ProjectTask", b =>
+                {
+                    b.Navigation("Resources");
                 });
 #pragma warning restore 612, 618
         }

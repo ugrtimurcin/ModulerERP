@@ -18,12 +18,14 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
     public DbSet<BillOfQuantitiesItem> BillOfQuantitiesItems => Set<BillOfQuantitiesItem>();
     public DbSet<ProjectChangeOrder> ProjectChangeOrders => Set<ProjectChangeOrder>();
     public DbSet<ProjectResource> ProjectResources => Set<ProjectResource>();
+    public DbSet<ProjectTaskResource> ProjectTaskResources => Set<ProjectTaskResource>();
     public DbSet<DailyLog> DailyLogs => Set<DailyLog>();
     public DbSet<DailyLogResourceUsage> DailyLogResourceUsages => Set<DailyLogResourceUsage>();
     public DbSet<DailyLogMaterialUsage> DailyLogMaterialUsages => Set<DailyLogMaterialUsage>();
     public DbSet<MaterialRequest> MaterialRequests => Set<MaterialRequest>();
     public DbSet<MaterialRequestItem> MaterialRequestItems => Set<MaterialRequestItem>();
     public DbSet<SubcontractorContract> SubcontractorContracts => Set<SubcontractorContract>();
+    public DbSet<ResourceRateCard> ResourceRateCards => Set<ResourceRateCard>();
 
     // Shared Audit Log (mapped to system_core schema)
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -48,7 +50,7 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
         // Map AuditLog to system_core table
         modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.ToTable("AuditLogs", "system_core");
+            entity.ToTable("AuditLogs", "core", t => t.ExcludeFromMigrations());
             entity.HasKey(e => e.Id);
             entity.Property(e => e.OldValues).HasColumnType("jsonb");
             entity.Property(e => e.NewValues).HasColumnType("jsonb");
@@ -102,6 +104,22 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
              entity.Property(e => e.HourlyCost).HasPrecision(18, 2);
         });
 
+        // Configure Project Tasks & Resources
+        modelBuilder.Entity<ProjectTask>(entity =>
+        {
+            entity.HasMany(t => t.Resources)
+                  .WithOne(r => r.ProjectTask)
+                  .HasForeignKey(r => r.ProjectTaskId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProjectTaskResource>(entity =>
+        {
+            // Composite unique index to prevent duplicate assignments
+            entity.HasIndex(x => new { x.ProjectTaskId, x.ProjectResourceId }).IsUnique();
+            entity.Property(e => e.AllocationPercent).HasPrecision(5, 2);
+        });
+
         // Configure Daily Logs
         modelBuilder.Entity<DailyLogResourceUsage>(entity =>
         {
@@ -128,6 +146,12 @@ public class ProjectManagementDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<ProjectChangeOrder>(entity =>
         {
             entity.Property(e => e.AmountChange).HasPrecision(18, 2);
+        });
+
+        // Configure Resource Rate Cards
+        modelBuilder.Entity<ResourceRateCard>(entity =>
+        {
+             entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
         });
       
         // Removed ProjectBudget Owned Entity configuration

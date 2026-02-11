@@ -87,6 +87,9 @@ namespace ModulerERP.FixedAssets.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("LocationDescription")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("LocationId")
                         .HasColumnType("uuid");
 
@@ -582,7 +585,10 @@ namespace ModulerERP.FixedAssets.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs", "system_core");
+                    b.ToTable("AuditLogs", "core", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ModulerERP.FixedAssets.Domain.Entities.Asset", b =>

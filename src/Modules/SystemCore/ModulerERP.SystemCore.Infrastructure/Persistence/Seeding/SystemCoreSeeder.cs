@@ -1,3 +1,4 @@
+using ModulerERP.SystemCore.Application.Constants;
 using ModulerERP.SystemCore.Domain.Entities;
 
 namespace ModulerERP.SystemCore.Infrastructure.Persistence.Seeding;
@@ -8,9 +9,10 @@ namespace ModulerERP.SystemCore.Infrastructure.Persistence.Seeding;
 public static class SystemCoreSeeder
 {
     // Well-known IDs for seed data
-    public static readonly Guid RootTenantId = new("00000000-0000-0000-0000-000000000001");
-    public static readonly Guid AdminUserId = new("00000000-0000-0000-0000-000000000001");
-    public static readonly Guid AdminRoleId = new("00000000-0000-0000-0000-000000000001");
+    // Well-known IDs for seed data
+    public static readonly Guid RootTenantId = SystemCoreConstants.SystemTenantId;
+    public static readonly Guid AdminUserId = SystemCoreConstants.SystemAdminUserId;
+    public static readonly Guid AdminRoleId = SystemCoreConstants.SystemAdminRoleId;
     
     // Currency IDs
     public static readonly Guid TryId = new("00000000-0000-0000-0001-000000000001");

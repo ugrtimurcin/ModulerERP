@@ -774,7 +774,10 @@ namespace ModulerERP.Sales.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs", "system_core");
+                    b.ToTable("AuditLogs", "core", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ModulerERP.Sales.Domain.Entities.Invoice", b =>

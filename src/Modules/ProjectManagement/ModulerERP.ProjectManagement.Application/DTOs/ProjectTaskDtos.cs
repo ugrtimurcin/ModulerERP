@@ -11,8 +11,13 @@ public record ProjectTaskDto(
     DateTime DueDate,
     decimal CompletionPercentage,
     ProjectTaskStatus Status,
-    Guid? AssignedEmployeeId,
-    Guid? AssignedSubcontractorId
+    List<TaskResourceDto> AssignedResources
+);
+
+public record TaskResourceDto(
+    Guid ProjectResourceId,
+    string Role,
+    decimal AllocationPercent
 );
 
 public record CreateProjectTaskDto(
@@ -21,8 +26,7 @@ public record CreateProjectTaskDto(
     Guid? ParentTaskId,
     DateTime StartDate,
     DateTime DueDate,
-    Guid? AssignedEmployeeId,
-    Guid? AssignedSubcontractorId
+    List<Guid> AssignedResourceIds
 );
 
 public record UpdateProjectTaskProgressDto(
@@ -37,6 +41,5 @@ public record UpdateProjectTaskDto(
     Guid? ParentTaskId,
     DateTime StartDate,
     DateTime DueDate,
-    Guid? AssignedEmployeeId,
-    Guid? AssignedSubcontractorId
+    List<Guid> AssignedResourceIds
 );

@@ -18,6 +18,8 @@ public class ProjectTaskService : IProjectTaskService
     public async Task<List<ProjectTaskDto>> GetByProjectIdAsync(Guid tenantId, Guid projectId)
     {
         return await _context.ProjectTasks
+            .Include(t => t.Resources)
+            .ThenInclude(tr => tr.ProjectResource)
             .Where(x => x.TenantId == tenantId && x.ProjectId == projectId && !x.IsDeleted)
             .Select(x => new ProjectTaskDto(
                 x.Id,
@@ -28,26 +30,45 @@ public class ProjectTaskService : IProjectTaskService
                 x.DueDate,
                 x.CompletionPercentage,
                 x.Status,
-                x.AssignedEmployeeId,
-                x.AssignedSubcontractorId
+                x.Resources.Select(r => new TaskResourceDto(
+                    r.ProjectResourceId, 
+                    r.ProjectResource.Role, 
+                    r.AllocationPercent
+                )).ToList()
             ))
             .ToListAsync();
     }
 
     public async Task<ProjectTaskDto> CreateAsync(Guid tenantId, Guid userId, CreateProjectTaskDto dto)
     {
+        // Validation: Ensure resources belong to project
+        var validResources = await _context.ProjectResources
+            .Where(r => r.ProjectId == dto.ProjectId && dto.AssignedResourceIds.Contains(r.Id))
+            .ToListAsync();
+
+        if (validResources.Count != dto.AssignedResourceIds.Distinct().Count())
+            throw new ArgumentException("One or more selected resources are invalid.");
+
+        // Check Availability
+        var taskStartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
+        var taskDueDate = DateTime.SpecifyKind(dto.DueDate, DateTimeKind.Utc);
+        await CheckResourceAvailability(tenantId, taskStartDate, taskDueDate, dto.AssignedResourceIds);
+
         var task = new ProjectTask
         {
             ProjectId = dto.ProjectId,
             Name = dto.Name,
             ParentTaskId = dto.ParentTaskId,
-            StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc),
-            DueDate = DateTime.SpecifyKind(dto.DueDate, DateTimeKind.Utc),
+            StartDate = taskStartDate,
+            DueDate = taskDueDate,
             CompletionPercentage = 0,
-            Status = Domain.Enums.ProjectTaskStatus.Todo,
-            AssignedEmployeeId = dto.AssignedEmployeeId,
-            AssignedSubcontractorId = dto.AssignedSubcontractorId
+            Status = Domain.Enums.ProjectTaskStatus.Todo
         };
+
+        foreach(var res in validResources)
+        {
+            task.Resources.Add(new ProjectTaskResource { ProjectResourceId = res.Id, ProjectTaskId = task.Id });
+        }
         
         task.SetTenant(tenantId);
         task.SetCreator(userId);
@@ -57,22 +78,57 @@ public class ProjectTaskService : IProjectTaskService
 
         return new ProjectTaskDto(
             task.Id, task.ProjectId, task.Name, task.ParentTaskId, task.StartDate, task.DueDate, 
-            task.CompletionPercentage, task.Status, task.AssignedEmployeeId, task.AssignedSubcontractorId);
+            task.CompletionPercentage, task.Status, 
+            task.Resources.Select(r => new TaskResourceDto(
+                    r.ProjectResourceId, 
+                    // We need to fetch the role from the validResources list since task.Resources[i].ProjectResource is not loaded yet
+                    validResources.First(vr => vr.Id == r.ProjectResourceId).Role, 
+                    r.AllocationPercent
+                )).ToList());
     }
 
     public async Task UpdateTaskAsync(Guid tenantId, Guid taskId, UpdateProjectTaskDto dto)
     {
         var task = await _context.ProjectTasks
+            .Include(t => t.Resources)
             .FirstOrDefaultAsync(x => x.Id == taskId && x.TenantId == tenantId && !x.IsDeleted);
 
         if (task == null) throw new KeyNotFoundException($"Task {taskId} not found.");
+
+        // Validation: Ensure resources belong to project
+        // Note: ProjectId is on the task, we trust the task belongs to the project.
+        var validResources = await _context.ProjectResources
+            .Where(r => r.ProjectId == task.ProjectId && dto.AssignedResourceIds.Contains(r.Id))
+            .ToListAsync();
+            
+        if (validResources.Count != dto.AssignedResourceIds.Distinct().Count())
+             throw new ArgumentException("One or more selected resources are invalid.");
 
         task.Name = dto.Name;
         task.ParentTaskId = dto.ParentTaskId;
         task.StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
         task.DueDate = DateTime.SpecifyKind(dto.DueDate, DateTimeKind.Utc);
-        task.AssignedEmployeeId = dto.AssignedEmployeeId;
-        task.AssignedSubcontractorId = dto.AssignedSubcontractorId;
+
+        // Check Availability for the NEW set of resources and NEW dates
+        // We need to check all proposed resources (existing ones that remain + new ones)
+        await CheckResourceAvailability(tenantId, task.StartDate, task.DueDate, dto.AssignedResourceIds, task.Id);
+
+        // Update Resources
+        // 1. Remove resources not in DTO
+        var toRemove = task.Resources.Where(r => !dto.AssignedResourceIds.Contains(r.ProjectResourceId)).ToList();
+        foreach(var rem in toRemove)
+        {
+            task.Resources.Remove(rem);
+        }
+
+        // 2. Add resources in DTO but not in Task
+        var existingIds = task.Resources.Select(r => r.ProjectResourceId).ToList();
+        var toAdd = dto.AssignedResourceIds.Where(id => !existingIds.Contains(id)).ToList();
+
+        foreach(var addId in toAdd)
+        {
+            task.Resources.Add(new ProjectTaskResource { ProjectResourceId = addId, ProjectTaskId = task.Id });
+        }
 
         // Recalculate Project Progress (in case duration/weighting changes in future, or if we move tasks)
         await RecalculateProjectProgress(tenantId, task.ProjectId);
@@ -144,6 +200,53 @@ public class ProjectTaskService : IProjectTaskService
         else
         {
             project.CompletionPercentage = 0;
+        }
+    }
+
+    private async Task CheckResourceAvailability(Guid tenantId, DateTime startDate, DateTime dueDate, List<Guid> projectResourceIds, Guid? currentTaskId = null)
+    {
+        // 1. Get the EmployeeIds and AssetIds for the requested ProjectResources
+        var resourcesToCheck = await _context.ProjectResources
+            .Where(x => projectResourceIds.Contains(x.Id))
+            .Select(x => new { x.Id, x.EmployeeId, x.AssetId })
+            .ToListAsync();
+
+        var employeeIds = resourcesToCheck.Where(x => x.EmployeeId.HasValue).Select(x => x.EmployeeId.Value).ToList();
+        var assetIds = resourcesToCheck.Where(x => x.AssetId.HasValue).Select(x => x.AssetId.Value).ToList();
+
+        if (!employeeIds.Any() && !assetIds.Any()) return;
+
+        // 2. Find overlapping tasks across ALL projects for this tenant
+        // Overlap Logic: (StartA < EndB) && (EndA > StartB)
+        
+        var query = _context.ProjectTasks
+            .Include(t => t.Resources)
+                .ThenInclude(tr => tr.ProjectResource)
+            .Where(t => 
+                t.TenantId == tenantId && 
+                !t.IsDeleted &&
+                (currentTaskId == null || t.Id != currentTaskId) &&
+                t.StartDate < dueDate && t.DueDate > startDate
+            );
+
+        // Optimization: Filter at DB level to only tasks that have matching resource types
+        var conflictingTasks = await query
+            .Where(t => t.Resources.Any(tr => 
+                (tr.ProjectResource.EmployeeId.HasValue && employeeIds.Contains(tr.ProjectResource.EmployeeId.Value)) ||
+                (tr.ProjectResource.AssetId.HasValue && assetIds.Contains(tr.ProjectResource.AssetId.Value))
+            ))
+            .Select(t => new 
+            { 
+                TaskName = t.Name,
+                StartDate = t.StartDate,
+                DueDate = t.DueDate
+            })
+            .ToListAsync();
+
+        if (conflictingTasks.Any())
+        {
+            var conflict = conflictingTasks.First();
+            throw new InvalidOperationException($"Resource conflict detected. One or more resources are already assigned to task '{conflict.TaskName}' from {conflict.StartDate:d} to {conflict.DueDate:d}.");
         }
     }
 }

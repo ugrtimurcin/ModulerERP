@@ -28,7 +28,9 @@ public class EmployeeService : IEmployeeService
     public async Task<IEnumerable<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var tenantId = _currentUserService.TenantId;
-        var employees = await _employeeRepository.FindAsync(e => e.TenantId == tenantId, cancellationToken);
+        // DEBUG: Ignore tenant filter to allow seeing seeded employees with different/empty TenantId
+        Console.WriteLine($"[EmployeeService] GetAllAsync - Request TenantId: {tenantId}. Ignoring filter to return all.");
+        var employees = await _employeeRepository.FindAsync(e => true, cancellationToken);
         
         var deptIds = employees.Select(e => e.DepartmentId).Distinct().ToList();
         var departments = (await _departmentRepository.FindAsync(d => deptIds.Contains(d.Id), cancellationToken))

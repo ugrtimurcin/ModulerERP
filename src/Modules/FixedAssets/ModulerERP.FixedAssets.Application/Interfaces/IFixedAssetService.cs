@@ -37,6 +37,11 @@ public interface IFixedAssetService
     Task<Guid> RecordMaintenanceAsync(RecordMaintenanceDto dto, Guid userId);
     
     Task DisposeAssetAsync(DisposeAssetDto dto, Guid userId);
+
+    /// <summary>
+    /// Updates asset location and status (e.g. from Project Assignment)
+    /// </summary>
+    Task UpdateLocationAndStatusAsync(Guid tenantId, Guid assetId, string locationDescription, string status, CancellationToken ct = default);
     
     #endregion
 

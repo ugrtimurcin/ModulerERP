@@ -23,24 +23,38 @@ public class AuthController : BaseApiController
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new { success = false, errors = ModelState });
-
-        var result = await _authService.LoginAsync(new LoginDto(request.Email, request.Password));
-
-        if (result == null)
+        try
         {
-            return Unauthorized(new { success = false, error = "Invalid email or password" });
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, errors = ModelState });
+
+            var result = await _authService.LoginAsync(new LoginDto(request.Email, request.Password));
+
+            if (result == null)
+            {
+                return Unauthorized(new { success = false, error = "Invalid email or password" });
+            }
+
+            // Record successful login
+            await _authService.RecordLoginAttemptAsync(
+                result.User.Id, result.User.Id, true,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                HttpContext.Request.Headers.UserAgent.ToString()
+            );
+
+            return Ok(new { success = true, data = result });
         }
-
-        // Record successful login
-        await _authService.RecordLoginAttemptAsync(
-            result.User.Id, result.User.Id, true,
-            HttpContext.Connection.RemoteIpAddress?.ToString(),
-            HttpContext.Request.Headers.UserAgent.ToString()
-        );
-
-        return Ok(new { success = true, data = result });
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Login Error: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                Console.WriteLine($"Inner Stack Trace: {ex.InnerException.StackTrace}");
+            }
+            return StatusCode(500, new { success = false, error = ex.Message, details = ex.ToString() });
+        }
     }
 
     /// <summary>

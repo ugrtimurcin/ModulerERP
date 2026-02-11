@@ -74,6 +74,24 @@ public class HRController : BaseApiController
         return Ok(new { token });
     }
 
+    [HttpGet("employees/lookup")]
+    public async Task<IActionResult> GetEmployeesLookup(CancellationToken ct)
+    {
+        // TODO: Move projection to Service layer in future. For now, fetch all and project.
+        var employees = await _employeeService.GetAllAsync(ct);
+        
+        Console.WriteLine($"[HRController] GetEmployeesLookup - Found {employees.Count()} employees.");
+        
+        var result = employees.Select(e => new 
+        { 
+            e.Id, 
+            e.FirstName, 
+            e.LastName, 
+            Position = e.JobTitle 
+        });
+        return Ok(new { success = true, data = result });
+    }
+
     // ==================== DEPARTMENTS ====================
 
     [HttpGet("departments")]

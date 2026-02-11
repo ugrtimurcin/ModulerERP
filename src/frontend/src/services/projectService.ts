@@ -19,7 +19,10 @@ import type {
     BillOfQuantitiesItemDto,
     CreateBoQItemDto,
     UpdateBoQItemDto,
-    UpdateProgressPaymentDetailDto
+    UpdateProgressPaymentDetailDto,
+    ResourceRateCardDto,
+    CreateResourceRateCardDto,
+    UpdateResourceRateCardDto
 } from '../types/project';
 
 export const projectService = {
@@ -44,6 +47,13 @@ export const projectService = {
         update: (id: string, data: UpdateProjectTaskDto) => request<void>(`/projecttasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: string) => request<void>(`/projecttasks/${id}`, { method: 'DELETE' }),
         updateProgress: (id: string, data: UpdateProjectTaskProgressDto) => request<void>(`/projecttasks/${id}/progress`, { method: 'PUT', body: JSON.stringify(data) }),
+    },
+
+    // Resources
+    resources: {
+        getAll: (projectId: string) => request<Array<import('../types/project').ProjectResourceDto>>(`/projects/${projectId}/resources`),
+        create: (data: import('../types/project').CreateProjectResourceDto) => request<import('../types/project').ProjectResourceDto>('/projectresources', { method: 'POST', body: JSON.stringify(data) }),
+        delete: (id: string) => request<void>(`/projectresources/${id}`, { method: 'DELETE' }),
     },
 
     // Transactions (Costs)
@@ -78,5 +88,13 @@ export const projectService = {
         create: (data: CreateChangeOrderDto) => request<ProjectChangeOrderDto>('/projectchangeorders', { method: 'POST', body: JSON.stringify(data) }),
         approve: (id: string) => request<void>(`/projectchangeorders/${id}/approve`, { method: 'POST' }),
         reject: (id: string) => request<void>(`/projectchangeorders/${id}/reject`, { method: 'POST' })
+    },
+
+    // Rate Cards
+    rateCards: {
+        getAll: (projectId?: string) => request<Array<ResourceRateCardDto>>(`/projects/rate-cards${projectId ? `?projectId=${projectId}` : ''}`),
+        create: (data: CreateResourceRateCardDto) => request<ResourceRateCardDto>('/projects/rate-cards', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id: string, data: UpdateResourceRateCardDto) => request<void>(`/projects/rate-cards/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: (id: string) => request<void>(`/projects/rate-cards/${id}`, { method: 'DELETE' }),
     }
 };

@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import {
     Plus, Edit, Trash, ChevronRight, ChevronDown
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Badge } from '@/components/ui';
 import { Modal } from '@/components/ui/Modal';
 import { useDialog } from '@/components/ui/Dialog';
+import { useToast } from '@/components/ui/Toast';
+import { MultiSelect } from '@/components/ui/MultiSelect';
 import { projectService } from '@/services/projectService';
-import type { ProjectTaskDto, CreateProjectTaskDto, UpdateProjectTaskDto } from '@/types/project';
+import type { ProjectTaskDto, CreateProjectTaskDto, UpdateProjectTaskDto, ProjectResourceDto } from '@/types/project';
 import { ProjectTaskStatus } from '@/types/project';
 
 interface TasksTabProps {
@@ -17,8 +19,10 @@ interface TasksTabProps {
 export function TasksTab({ projectId }: TasksTabProps) {
     const { t } = useTranslation();
     const { confirm } = useDialog();
+    const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [tasks, setTasks] = useState<ProjectTaskDto[]>([]);
+    const [resources, setResources] = useState<ProjectResourceDto[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<ProjectTaskDto | null>(null);
 
@@ -27,11 +31,12 @@ export function TasksTab({ projectId }: TasksTabProps) {
         name: '',
         startDate: '',
         dueDate: '',
-        assignedEmployeeId: undefined
+        assignedResourceIds: []
     });
 
     useEffect(() => {
         loadTasks();
+        loadResources();
     }, [projectId]);
 
     const loadTasks = async () => {
@@ -44,6 +49,17 @@ export function TasksTab({ projectId }: TasksTabProps) {
             console.error('Failed to load tasks', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadResources = async () => {
+        try {
+            const response = await projectService.resources.getAll(projectId);
+            if (response.success && response.data) {
+                setResources(response.data);
+            }
+        } catch (error) {
+            console.error('Failed to load resources', error);
         }
     };
 
@@ -76,7 +92,8 @@ export function TasksTab({ projectId }: TasksTabProps) {
             name: '',
             startDate: new Date().toISOString().split('T')[0],
             dueDate: new Date().toISOString().split('T')[0],
-            parentTaskId: parent?.id
+            parentTaskId: parent?.id,
+            assignedResourceIds: []
         });
         setIsModalOpen(true);
     };
@@ -89,7 +106,7 @@ export function TasksTab({ projectId }: TasksTabProps) {
             startDate: task.startDate.split('T')[0],
             dueDate: task.dueDate.split('T')[0],
             parentTaskId: task.parentTaskId,
-            assignedEmployeeId: task.assignedEmployeeId
+            assignedResourceIds: task.assignedResources?.map(r => r.projectResourceId) || []
         });
         setIsModalOpen(true);
     };
@@ -114,31 +131,49 @@ export function TasksTab({ projectId }: TasksTabProps) {
         try {
             if (!formData.name || !formData.startDate || !formData.dueDate) return;
 
+            let response;
             if (editingTask) {
-                await projectService.tasks.update(editingTask.id, {
+                response = await projectService.tasks.update(editingTask.id, {
                     id: editingTask.id,
                     projectId,
                     name: formData.name,
                     startDate: formData.startDate,
                     dueDate: formData.dueDate,
                     parentTaskId: formData.parentTaskId,
-                    assignedEmployeeId: formData.assignedEmployeeId
+                    assignedResourceIds: formData.assignedResourceIds
                 } as UpdateProjectTaskDto);
             } else {
-                await projectService.tasks.create({
+                response = await projectService.tasks.create({
                     projectId,
                     name: formData.name!,
                     startDate: formData.startDate,
                     dueDate: formData.dueDate,
                     parentTaskId: formData.parentTaskId,
-                    assignedEmployeeId: formData.assignedEmployeeId
+                    assignedResourceIds: formData.assignedResourceIds
                 } as CreateProjectTaskDto);
             }
 
+            // Note: Update returns void/undefined in current service definition, but Create returns ProjectTaskDto?
+            // Actually api.ts request<void> returns ApiResponse<void>.
+            // Let's check api.ts request signature. It returns Promise<ApiResponse<T>>.
+            // So response object will have success/error properties.
+
+            // Casting to any because projectService.tasks.update type might be inferred as Promise<ApiResponse<void>> 
+            // but the Service definition says request<void>.
+
+            const res = response as any;
+
+            if (res && res.success === false) {
+                toast.error(t('common.error'), res.error || t('common.errorSaving'));
+                return;
+            }
+
+            toast.success(t('common.success'), t('common.saved'));
             setIsModalOpen(false);
             loadTasks();
         } catch (error) {
             console.error('Failed to save task', error);
+            toast.error(t('common.error'), t('common.errorSaving'));
         }
     };
 
@@ -187,6 +222,7 @@ export function TasksTab({ projectId }: TasksTabProps) {
                         label={t('projects.tasks.taskName')}
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
                     />
                     <div className="grid grid-cols-2 gap-4">
                         <Input
@@ -194,15 +230,27 @@ export function TasksTab({ projectId }: TasksTabProps) {
                             type="date"
                             value={formData.startDate}
                             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                            required
                         />
                         <Input
                             label={t('projects.tasks.dueDate')}
                             type="date"
                             value={formData.dueDate}
                             onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                            required
                         />
                     </div>
-                    {/* Employee Select would go here */}
+
+                    <MultiSelect
+                        label={t('projects.tasks.assignedResources')}
+                        options={resources.map(r => ({
+                            label: `${r.role} ${r.employeeName ? `(${r.employeeName})` : r.assetName ? `(${r.assetName})` : ''}`,
+                            value: r.id
+                        }))}
+                        value={formData.assignedResourceIds || []}
+                        onChange={(val) => setFormData({ ...formData, assignedResourceIds: val })}
+                        placeholder={t('common.select')}
+                    />
 
                     <div className="flex justify-end space-x-2 mt-4">
                         <Button variant="ghost" onClick={() => setIsModalOpen(false)}>{t('common.cancel')}</Button>
@@ -241,6 +289,15 @@ function TaskItem({ task, level, onAddSub, onEdit, onDelete }: TaskItemProps) {
 
                 <div className="flex-1 flex items-center gap-3">
                     <span className="font-medium">{task.name}</span>
+
+                    {/* Resource Badges */}
+                    {task.assignedResources && task.assignedResources.length > 0 && (
+                        <div className="flex gap-1">
+                            {task.assignedResources.map(r => (
+                                <Badge key={r.projectResourceId} variant="info">{r.role}</Badge>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto">
                         <span className={`px-2 py-0.5 rounded-full ${task.status === ProjectTaskStatus.Completed ? 'bg-green-100 text-green-800' :
