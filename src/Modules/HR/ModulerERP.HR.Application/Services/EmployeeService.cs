@@ -1,6 +1,7 @@
 using ModulerERP.HR.Application.DTOs;
 using ModulerERP.HR.Application.Interfaces;
 using ModulerERP.HR.Domain.Entities;
+using ModulerERP.HR.Infrastructure.Persistence;
 using ModulerERP.HR.Domain.Enums;
 using global::ModulerERP.SharedKernel.Interfaces;
 
@@ -10,18 +11,19 @@ public class EmployeeService : IEmployeeService
 {
     private readonly IRepository<Employee> _employeeRepository;
     private readonly IRepository<Department> _departmentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IRepository<Department> _departmentRepository;
+    private readonly HRDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
     public EmployeeService(
         IRepository<Employee> employeeRepository,
         IRepository<Department> departmentRepository,
-        IUnitOfWork unitOfWork,
+        HRDbContext dbContext,
         ICurrentUserService currentUserService)
     {
         _employeeRepository = employeeRepository;
         _departmentRepository = departmentRepository;
-        _unitOfWork = unitOfWork;
+        _dbContext = dbContext;
         _currentUserService = currentUserService;
     }
 
@@ -120,7 +122,7 @@ public class EmployeeService : IEmployeeService
         }
 
         await _employeeRepository.AddAsync(emp, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return (await GetByIdAsync(emp.Id, cancellationToken))!; 
     }
@@ -134,8 +136,7 @@ public class EmployeeService : IEmployeeService
         emp.UpdateJob(dto.JobTitle, dto.DepartmentId, dto.SupervisorId);
         emp.SetSalary(dto.CurrentSalary, emp.SalaryCurrencyId);
         
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<string> GenerateQrTokenAsync(Guid id, CancellationToken cancellationToken = default)
@@ -147,7 +148,7 @@ public class EmployeeService : IEmployeeService
         var token = emp.Id.ToString();
         emp.SetQrToken(token);
         
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return token;
     }
 }

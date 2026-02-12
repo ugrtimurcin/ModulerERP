@@ -86,11 +86,11 @@ export function BoQItemDialog({
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={initialData ? t('project.boq.editItem') : t('project.boq.addItem')}
+            title={initialData ? t('projects.boq.editItem') : t('projects.boq.addItem')}
         >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <Input
-                    label={t('project.boq.itemCode')}
+                    label={t('projects.boq.itemCode')}
                     error={errors.itemCode?.message}
                     {...register('itemCode', { required: t('validation.required') })}
                 />
@@ -131,7 +131,7 @@ export function BoQItemDialog({
                 <div className="grid grid-cols-2 gap-4">
                     <Input
                         type="number"
-                        label={t('project.boq.unitPrice')} // Income
+                        label={t('projects.boq.unitPrice')} // Income
                         step="0.01"
                         error={errors.contractUnitPrice?.message}
                         {...register('contractUnitPrice', {
@@ -143,7 +143,7 @@ export function BoQItemDialog({
 
                     <Input
                         type="number"
-                        label={t('project.boq.unitCost')} // Expense
+                        label={t('projects.boq.unitCost')} // Expense
                         step="0.01"
                         error={errors.estimatedUnitCost?.message}
                         {...register('estimatedUnitCost', {

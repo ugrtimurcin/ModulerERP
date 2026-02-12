@@ -164,6 +164,27 @@ public class ProgressPaymentService : IProgressPaymentService
         }
     }
 
+    public async Task UpdateAsync(Guid tenantId, Guid id, UpdateProgressPaymentDto dto)
+    {
+        var payment = await _context.ProgressPayments
+            .Include(p => p.Details)
+            .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId && !x.IsDeleted);
+
+        if (payment == null) throw new KeyNotFoundException($"Progress Payment {id} not found.");
+        if (payment.Status != ProgressPaymentStatus.Draft) throw new InvalidOperationException("Cannot update a payment that is not in Draft status.");
+
+        payment.Date = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
+        payment.PeriodStart = DateTime.SpecifyKind(dto.PeriodStart, DateTimeKind.Utc);
+        payment.PeriodEnd = DateTime.SpecifyKind(dto.PeriodEnd, DateTimeKind.Utc);
+        payment.MaterialOnSiteAmount = dto.MaterialOnSiteAmount;
+        payment.AdvanceDeductionAmount = dto.AdvanceDeductionAmount;
+        payment.IsExpense = dto.IsExpense;
+
+        payment.Calculate();
+
+        await _context.SaveChangesAsync();
+    }
+
     public async Task UpdateDetailAsync(Guid tenantId, Guid paymentId, UpdateProgressPaymentDetailDto dto)
     {
          var payment = await _context.ProgressPayments

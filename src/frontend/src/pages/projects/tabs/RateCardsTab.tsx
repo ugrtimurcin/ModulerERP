@@ -104,11 +104,11 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
                             <table className="w-full caption-bottom text-sm text-left">
                                 <thead className="[&_tr]:border-b">
                                     <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Type</th>
-                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Resource</th>
-                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Rate</th>
-                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Effective From</th>
-                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[100px]">Actions</th>
+                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.type')}</th>
+                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.resource')}</th>
+                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.rate')}</th>
+                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.effectiveFrom')}</th>
+                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[100px]">{t('projects.tabs.rateCard.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="[&_tr:last-child]:border-0">
@@ -119,14 +119,14 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
                                             </td>
                                             <td className="p-4 align-middle">
                                                 {card.employeeName || card.assetName || '-'}
-                                                {card.projectId ? <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1 rounded">Project</span> : <span className="ml-2 text-xs bg-gray-100 text-gray-800 px-1 rounded">Global</span>}
+                                                {card.projectId ? <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-1 rounded">{t('projects.tabs.rateCard.project')}</span> : <span className="ml-2 text-xs bg-gray-100 text-gray-800 px-1 rounded">{t('projects.tabs.rateCard.global')}</span>}
                                             </td>
                                             <td className="p-4 align-middle font-mono">
                                                 {card.hourlyRate.toFixed(2)}
                                             </td>
                                             <td className="p-4 align-middle">
                                                 {new Date(card.effectiveFrom).toLocaleDateString()}
-                                                {card.effectiveTo ? ` - ${new Date(card.effectiveTo).toLocaleDateString()}` : ' - Present'}
+                                                {card.effectiveTo ? ` - ${new Date(card.effectiveTo).toLocaleDateString()}` : ` - ${t('projects.tabs.rateCard.present')}`}
                                             </td>
                                             <td className="p-4 align-middle">
                                                 <div className="flex items-center gap-2">

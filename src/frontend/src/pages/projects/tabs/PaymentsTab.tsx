@@ -5,7 +5,7 @@ import { projectService } from '@/services/projectService';
 import { Button } from '@/components/ui';
 import { Plus, Check, FileText } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
-import { ProgressPaymentDialog } from '../components/ProgressPaymentDialog';
+import { ProgressPaymentWizard } from '../components/wizard/ProgressPaymentWizard';
 
 interface PaymentsTabProps {
     projectId: string;
@@ -140,7 +140,7 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
                 </table>
             </div>
 
-            <ProgressPaymentDialog
+            <ProgressPaymentWizard
                 isOpen={isDialogOpen}
                 onClose={() => setIsDialogOpen(false)}
                 projectId={projectId}

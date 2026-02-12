@@ -36,6 +36,13 @@ public class ProgressPaymentController : ControllerBase
         return CreatedAtAction(nameof(GetByProject), new { projectId = result.ProjectId }, result);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid projectId, Guid id, [FromBody] UpdateProgressPaymentDto dto)
+    {
+        await _service.UpdateAsync(_currentUserService.TenantId, id, dto);
+        return NoContent();
+    }
+
     [HttpPost("{id}/approve")]
     public async Task<IActionResult> Approve(Guid projectId, Guid id)
     {

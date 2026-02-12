@@ -28,7 +28,11 @@ public class ProgressPayment : BaseEntity
     public decimal WithholdingTaxRate { get; set; } // Stopaj Oranı
     public decimal WithholdingTaxAmount { get; set; } // Stopaj Kesintisi
     
-    public decimal AdvanceDeductionAmount { get; set; } // Avans Kesintisi
+    public decimal SecurityDepositRate { get; set; } // [NEW] Teminat Kesintisi Oranı
+    public decimal SecurityDepositAmount { get; set; } // [NEW] Teminat Kesintisi Tutarı
+
+    public decimal AdvanceRepaymentAmount { get; set; } // [NEW] Avans Mahsubu (Replced AdvanceDeductionAmount)
+    public decimal AdvanceDeductionAmount { get; set; } // Keep for compatibility if needed, else remove later
     
     public decimal NetPayableAmount { get; private set; }
     
@@ -52,10 +56,18 @@ public class ProgressPayment : BaseEntity
         // Deductions are usually calculated on the Delta
         if (RetentionAmount == 0 && RetentionRate > 0)
             RetentionAmount = PeriodDeltaAmount * RetentionRate;
+
+        if (SecurityDepositAmount == 0 && SecurityDepositRate > 0) // [NEW]
+            SecurityDepositAmount = PeriodDeltaAmount * SecurityDepositRate;
             
         if (WithholdingTaxAmount == 0 && WithholdingTaxRate > 0)
             WithholdingTaxAmount = PeriodDeltaAmount * WithholdingTaxRate;
             
-        NetPayableAmount = PeriodDeltaAmount - RetentionAmount - WithholdingTaxAmount - AdvanceDeductionAmount;
+        NetPayableAmount = PeriodDeltaAmount 
+            - RetentionAmount 
+            - SecurityDepositAmount 
+            - WithholdingTaxAmount 
+            - AdvanceRepaymentAmount
+            - AdvanceDeductionAmount;
     }
 }

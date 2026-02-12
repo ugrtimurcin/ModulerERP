@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ModulerERP.ProjectManagement.Application.DTOs;
 using ModulerERP.ProjectManagement.Application.Interfaces;
 
-namespace ModulerERP.Api.Controllers;
+namespace ModulerERP.Api.Controllers.ProjectManagement;
 
 public class ProjectResourcesController : BaseApiController
 {

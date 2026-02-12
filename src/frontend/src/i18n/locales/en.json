@@ -1239,12 +1239,44 @@
     "completion": "Completion",
     "client": "Client",
     "manager": "Project Manager",
+    "addResource": "Add Resource",
+    "addRateCard": "Add Rate Card",
+    "role": "Role",
+    "hourlyCost": "Hourly Cost",
     "tabs": {
       "details": "Details",
       "tasks": "WBS & Tasks",
+      "dailyLogs": "Daily Logs",
       "budget": "Budget & Financials",
       "payments": "Progress Payments",
-      "documents": "Documents"
+      "documents": "Documents",
+      "resources": "Resources",
+      "rateCards": "Rate Cards",
+      "rateCardsTitle": "Rate Card Management",
+      "rateCard": {
+        "type": "Type",
+        "resource": "Resource",
+        "rate": "Rate",
+        "effectiveFrom": "Effective From",
+        "effectiveTo": "Effective To",
+        "actions": "Actions",
+        "project": "Project",
+        "global": "Global",
+        "present": "Present"
+      },
+      "resourcesTitle": "Resource Management",
+      "resource": {
+        "type": "Resource Type",
+        "types": {
+          "other": "Other (Manual)",
+          "employee": "Employee",
+          "asset": "Asset"
+        },
+        "selectEmployees": "Select Employees",
+        "selectAssets": "Select Assets"
+      },
+      "changeOrders": "Change Orders",
+      "boq": "Bill of Quantities"
     },
     "financials": {
       "summary": "Financial Summary",
@@ -1290,6 +1322,25 @@
         "approved": "Approved",
         "invoiced": "Invoiced"
       },
+      "retention": "Retention",
+      "withholdingTax": "Withholding Tax",
+      "netPayable": "Net Payable",
+      "previousCumulative": "Previous Cumulative",
+      "calculatedDeductions": "Calculated Deductions",
+      "isExpensePayment": "Is Expense Payment?",
+      "materialOnSiteDesc": "Amount of materials on site not yet installed",
+      "wizard": {
+        "basicInfo": "Basic Info",
+        "quantities": "Quantities",
+        "financials": "Financials",
+        "review": "Review",
+        "readyToFinish": "Ready to Finish",
+        "reviewNote": "Please review and confirm the payment details.",
+        "financialAdjustments": "Financial Adjustments",
+        "enterQuantities": "Enter Period Quantities",
+        "enterBasicInfo": "Enter Payment Information",
+        "draftNote": "Note: Clicking Next will save as Draft."
+      },
       "grid": {
         "code": "Code",
         "description": "Description",
@@ -1305,9 +1356,17 @@
       "title": "Daily Logs",
       "addDailyLog": "Add Daily Log",
       "weather": "Weather",
+      "weatherCondition": "Weather Condition",
       "resources": "Resources",
+      "weatherPlaceholder": "e.g. Sunny, 25°C",
+      "siteManagerNote": "Site Manager Note",
+      "resourceUsage": "Resource Usage",
+      "selectResource": "Select Resource",
+      "materialUsage": "Material Usage",
       "confirmApprove": "Are you sure you want to approve this daily log?",
-      "approved": "Daily Log Approved"
+      "approved": "Daily Log Approved",
+      "confirmBatchApprove": "Are you sure you want to approve {{count}} selected logs?",
+      "batchApproved": "Selected logs approved"
     },
     "boq": {
       "title": "Bill of Quantities",

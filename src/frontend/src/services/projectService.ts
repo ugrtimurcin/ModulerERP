@@ -11,6 +11,7 @@ import type {
     CreateProjectTransactionDto,
     ProgressPaymentDto,
     CreateProgressPaymentDto,
+    UpdateProgressPaymentDto,
     ProjectDocumentDto,
     CreateProjectDocumentDto,
     ProjectFinancialSummaryDto,
@@ -66,6 +67,7 @@ export const projectService = {
     payments: {
         getByProject: (projectId: string) => request<Array<ProgressPaymentDto>>(`/projects/${projectId}/payments`),
         create: (data: CreateProgressPaymentDto) => request<ProgressPaymentDto>(`/projects/${data.projectId}/payments`, { method: 'POST', body: JSON.stringify(data) }),
+        update: (projectId: string, id: string, data: UpdateProgressPaymentDto) => request<void>(`/projects/${projectId}/payments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         approve: (projectId: string, id: string) => request<void>(`/projects/${projectId}/payments/${id}/approve`, { method: 'POST' }),
         updateDetail: (projectId: string, id: string, data: UpdateProgressPaymentDetailDto) => request<void>(`/projects/${projectId}/payments/${id}/details`, { method: 'PUT', body: JSON.stringify(data) }),
     },

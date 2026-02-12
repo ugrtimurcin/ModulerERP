@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using ModulerERP.SystemCore.Application.Interfaces;
+using ModulerERP.SharedKernel.Interfaces; // Added for IExchangeRateService
 using ModulerERP.SystemCore.Infrastructure.Persistence;
 using ModulerERP.SystemCore.Infrastructure.Services;
 
@@ -63,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITenantService, TenantService>();
+        services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
         return services;
     }

@@ -78,6 +78,9 @@ public class HRDbContext : DbContext, IUnitOfWork
             if (entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
                 continue;
 
+            Console.WriteLine($"[HRDbContext] processing entry: {entry.Entity.GetType().Name}, State: {entry.State}, TenantId: {tenantId}");
+
+
             // Handle TenantId and Audit fields
             if (entry.State == EntityState.Added)
             {
@@ -159,6 +162,7 @@ public class HRDbContext : DbContext, IUnitOfWork
         }
 
         var result = await base.SaveChangesAsync(cancellationToken);
+        Console.WriteLine($"[HRDbContext] SaveChangesAsync completed. Records affected: {result}");
 
         if (auditEntries.Count > 0)
         {

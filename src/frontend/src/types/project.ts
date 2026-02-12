@@ -320,6 +320,15 @@ export interface CreateProgressPaymentDto {
     isExpense: boolean;
 }
 
+export interface UpdateProgressPaymentDto {
+    date: string;
+    periodStart: string;
+    periodEnd: string;
+    materialOnSiteAmount: number;
+    advanceDeductionAmount: number;
+    isExpense: boolean;
+}
+
 export interface ProjectDocumentDto {
     id: string;
     projectId: string;

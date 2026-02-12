@@ -1125,12 +1125,44 @@
         "completion": "Tamamlanma",
         "client": "Müşteri",
         "manager": "Proje Yöneticisi",
+        "addResource": "Kaynak Ekle",
+        "addRateCard": "Birim Fiyat Ekle",
+        "role": "Rol",
+        "hourlyCost": "Saatlik Maliyet",
         "tabs": {
             "details": "Detaylar",
             "tasks": "WBS & Görevler",
+            "dailyLogs": "Günlük Raporlar",
             "budget": "Bütçe & Finansallar",
             "payments": "Hakedişler",
-            "documents": "Dokümanlar"
+            "documents": "Dokümanlar",
+            "resources": "Kaynaklar",
+            "rateCards": "Birim Fiyatlar",
+            "rateCardsTitle": "Birim Fiyat Yönetimi",
+            "rateCard": {
+                "type": "Tip",
+                "resource": "Kaynak",
+                "rate": "Birim Fiyat",
+                "effectiveFrom": "Geçerlilik Başlangıcı",
+                "effectiveTo": "Geçerlilik Bitişi",
+                "actions": "İşlemler",
+                "project": "Proje",
+                "global": "Genel",
+                "present": "Günümüz"
+            },
+            "resourcesTitle": "Kaynak Yönetimi",
+            "resource": {
+                "type": "Kaynak Tipi",
+                "types": {
+                    "other": "Diğer (Manuel)",
+                    "employee": "Çalışan",
+                    "asset": "Demirbaş"
+                },
+                "selectEmployees": "Çalışan Seçin",
+                "selectAssets": "Demirbaş Seçin"
+            },
+            "changeOrders": "Zeyilnameler",
+            "boq": "Metraj (BoQ)"
         },
         "financials": {
             "summary": "Finansal Özet",
@@ -1150,7 +1182,8 @@
             "parentTask": "Üst Görev",
             "assignedTo": "Atanan Kişi",
             "dueDate": "Bitiş Tarihi",
-            "progress": "İlerleme"
+            "progress": "İlerleme",
+            "assignedResources": "Atanan Kaynaklar"
         },
         "documents": {
             "upload": "Doküman Yükle",
@@ -1176,6 +1209,25 @@
                 "approved": "Onaylandı",
                 "invoiced": "Faturalandı"
             },
+            "retention": "Teminat Kesintisi",
+            "withholdingTax": "Stopaj Kesintisi",
+            "netPayable": "Ödenecek Tutar",
+            "previousCumulative": "Önceki Kümülatif",
+            "calculatedDeductions": "Hesaplanan Kesintiler",
+            "isExpensePayment": "Gider Ödemesi mi?",
+            "materialOnSiteDesc": "Sahada bulunan ancak henüz imalata girmeyen malzeme tutarı",
+            "wizard": {
+                "basicInfo": "Temel Bilgiler",
+                "quantities": "Metrajlar",
+                "financials": "Finansallar",
+                "review": "İnceleme",
+                "readyToFinish": "Tamamlamaya Hazır",
+                "reviewNote": "Lütfen hakediş detaylarını kontrol edin ve onaylayın.",
+                "financialAdjustments": "Finansal Ayarlamalar",
+                "enterQuantities": "Dönem Metrajlarını Girin",
+                "enterBasicInfo": "Hakediş Bilgilerini Girin",
+                "draftNote": "Not: İleriye tıkladığınızda taslak olarak kaydedilecektir."
+            },
             "grid": {
                 "code": "Kod",
                 "description": "Açıklama",
@@ -1191,9 +1243,17 @@
             "title": "Günlük Raporlar",
             "addDailyLog": "Günlük Rapor Ekle",
             "weather": "Hava Durumu",
+            "weatherCondition": "Hava Durumu",
             "resources": "Kaynaklar",
+            "weatherPlaceholder": "Örn. Güneşli, 25°C",
+            "siteManagerNote": "Şantiye Şefi Notu",
+            "resourceUsage": "Kaynak Kullanımı",
+            "selectResource": "Kaynak Seçin",
+            "materialUsage": "Malzeme Kullanımı",
             "confirmApprove": "Bu günlük raporu onaylamak istediğinizden emin misiniz?",
-            "approved": "Günlük Rapor Onaylandı"
+            "approved": "Günlük Rapor Onaylandı",
+            "confirmBatchApprove": "Seçilen {{count}} raporu onaylamak istediğinizden emin misiniz?",
+            "batchApproved": "Seçilen raporlar onaylandı"
         },
         "boq": {
             "title": "Metraj Cetveli (BoQ)",

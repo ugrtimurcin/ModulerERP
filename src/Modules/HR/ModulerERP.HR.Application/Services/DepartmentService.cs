@@ -1,6 +1,7 @@
 using ModulerERP.HR.Application.DTOs;
 using ModulerERP.HR.Application.Interfaces;
 using ModulerERP.HR.Domain.Entities;
+using ModulerERP.HR.Infrastructure.Persistence;
 using global::ModulerERP.SharedKernel.Interfaces;
 
 namespace ModulerERP.HR.Application.Services;
@@ -8,16 +9,17 @@ namespace ModulerERP.HR.Application.Services;
 public class DepartmentService : IDepartmentService
 {
     private readonly IRepository<Department> _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IRepository<Department> _repository;
+    private readonly HRDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
     public DepartmentService(
         IRepository<Department> repository,
-        IUnitOfWork unitOfWork,
+        HRDbContext dbContext,
         ICurrentUserService currentUserService)
     {
         _repository = repository;
-        _unitOfWork = unitOfWork;
+        _dbContext = dbContext;
         _currentUserService = currentUserService;
     }
 
@@ -59,7 +61,7 @@ public class DepartmentService : IDepartmentService
             dto.ManagerId);
 
         await _repository.AddAsync(dept, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return new DepartmentDto(dept.Id, dept.Name, dept.Description, dept.ManagerId, null);
     }
@@ -70,7 +72,7 @@ public class DepartmentService : IDepartmentService
         if (dept == null) throw new KeyNotFoundException($"Department {id} not found.");
 
         dept.Update(dto.Name, dto.Description, dto.ManagerId);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -79,7 +81,7 @@ public class DepartmentService : IDepartmentService
         if (dept != null)
         {
             _repository.Remove(dept);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

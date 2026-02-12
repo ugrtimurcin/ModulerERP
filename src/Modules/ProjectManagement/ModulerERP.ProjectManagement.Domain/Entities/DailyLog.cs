@@ -1,4 +1,5 @@
 using ModulerERP.SharedKernel.Entities;
+using ModulerERP.ProjectManagement.Domain.Enums;
 
 namespace ModulerERP.ProjectManagement.Domain.Entities;
 
@@ -22,9 +23,14 @@ public class DailyLogResourceUsage : BaseEntity
 {
     public Guid DailyLogId { get; set; }
     public Guid ProjectResourceId { get; set; }
-    public Guid? ProjectTaskId { get; set; } // Optional: Link to Gantt Task
+    public Guid? ProjectTaskId { get; set; } // Link to Gantt Task
     
-    public decimal HoursWorked { get; set; }
+    public decimal RawHours { get; set; } // [NEW] From HR/Attendance
+    public decimal ApprovedHours { get; set; } // [NEW] Billable hours
+    public decimal HoursWorked { get; set; } // Keep for backward compatibility or map to ApprovedHours
+    
+    public ValidationStatus ValidationStatus { get; set; } // [NEW] Enum
+    
     public string Description { get; set; } = string.Empty;
 }
 

@@ -18,6 +18,8 @@ public class Project : BaseEntity
 
     // Commercial
     public Guid ContractCurrencyId { get; set; }
+    public Guid BudgetCurrencyId { get; set; } // [NEW] Added for multi-currency budgeting
+    public Guid LocalCurrencyId { get; set; } // [NEW] Added for multi-currency reporting
     public decimal ContractAmount { get; set; }
     
     // TRNC Financial Settings

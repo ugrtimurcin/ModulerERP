@@ -14,11 +14,15 @@ public class ProjectTransaction : BaseEntity
     public string Description { get; set; } = string.Empty;
 
     // Financials
-    public decimal Amount { get; set; }
+    public decimal Amount { get; set; } // Transaction Amount
     public Guid CurrencyId { get; set; } // Original Currency
     public decimal ExchangeRate { get; set; }
-    public decimal AmountReporting { get; set; } // Converted to Tenant's Functional Currency (TRY)
+    
+    public decimal ProjectCurrencyAmount { get; set; } // [NEW] Amount in Project Budget Currency
+    public decimal LocalCurrencyAmount { get; set; } // [NEW] Amount in Tenant Local Currency
+    public decimal AmountReporting { get; set; } // Deprecated? Or Same as LocalCurrencyAmount
     public DateTime Date { get; set; }
 
-    public ProjectTransactionType Type { get; set; }
+    public ProjectTransactionType Type { get; set; } // Expense/Income category
+    public ProjectTransactionSourceType SourceType { get; set; } // [NEW] Source System (Stock, HR, etc.)
 }

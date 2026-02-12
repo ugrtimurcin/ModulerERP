@@ -250,30 +250,30 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
                     <div className="flex space-x-4 mb-4">
                         <label className="flex items-center space-x-2">
                             <input type="radio" name="resourceType" value="other" checked={resourceType === 'other'} onChange={(e) => handleTypeChange(e.target.value)} />
-                            <span>Other (Manual)</span>
+                            <span>{t('projects.tabs.resource.types.other')}</span>
                         </label>
                         <label className="flex items-center space-x-2">
                             <input type="radio" name="resourceType" value="employee" checked={resourceType === 'employee'} onChange={(e) => handleTypeChange(e.target.value)} />
-                            <span>Employee</span>
+                            <span>{t('projects.tabs.resource.types.employee')}</span>
                         </label>
                         <label className="flex items-center space-x-2">
                             <input type="radio" name="resourceType" value="asset" checked={resourceType === 'asset'} onChange={(e) => handleTypeChange(e.target.value)} />
-                            <span>Asset</span>
+                            <span>{t('projects.tabs.resource.types.asset')}</span>
                         </label>
                     </div>
 
                     {loadingLookups ? (
-                        <div className="text-sm text-muted-foreground">Loading options...</div>
+                        <div className="text-sm text-muted-foreground">{t('common.loading')}</div>
                     ) : (
                         <>
                             {resourceType === 'employee' && (
                                 <div className="space-y-2">
                                     <MultiSelect
-                                        label="Select Employees"
+                                        label={t('projects.tabs.resource.selectEmployees')}
                                         value={formData.employeeIds}
                                         onChange={handleEmployeeSelect}
                                         options={employees.map(e => ({ label: `${e.firstName} ${e.lastName} (${e.position})`, value: e.id }))}
-                                        placeholder="Select Employees..."
+                                        placeholder={t('projects.tabs.resource.selectEmployees') + '...'}
                                     />
                                 </div>
                             )}
@@ -281,11 +281,11 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
                             {resourceType === 'asset' && (
                                 <div className="space-y-2">
                                     <MultiSelect
-                                        label="Select Assets"
+                                        label={t('projects.tabs.resource.selectAssets')}
                                         value={formData.assetIds}
                                         onChange={handleAssetSelect}
                                         options={assets.map(a => ({ label: `${a.name} (${a.serialNumber || 'No SN'})`, value: a.id }))}
-                                        placeholder="Select Assets..."
+                                        placeholder={t('projects.tabs.resource.selectAssets') + '...'}
                                     />
                                 </div>
                             )}

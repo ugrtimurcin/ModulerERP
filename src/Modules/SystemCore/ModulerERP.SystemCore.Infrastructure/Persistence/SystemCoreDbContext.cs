@@ -34,6 +34,7 @@ public class SystemCoreDbContext : DbContext
     // public DbSet<Permission> Permissions => Set<Permission>(); // Removed in V2.0
     public DbSet<Language> Languages => Set<Language>();
     public DbSet<Translation> Translations => Set<Translation>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
 
     // Tenant Management
     public DbSet<Tenant> Tenants => Set<Tenant>();
