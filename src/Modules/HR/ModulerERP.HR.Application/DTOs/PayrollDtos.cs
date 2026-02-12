@@ -23,7 +23,9 @@ public record PayrollEntryDto(
     decimal OvertimePay,
     decimal CommissionPay,
     decimal AdvanceDeduction,
-    decimal TaxDeduction,
+    decimal SocialSecurityEmployee,
+    decimal ProvidentFundEmployee,
+    decimal IncomeTax,
     decimal NetPayable
 );
 

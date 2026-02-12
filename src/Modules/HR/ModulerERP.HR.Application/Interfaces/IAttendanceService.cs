@@ -6,7 +6,8 @@ public interface IAttendanceService
 {
     Task<IEnumerable<DailyAttendanceDto>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default);
     Task<DailyAttendanceDto?> GetByEmployeeAndDateAsync(Guid employeeId, DateTime date, CancellationToken cancellationToken = default);
-    Task<DailyAttendanceDto> CheckInAsync(Guid employeeId, CancellationToken cancellationToken = default);
-    Task CheckOutAsync(Guid employeeId, CancellationToken cancellationToken = default);
+    Task<DailyAttendanceDto> CheckInAsync(Guid employeeId, DateTime? time = null, CancellationToken cancellationToken = default);
+    Task CheckOutAsync(Guid employeeId, DateTime? time = null, CancellationToken cancellationToken = default);
+    Task ApproveAsync(Guid id, CancellationToken cancellationToken = default);
     Task<DailyAttendanceDto> CreateAsync(CreateAttendanceDto dto, CancellationToken cancellationToken = default);
 }

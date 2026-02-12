@@ -233,11 +233,23 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("OvertimeMins")
+                    b.Property<Guid?>("MatchedProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("NormalMins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Overtime1xMins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Overtime2xMins")
                         .HasColumnType("integer");
 
                     b.Property<Guid?>("ShiftId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -327,8 +339,14 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BankName")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Citizenship")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -406,6 +424,9 @@ namespace ModulerERP.HR.Infrastructure.Migrations
 
                     b.Property<DateTime?>("WorkPermitExpDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WorkPermitNumber")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -560,6 +581,9 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal>("Bonus")
+                        .HasColumnType("numeric");
+
                     b.Property<decimal>("CommissionPay")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -586,6 +610,9 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
+                    b.Property<decimal>("IncomeTax")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -606,12 +633,26 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.Property<Guid?>("PayrollId1")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("TaxDeduction")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                    b.Property<decimal>("ProvidentFundEmployee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ProvidentFundEmployer")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SocialSecurityEmployee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SocialSecurityEmployer")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal>("TransportationAllowance")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("UnemploymentInsuranceEmployer")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

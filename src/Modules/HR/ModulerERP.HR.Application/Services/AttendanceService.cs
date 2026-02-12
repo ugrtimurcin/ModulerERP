@@ -3,25 +3,30 @@ using ModulerERP.HR.Application.Interfaces;
 using ModulerERP.HR.Domain.Entities;
 using ModulerERP.SharedKernel.Interfaces;
 
+using ModulerERP.HR.Domain.Enums;
+
 namespace ModulerERP.HR.Application.Services;
 
 public class AttendanceService : IAttendanceService
 {
     private readonly IRepository<DailyAttendance> _attendanceRepository;
     private readonly IRepository<Employee> _employeeRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly MediatR.IPublisher _publisher;
 
     public AttendanceService(
         IRepository<DailyAttendance> attendanceRepository,
         IRepository<Employee> employeeRepository,
-        IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        IHRUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService,
+        MediatR.IPublisher publisher)
     {
         _attendanceRepository = attendanceRepository;
         _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _publisher = publisher;
     }
 
     public async Task<IEnumerable<DailyAttendanceDto>> GetByDateAsync(DateTime date, CancellationToken cancellationToken = default)
@@ -45,7 +50,7 @@ public class AttendanceService : IAttendanceService
             a.CheckInTime,
             a.CheckOutTime,
             a.TotalWorkedMins,
-            a.OvertimeMins,
+            a.Overtime1xMins + a.Overtime2xMins, // Aggregate for DTO
             a.Status
         ));
     }
@@ -71,15 +76,17 @@ public class AttendanceService : IAttendanceService
             record.CheckInTime,
             record.CheckOutTime,
             record.TotalWorkedMins,
-            record.OvertimeMins,
+            record.Overtime1xMins + record.Overtime2xMins, // Aggregate for DTO
             record.Status
         );
     }
 
-    public async Task<DailyAttendanceDto> CheckInAsync(Guid employeeId, CancellationToken cancellationToken = default)
+    public async Task<DailyAttendanceDto> CheckInAsync(Guid employeeId, DateTime? time = null, CancellationToken cancellationToken = default)
     {
-        var today = DateTime.UtcNow.Date;
-        var existing = await GetByEmployeeAndDateAsync(employeeId, today, cancellationToken);
+        var checkInTime = time ?? DateTime.UtcNow;
+        var date = checkInTime.Date;
+        
+        var existing = await GetByEmployeeAndDateAsync(employeeId, date, cancellationToken);
         
         if (existing != null)
             throw new InvalidOperationException("Employee has already checked in today.");
@@ -88,31 +95,63 @@ public class AttendanceService : IAttendanceService
             _currentUserService.TenantId,
             _currentUserService.UserId,
             employeeId,
-            today,
+            date,
             Guid.Empty, // No shift for now
-            AttendanceStatus.Present
+            AttendanceStatus.Present,
+            AttendanceSource.Manual
         );
+
+        // Explicitly set the check-in time using the provided time or UtcNow
+        attendance.RegisterCheckIn(checkInTime);
 
         await _attendanceRepository.AddAsync(attendance, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return (await GetByEmployeeAndDateAsync(employeeId, today, cancellationToken))!;
+        return (await GetByEmployeeAndDateAsync(employeeId, date, cancellationToken))!;
     }
 
-    public async Task CheckOutAsync(Guid employeeId, CancellationToken cancellationToken = default)
+    public async Task CheckOutAsync(Guid employeeId, DateTime? time = null, CancellationToken cancellationToken = default)
     {
-        var today = DateTime.UtcNow.Date;
+        var checkOutTime = time ?? DateTime.UtcNow;
+        var date = checkOutTime.Date;
+
         var records = await _attendanceRepository.FindAsync(
-            a => a.EmployeeId == employeeId && a.Date.Date == today,
+            a => a.EmployeeId == employeeId && a.Date.Date == date,
             cancellationToken);
 
         var record = records.FirstOrDefault();
         if (record == null)
             throw new InvalidOperationException("No check-in found for today.");
 
-        // Note: The entity would need a method to set checkout time
-        // For now, we just save the changes
+        record.RegisterCheckOut(checkOutTime);
+
+        // Determine if weekend
+        var isWeekend = checkOutTime.DayOfWeek == DayOfWeek.Saturday || checkOutTime.DayOfWeek == DayOfWeek.Sunday;
+        var isHoliday = false; // TODO: Implement Holiday Service Lookup
+
+        record.CalculateBreakdown(isHoliday, isWeekend);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ApproveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var record = await _attendanceRepository.GetByIdAsync(id, cancellationToken);
+        if (record == null) throw new KeyNotFoundException($"Attendance record {id} not found.");
+
+        // In a real scenario, we'd update Status to Approved if that enum existed, or separate Validated flag.
+        // For now, we assume implicit approval triggers the event.
+        
+        // Publish Event
+        await _publisher.Publish(new ModulerERP.SharedKernel.Events.AttendanceApprovedEvent(
+            record.Id,
+            record.EmployeeId,
+            record.Date,
+            record.TotalWorkedMins,
+            record.Overtime1xMins,
+            record.Overtime2xMins,
+            record.MatchedProjectId
+        ), cancellationToken);
     }
 
     public async Task<DailyAttendanceDto> CreateAsync(CreateAttendanceDto dto, CancellationToken cancellationToken = default)
@@ -123,7 +162,8 @@ public class AttendanceService : IAttendanceService
             dto.EmployeeId,
             dto.Date,
             dto.ShiftId ?? Guid.Empty,
-            dto.Status
+            dto.Status,
+            AttendanceSource.Manual
         );
 
         await _attendanceRepository.AddAsync(attendance, cancellationToken);

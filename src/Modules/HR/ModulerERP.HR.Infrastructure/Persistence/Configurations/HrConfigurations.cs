@@ -61,7 +61,12 @@ public class PayrollEntryConfiguration : IEntityTypeConfiguration<PayrollEntry>
         builder.Property(e => e.OvertimePay).HasPrecision(18, 2);
         builder.Property(e => e.CommissionPay).HasPrecision(18, 2);
         builder.Property(e => e.AdvanceDeduction).HasPrecision(18, 2);
-        builder.Property(e => e.TaxDeduction).HasPrecision(18, 2);
+            builder.Property(e => e.IncomeTax).HasColumnType("decimal(18,2)");
+            builder.Property(e => e.SocialSecurityEmployee).HasColumnType("decimal(18,2)");
+            builder.Property(e => e.ProvidentFundEmployee).HasColumnType("decimal(18,2)");
+            builder.Property(e => e.SocialSecurityEmployer).HasColumnType("decimal(18,2)");
+            builder.Property(e => e.ProvidentFundEmployer).HasColumnType("decimal(18,2)");
+            builder.Property(e => e.UnemploymentInsuranceEmployer).HasColumnType("decimal(18,2)");
         builder.Property(e => e.NetPayable).HasPrecision(18, 2);
         builder.Property(e => e.ExchangeRate).HasPrecision(18, 4);
     }

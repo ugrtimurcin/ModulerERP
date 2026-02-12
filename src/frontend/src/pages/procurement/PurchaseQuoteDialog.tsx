@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 
 interface QuoteItem {
     id?: string;
@@ -47,14 +47,12 @@ export function PurchaseQuoteDialog({ open, onClose, quote }: PurchaseQuoteDialo
 
     useEffect(() => {
         if (open) {
-            // getAll(page, pageSize, isCustomer, isSupplier)
-            api.partners.getAll(1, 100, undefined, true).then(res => {
-                if (res && res.data) setSuppliers(res.data.data);
+            api.get<{ data: { data: { id: string; name: string }[] } }>('/partners?page=1&pageSize=100&isSupplier=true').then(res => {
+                setSuppliers(res.data.data);
             }).catch(() => { });
 
-            api.rfqs.getAll().then(res => {
-                const list = Array.isArray(res) ? res : (res as any).data || [];
-                setRfqs(list);
+            api.get<any[]>('/procurement/rfqs').then(res => {
+                setRfqs(res);
             }).catch(() => { });
         }
     }, [open]);
@@ -101,13 +99,7 @@ export function PurchaseQuoteDialog({ open, onClose, quote }: PurchaseQuoteDialo
         setItems(updated);
     };
 
-    const totalAmount = items.reduce((sum, item) => sum + item.price, 0); // Logic might need quantity if price is unit price. DTO says "Price" in Item. Usually it's Unit Price * Qty. But QuoteItemDto has Price. Let's assume Unit Price for now and we need Quantity?
-    // Wait, DTO CreatePurchaseQuoteItemDto has Price, LeadTimeDays. It does NOT have Quantity? 
-    // Ah, Update: CreatePurchaseQuoteDto has TotalAmount.
-    // The QuoteItem corresponds to an RFQ Item which has a TargetQuantity. The Quote usually confirms the quantity or offers a different one.
-    // Checking DTO: CreatePurchaseQuoteItemDto: RfqItemId, ProductId, Price, LeadTimeDays. NO Quantity.
-    // This implies the quote is for the requested quantity in RFQ Item.
-    // So Total Amount implies sum of all line totals.
+    const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -116,7 +108,7 @@ export function PurchaseQuoteDialog({ open, onClose, quote }: PurchaseQuoteDialo
         try {
             const payload = {
                 ...form,
-                totalAmount: totalAmount, // This might need to be calculated properly if price is unit price
+                totalAmount: totalAmount,
                 items: items.map(i => ({
                     rfqItemId: i.rfqItemId,
                     productId: i.productId,
@@ -128,12 +120,7 @@ export function PurchaseQuoteDialog({ open, onClose, quote }: PurchaseQuoteDialo
             if (quote) {
                 toast.info('Update not fully implemented');
             } else {
-                // api.ts needs update? Yes, create method for quotes.
-                // Assuming api.purchaseQuotes.create exists or will exist.
-                // It currently doesn't exist in the initial viewed api.ts snippet logic, I might need to check/add it.
-                // Re-checking api.ts snippet: "purchaseQuotes: { getByRfq: ... }"
-                // I need to ADD create to api.ts for quotes.
-                await (api as any).purchaseQuotes.create(payload);
+                await api.post('/procurement/quotes', payload);
                 toast.success(t('procurement.quoteCreated'));
                 onClose(true);
             }

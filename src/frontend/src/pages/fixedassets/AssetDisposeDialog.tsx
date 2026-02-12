@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface Partner {
     id: string;
@@ -13,8 +14,6 @@ interface AssetDisposeDialogProps {
     onClose: (saved: boolean) => void;
     assetId: string;
 }
-
-const API_BASE = '/api/fixedassets';
 
 export function AssetDisposeDialog({ open, onClose, assetId }: AssetDisposeDialogProps) {
     const { t } = useTranslation();
@@ -32,10 +31,10 @@ export function AssetDisposeDialog({ open, onClose, assetId }: AssetDisposeDialo
 
     useEffect(() => {
         if (open) {
-            fetch('/api/partners', { cache: 'no-store' })
-                .then(res => res.json())
-                .then(data => setPartners(data.data || data))
+            api.get<{ data: Partner[] }>('/partners')
+                .then(res => setPartners(res.data || (res as any)))
                 .catch(() => { });
+
             setForm({
                 disposalDate: new Date().toISOString().split('T')[0],
                 type: 0,
@@ -51,27 +50,22 @@ export function AssetDisposeDialog({ open, onClose, assetId }: AssetDisposeDialo
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/dispose`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    assetId,
-                    disposalDate: form.disposalDate,
-                    type: form.type,
-                    saleAmount: form.saleAmount ? parseFloat(form.saleAmount) : null,
-                    reason: form.reason || null,
-                    partnerId: form.partnerId || null,
-                }),
+            await api.post('/fixedassets/dispose', {
+                assetId,
+                disposalDate: form.disposalDate,
+                type: form.type,
+                saleAmount: form.saleAmount ? parseFloat(form.saleAmount) : null,
+                reason: form.reason || null,
+                partnerId: form.partnerId || null,
             });
 
-            if (res.ok) {
-                toast.success(t('fixedAssets.assetDisposed'));
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            toast.success(t('fixedAssets.assetDisposed'));
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

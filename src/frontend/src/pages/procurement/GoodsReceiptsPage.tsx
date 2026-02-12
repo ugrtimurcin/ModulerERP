@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Eye, ClipboardCheck, Package, Truck } from 'lucide-react';
 import { DataTable, Button, Badge, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface GoodsReceipt {
     id: string;
@@ -14,8 +15,6 @@ interface GoodsReceipt {
     itemCount: number;
 }
 
-const API_BASE = '/api/procurement';
-
 export function GoodsReceiptsPage() {
     const { t } = useTranslation();
     const toast = useToast();
@@ -26,8 +25,8 @@ export function GoodsReceiptsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/goods-receipts`, { cache: 'no-store' });
-            if (res.ok) setReceipts(await res.json());
+            const data = await api.get<GoodsReceipt[]>('/procurement/goods-receipts');
+            setReceipts(data);
         } catch {
             toast.error('Failed to load goods receipts');
         }

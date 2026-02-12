@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Clock } from 'lucide-react';
 import { DataTable, Button, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { WorkShiftDialog } from './WorkShiftDialog';
+import { api } from '@/lib/api';
 
 interface WorkShift {
     id: string;
@@ -12,8 +13,6 @@ interface WorkShift {
     endTime: string;
     breakMinutes: number;
 }
-
-const API_BASE = '/api/hr/work-shifts';
 
 export function WorkShiftsPage() {
     const { t } = useTranslation();
@@ -28,8 +27,8 @@ export function WorkShiftsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(API_BASE, { cache: 'no-store' });
-            if (res.ok) setShifts(await res.json());
+            const data = await api.get<WorkShift[]>('/hr/work-shifts');
+            setShifts(data);
         } catch {
             toast.error(t('common.error'));
         }
@@ -50,10 +49,12 @@ export function WorkShiftsPage() {
 
         if (confirmed) {
             try {
-                const res = await fetch(`${API_BASE}/${shift.id}`, { method: 'DELETE', cache: 'no-store' });
-                if (res.ok) { toast.success(t('hr.workShiftDeleted')); loadData(); }
-                else toast.error(t('common.error'));
-            } catch { toast.error(t('common.error')); }
+                await api.delete(`/hr/work-shifts/${shift.id}`);
+                toast.success(t('hr.workShiftDeleted'));
+                loadData();
+            } catch (error: any) {
+                toast.error(t('common.error'));
+            }
         }
     };
 

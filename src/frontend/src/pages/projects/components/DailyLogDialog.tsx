@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Input, Select, Button } from '@/components/ui/Form';
 import { Plus, Trash2 } from 'lucide-react';
 import type { CreateDailyLogDto, ProjectResourceDto } from '@/types/project';
-import { projectResourceService } from '@/services/projectResourceService';
+import { api } from '@/lib/api';
 
 interface DailyLogDialogProps {
     isOpen: boolean;
@@ -50,8 +50,8 @@ export function DailyLogDialog({ isOpen, onClose, onSubmit, projectId }: DailyLo
 
     const loadResources = async () => {
         try {
-            const res = await projectResourceService.getByProject(projectId);
-            if (res.success && res.data) {
+            const res = await api.get<{ data: ProjectResourceDto[] }>(`/projects/${projectId}/resources`);
+            if (res.data) {
                 setResources(res.data);
             }
         } catch (error) {

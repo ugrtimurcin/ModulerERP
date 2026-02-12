@@ -4,7 +4,7 @@ import { Plus, Trash, Edit, User, Truck } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useDialog } from '@/components/ui/Dialog';
 import { useToast } from '@/components/ui/Toast';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import type { ResourceRateCardDto, CreateResourceRateCardDto, UpdateResourceRateCardDto } from '@/types/project';
 import { RateCardDialog } from '../components/RateCardDialog';
 
@@ -28,8 +28,8 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
     const loadRateCards = async () => {
         setLoading(true);
         try {
-            const response = await projectService.rateCards.getAll(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ResourceRateCardDto[] }>(`/projects/rate-cards?projectId=${projectId}`);
+            if (response.data) {
                 setRateCards(response.data);
             }
         } catch (error) {
@@ -57,7 +57,7 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
             confirmText: t('common.delete'),
             onConfirm: async () => {
                 try {
-                    await projectService.rateCards.delete(card.id);
+                    await api.delete(`/projects/rate-cards/${card.id}`);
                     toast.success(t('common.success'), t('common.deleted'));
                     loadRateCards();
                 } catch (error) {
@@ -70,12 +70,12 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
 
     const handleSave = async (data: CreateResourceRateCardDto | UpdateResourceRateCardDto) => {
         if (editingCard) {
-            await projectService.rateCards.update(editingCard.id, data as UpdateResourceRateCardDto);
+            await api.put(`/projects/rate-cards/${editingCard.id}`, data);
             toast.success(t('common.success'), t('common.updated'));
         } else {
             // Force projectId for new cards created in this tab
             (data as CreateResourceRateCardDto).projectId = projectId;
-            await projectService.rateCards.create(data as CreateResourceRateCardDto);
+            await api.post('/projects/rate-cards', data);
             toast.success(t('common.success'), t('common.saved'));
         }
         loadRateCards();

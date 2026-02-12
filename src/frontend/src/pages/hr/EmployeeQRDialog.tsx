@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import QRCode from 'react-qr-code';
 import { Button } from '@/components/ui';
 import { X, Printer } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface EmployeeQRDialogProps {
     open: boolean;
@@ -27,12 +28,9 @@ export function EmployeeQRDialog({ open, onClose, employee }: EmployeeQRDialogPr
 
     const handleGenerate = async () => {
         try {
-            const res = await fetch(`/api/hr/employees/${localEmp.id}/generate-qr`, { method: 'PUT' });
-            if (res.ok) {
-                const data = await res.json();
-                setToken(data.token);
-                // Also update local state or trigger parent refresh if needed
-            }
+            const data = await api.put<{ token: string }>(`/hr/employees/${localEmp.id}/generate-qr`, {});
+            setToken(data.token);
+            // Also update local state or trigger parent refresh if needed
         } catch {
             // Handle error
         }

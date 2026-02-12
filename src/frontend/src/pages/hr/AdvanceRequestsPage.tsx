@@ -4,6 +4,7 @@ import { Plus, Check, X, DollarSign, Wallet } from 'lucide-react';
 import { DataTable, Button, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { AdvanceRequestDialog } from './AdvanceRequestDialog';
+import { api } from '@/lib/api';
 
 interface AdvanceRequest {
     id: string;
@@ -22,8 +23,6 @@ interface Employee {
     lastName: string;
 }
 
-const API_BASE = '/api/hr/advance-requests';
-
 export function AdvanceRequestsPage() {
     const { t } = useTranslation();
     const toast = useToast();
@@ -36,13 +35,13 @@ export function AdvanceRequestsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [reqRes, empRes] = await Promise.all([
-                fetch(API_BASE, { cache: 'no-store' }),
-                fetch('/api/hr/employees', { cache: 'no-store' })
+            const [reqData, empData] = await Promise.all([
+                api.get<AdvanceRequest[]>('/hr/advance-requests'),
+                api.get<Employee[]>('/hr/employees')
             ]);
 
-            if (reqRes.ok) setRequests(await reqRes.json());
-            if (empRes.ok) setEmployees(await empRes.json());
+            setRequests(reqData);
+            setEmployees(empData);
         } catch {
             toast.error(t('common.error'));
         }
@@ -56,21 +55,19 @@ export function AdvanceRequestsPage() {
     const handleAction = async (id: string, action: 'approve' | 'reject' | 'pay') => {
         try {
             const url = action === 'pay'
-                ? `${API_BASE}/${id}/paid` // Match backend endpoint: /paid
-                : `${API_BASE}/${id}/${action}`;
+                ? `/hr/advance-requests/${id}/paid`
+                : `/hr/advance-requests/${id}/${action}`;
 
-            const res = await fetch(url, { method: 'PUT', cache: 'no-store' });
-            if (res.ok) {
-                toast.success(
-                    action === 'approve' ? t('hr.advanceApproved') :
-                        action === 'reject' ? t('hr.advanceRejected') :
-                            t('hr.advancePaid')
-                );
-                loadData();
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
+            await api.put(url, {});
+            toast.success(
+                action === 'approve' ? t('hr.advanceApproved') :
+                    action === 'reject' ? t('hr.advanceRejected') :
+                        t('hr.advancePaid')
+            );
+            loadData();
+        } catch {
+            toast.error(t('common.error'));
+        }
     };
 
     const handleDialogClose = (saved: boolean) => {

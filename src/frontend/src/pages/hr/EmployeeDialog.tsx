@@ -2,27 +2,9 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
-interface Employee {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    identityNumber: string;
-    jobTitle: string;
-    departmentId: string;
-    departmentName: string;
-    supervisorId: string | null;
-    supervisorName: string | null;
-    currentSalary: number;
-    status: number;
-    createdAt: string;
-}
-
-interface Department {
-    id: string;
-    name: string;
-}
+import type { Employee, Department } from '@/types/hr';
 
 interface EmployeeDialogProps {
     open: boolean;
@@ -31,8 +13,6 @@ interface EmployeeDialogProps {
     departments: Department[];
     employees: Employee[];
 }
-
-const API_BASE = '/api/hr';
 
 export function EmployeeDialog({ open, onClose, employee, departments, employees }: EmployeeDialogProps) {
     const { t } = useTranslation();
@@ -44,10 +24,15 @@ export function EmployeeDialog({ open, onClose, employee, departments, employees
         lastName: '',
         email: '',
         identityNumber: '',
+        citizenshipNumber: '',
+        workPermitNumber: '',
+        workPermitExpiryDate: '',
         jobTitle: '',
         departmentId: '',
         supervisorId: '',
         currentSalary: 0,
+        bankName: '',
+        iban: '',
     });
 
     useEffect(() => {
@@ -57,10 +42,15 @@ export function EmployeeDialog({ open, onClose, employee, departments, employees
                 lastName: employee.lastName,
                 email: employee.email,
                 identityNumber: employee.identityNumber,
+                citizenshipNumber: employee.citizenshipNumber || '',
+                workPermitNumber: employee.workPermitNumber || '',
+                workPermitExpiryDate: employee.workPermitExpiryDate || '',
                 jobTitle: employee.jobTitle,
                 departmentId: employee.departmentId,
                 supervisorId: employee.supervisorId || '',
                 currentSalary: employee.currentSalary,
+                bankName: employee.bankName || '',
+                iban: employee.iban || '',
             });
         } else {
             setForm({
@@ -68,10 +58,15 @@ export function EmployeeDialog({ open, onClose, employee, departments, employees
                 lastName: '',
                 email: '',
                 identityNumber: '',
+                citizenshipNumber: '',
+                workPermitNumber: '',
+                workPermitExpiryDate: '',
                 jobTitle: '',
                 departmentId: departments[0]?.id || '',
                 supervisorId: '',
                 currentSalary: 0,
+                bankName: '',
+                iban: '',
             });
         }
     }, [employee, departments, open]);
@@ -81,32 +76,21 @@ export function EmployeeDialog({ open, onClose, employee, departments, employees
         setIsSubmitting(true);
 
         try {
-            const url = employee
-                ? `${API_BASE}/employees/${employee.id}`
-                : `${API_BASE}/employees`;
-
-            const method = employee ? 'PUT' : 'POST';
-
             const payload = {
                 ...form,
                 supervisorId: form.supervisorId || null,
             };
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (res.ok) {
-                toast.success(employee ? t('hr.employeeUpdated') : t('hr.employeeCreated'));
-                onClose(true);
+            if (employee) {
+                await api.put(`/hr/employees/${employee.id}`, payload);
+                toast.success(t('hr.employeeUpdated'));
             } else {
-                const error = await res.text();
-                toast.error(t('common.error'), error);
+                await api.post('/hr/employees', payload);
+                toast.success(t('hr.employeeCreated'));
             }
-        } catch {
-            toast.error(t('common.error'));
+            onClose(true);
+        } catch (error: any) {
+            toast.error(error.message || t('common.error'));
         } finally {
             setIsSubmitting(false);
         }
@@ -165,15 +149,72 @@ export function EmployeeDialog({ open, onClose, employee, departments, employees
                                 required
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">{t('hr.identityNumber')}</label>
-                            <input
-                                type="text"
-                                value={form.identityNumber}
-                                onChange={(e) => setForm({ ...form, identityNumber: e.target.value })}
-                                className="w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                required
-                            />
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-medium border-b border-[hsl(var(--border))] pb-2">{t('hr.legalInfo')}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('hr.identityNumber')}</label>
+                                <input
+                                    type="text"
+                                    value={form.identityNumber}
+                                    onChange={(e) => setForm({ ...form, identityNumber: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('hr.citizenshipNumber')}</label>
+                                <input
+                                    type="text"
+                                    value={form.citizenshipNumber}
+                                    onChange={(e) => setForm({ ...form, citizenshipNumber: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('hr.workPermitNumber')}</label>
+                                <input
+                                    type="text"
+                                    value={form.workPermitNumber}
+                                    onChange={(e) => setForm({ ...form, workPermitNumber: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('hr.workPermitExpiryDate')}</label>
+                                <input
+                                    type="date"
+                                    value={form.workPermitExpiryDate ? new Date(form.workPermitExpiryDate).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => setForm({ ...form, workPermitExpiryDate: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-medium border-b border-[hsl(var(--border))] pb-2">{t('hr.bankInfo')}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('hr.bankName')}</label>
+                                <input
+                                    type="text"
+                                    value={form.bankName}
+                                    onChange={(e) => setForm({ ...form, bankName: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('hr.iban')}</label>
+                                <input
+                                    type="text"
+                                    value={form.iban}
+                                    onChange={(e) => setForm({ ...form, iban: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
                         </div>
                     </div>
 

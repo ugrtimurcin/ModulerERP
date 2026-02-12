@@ -9,8 +9,20 @@ public class PayrollEntry : BaseEntity
     public decimal BaseSalary { get; private set; }
     public decimal OvertimePay { get; private set; }
     public decimal CommissionPay { get; private set; }
+    public decimal Bonus { get; private set; }
+    public decimal TransportationAllowance { get; private set; }
+    
+    // Deductions (Employee)
+    public decimal SocialSecurityEmployee { get; private set; } // 9%
+    public decimal ProvidentFundEmployee { get; private set; } // 5%
+    public decimal IncomeTax { get; private set; }
     public decimal AdvanceDeduction { get; private set; }
-    public decimal TaxDeduction { get; private set; }
+    
+    // Employer Costs
+    public decimal SocialSecurityEmployer { get; private set; }
+    public decimal ProvidentFundEmployer { get; private set; }
+    public decimal UnemploymentInsuranceEmployer { get; private set; }
+
     public decimal NetPayable { get; private set; }
     public decimal ExchangeRate { get; private set; }
 
@@ -27,8 +39,15 @@ public class PayrollEntry : BaseEntity
         decimal baseSalary,
         decimal overtime,
         decimal commission,
+        decimal bonus,
+        decimal transport,
+        decimal socialSecurityEmp,
+        decimal providentFundEmp,
+        decimal incomeTax,
         decimal advance,
-        decimal tax,
+        decimal socialSecurityEmplr,
+        decimal providentFundEmplr,
+        decimal unemploymentIns,
         decimal net,
         decimal rate)
     {
@@ -39,8 +58,15 @@ public class PayrollEntry : BaseEntity
             BaseSalary = baseSalary,
             OvertimePay = overtime,
             CommissionPay = commission,
+            Bonus = bonus,
+            TransportationAllowance = transport,
+            SocialSecurityEmployee = socialSecurityEmp,
+            ProvidentFundEmployee = providentFundEmp,
+            IncomeTax = incomeTax,
             AdvanceDeduction = advance,
-            TaxDeduction = tax,
+            SocialSecurityEmployer = socialSecurityEmplr,
+            ProvidentFundEmployer = providentFundEmplr,
+            UnemploymentInsuranceEmployer = unemploymentIns,
             NetPayable = net,
             ExchangeRate = rate
         };

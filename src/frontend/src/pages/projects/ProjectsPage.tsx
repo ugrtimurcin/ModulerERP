@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, Calendar, Folder } from 'lucide-react';
 import { Button, Input, Badge } from '@/components/ui';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import { ProjectStatus } from '@/types/project';
 import type { ProjectDto } from '@/types/project';
 import { useNavigate } from 'react-router-dom';
@@ -20,10 +20,8 @@ export function ProjectsPage() {
 
     const loadProjects = async () => {
         try {
-            const response = await projectService.projects.getAll();
-            if (response.success && response.data) {
-                setProjects(response.data);
-            }
+            const response = await api.get<{ data: ProjectDto[] }>('/projects');
+            setProjects(response.data || []);
         } catch (error) {
             console.error('Failed to load projects', error);
         } finally {

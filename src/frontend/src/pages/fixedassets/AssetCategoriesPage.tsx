@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, FolderTree } from 'lucide-react';
 import { DataTable, Button, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
+import { api } from '@/lib/api';
 import { AssetCategoryDialog } from './AssetCategoryDialog';
 
 interface AssetCategory {
@@ -13,8 +14,6 @@ interface AssetCategory {
     depreciationMethod: number;
     usefulLifeMonths: number;
 }
-
-const API_BASE = '/api/fixedassets';
 
 const DepreciationMethods: Record<number, string> = {
     0: 'Straight Line',
@@ -36,11 +35,8 @@ export function AssetCategoriesPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/categories`, { cache: 'no-store' });
-            if (res.ok) {
-                const data = await res.json();
-                setCategories(data.data || data);
-            }
+            const res = await api.get<{ data: AssetCategory[] }>('/fixedassets/categories');
+            setCategories(res.data || (res as any));
         } catch (error) {
             toast.error(t('common.error'));
         }
@@ -70,13 +66,9 @@ export function AssetCategoriesPage() {
 
         if (confirmed) {
             try {
-                const res = await fetch(`${API_BASE}/categories/${category.id}`, { method: 'DELETE', cache: 'no-store' });
-                if (res.ok) {
-                    toast.success(t('fixedAssets.categoryDeleted'));
-                    loadData();
-                } else {
-                    toast.error(t('common.error'));
-                }
+                await api.delete(`/fixedassets/categories/${category.id}`);
+                toast.success(t('fixedAssets.categoryDeleted'));
+                loadData();
             } catch {
                 toast.error(t('common.error'));
             }

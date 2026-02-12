@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface AssetMeterLogDialogProps {
     open: boolean;
     onClose: (saved: boolean) => void;
     assetId: string;
 }
-
-const API_BASE = '/api/fixedassets';
 
 export function AssetMeterLogDialog({ open, onClose, assetId }: AssetMeterLogDialogProps) {
     const { t } = useTranslation();
@@ -37,25 +36,20 @@ export function AssetMeterLogDialog({ open, onClose, assetId }: AssetMeterLogDia
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/log-meter`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    assetId,
-                    logDate: form.logDate,
-                    meterValue: form.meterValue,
-                    source: form.source,
-                }),
+            await api.post('/fixedassets/log-meter', {
+                assetId,
+                logDate: form.logDate,
+                meterValue: form.meterValue,
+                source: form.source,
             });
 
-            if (res.ok) {
-                toast.success(t('fixedAssets.meterLogged'));
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            toast.success(t('fixedAssets.meterLogged'));
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

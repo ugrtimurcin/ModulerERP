@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Input } from '@/components/ui';
 import { Modal } from '@/components/ui/Modal'; // Using older Modal style for consistency or new Dialog? Using Modal as per ResourcesTab
 import { useToast } from '@/components/ui/Toast';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 import type { CreateResourceRateCardDto, UpdateResourceRateCardDto, ResourceRateCardDto } from '@/types/project';
 
 interface RateCardDialogProps {
@@ -60,18 +60,18 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
         setLoadingLookups(true);
         try {
             const [empRes, assetRes] = await Promise.all([
-                api.employees.getLookup(),
-                api.assets.getLookup()
+                api.get<{ id: string; firstName: string; lastName: string; position: string }[]>('/hr/employees/lookup'),
+                api.get<{ id: string; name: string; serialNumber: string }[]>('/fixedassets/assets/lookup')
             ]);
 
-            if (empRes.success && empRes.data) {
-                setEmployees(empRes.data.map((e: any) => ({
+            if (empRes) {
+                setEmployees(empRes.map((e) => ({
                     id: e.id,
-                    label: `${e.firstName} ${e.lastName} (${e.Position || e.position})`
+                    label: `${e.firstName} ${e.lastName} (${e.position})`
                 })));
             }
-            if (assetRes.success && assetRes.data) {
-                setAssets(assetRes.data.map((a: any) => ({
+            if (assetRes) {
+                setAssets(assetRes.map((a) => ({
                     id: a.id,
                     label: `${a.name} (${a.serialNumber || 'No SN'})`
                 })));

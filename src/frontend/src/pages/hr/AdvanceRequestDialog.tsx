@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface Employee {
     id: string;
@@ -14,8 +15,6 @@ interface AdvanceRequestDialogProps {
     onClose: (saved: boolean) => void;
     employees: Employee[];
 }
-
-const API_BASE = '/api/hr/advance-requests';
 
 export function AdvanceRequestDialog({ open, onClose, employees }: AdvanceRequestDialogProps) {
     const { t } = useTranslation();
@@ -33,21 +32,15 @@ export function AdvanceRequestDialog({ open, onClose, employees }: AdvanceReques
         setIsSubmitting(true);
 
         try {
-            const res = await fetch(API_BASE, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
-            });
-
-            if (res.ok) {
-                toast.success(t('hr.advanceRequestCreated'));
-                setForm({ employeeId: '', amount: 0, description: '' });
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            await api.post('/hr/advance-requests', form);
+            toast.success(t('hr.advanceRequestCreated'));
+            setForm({ employeeId: '', amount: 0, description: '' });
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

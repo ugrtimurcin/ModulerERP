@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { DollarSign, Play, FileText, Calendar, Users } from 'lucide-react';
 import { DataTable, Button, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
+import { PayrollDetailDialog } from './PayrollDetailDialog';
+import { api } from '@/lib/api';
 
 interface PayrollRun {
     id: string;
@@ -17,8 +19,6 @@ interface PayrollRun {
     currencyCode: string;
 }
 
-const API_BASE = '/api/hr';
-
 export function PayrollPage() {
     const { t } = useTranslation();
     const toast = useToast();
@@ -27,12 +27,13 @@ export function PayrollPage() {
     const [runs, setRuns] = useState<PayrollRun[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/payroll?year=${selectedYear}`, { cache: 'no-store' });
-            if (res.ok) setRuns(await res.json());
+            const data = await api.get<PayrollRun[]>(`/hr/payroll?year=${selectedYear}`);
+            setRuns(data);
         } catch {
             toast.error(t('common.error'));
         }
@@ -50,14 +51,16 @@ export function PayrollPage() {
         if (!ok) return;
 
         try {
-            const res = await fetch(`${API_BASE}/payroll/run`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 })
+            await api.post('/hr/payroll/run', {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth() + 1
             });
-            if (res.ok) { toast.success(t('hr.payrollGenerated')); loadData(); }
-            else toast.error(await res.text());
-        } catch { toast.error(t('common.error')); }
+            toast.success(t('hr.payrollGenerated'));
+            loadData();
+        } catch (error: any) {
+            // The api utility throws an Error with the message from the server if available
+            toast.error(error.message || t('common.error'));
+        }
     };
 
     const getMonthName = (month: number) => {
@@ -221,13 +224,23 @@ export function PayrollPage() {
                 isLoading={isLoading}
                 searchable
                 searchPlaceholder={t('common.search')}
-                actions={(_run) => (
+                actions={(run) => (
                     <div className="flex items-center gap-1">
-                        <button onClick={() => { }} className="p-2 rounded-lg hover:bg-[hsl(var(--accent))]" title="View Slips">
+                        <button
+                            onClick={() => setSelectedRunId(run.id)}
+                            className="p-2 rounded-lg hover:bg-[hsl(var(--accent))]"
+                            title={t('hr.payrollDetails')}
+                        >
                             <FileText className="w-4 h-4" />
                         </button>
                     </div>
                 )}
+            />
+
+            <PayrollDetailDialog
+                open={!!selectedRunId}
+                onClose={() => setSelectedRunId(null)}
+                payrollRunId={selectedRunId}
             />
         </div>
     );

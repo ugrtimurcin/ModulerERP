@@ -3,11 +3,12 @@ using ModulerERP.SharedKernel.Entities;
 using ModulerERP.SharedKernel.Enums;
 using ModulerERP.SharedKernel.Interfaces;
 using ModulerERP.HR.Domain.Entities;
+using ModulerERP.HR.Application.Interfaces;
 using System.Text.Json;
 
 namespace ModulerERP.HR.Infrastructure.Persistence;
 
-public class HRDbContext : DbContext, IUnitOfWork
+public class HRDbContext : DbContext, IHRUnitOfWork
 {
     private readonly ICurrentUserService _currentUserService;
 

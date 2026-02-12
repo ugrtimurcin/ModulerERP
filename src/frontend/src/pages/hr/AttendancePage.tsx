@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, Users, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
-import { DataTable, Badge, useToast } from '@/components/ui';
+import { Clock, Users, CheckCircle2, XCircle, AlertCircle, Plus } from 'lucide-react';
+import { DataTable, Badge, useToast, Button } from '@/components/ui';
 import type { Column } from '@/components/ui';
+import type { Employee } from '@/types/hr';
+import { ManualAttendanceDialog } from './ManualAttendanceDialog';
+import { api } from '@/lib/api';
 
 interface DailyAttendance {
     id: string;
@@ -12,25 +15,27 @@ interface DailyAttendance {
     checkInTime: string | null;
     checkOutTime: string | null;
     totalWorkedMins: number;
-    overtimeMins: number;
+    overtimeMins: number; // Aggregate
     status: number;
 }
 
-const API_BASE = '/api/hr';
+
 
 export function AttendancePage() {
     const { t } = useTranslation();
     const toast = useToast();
 
     const [records, setRecords] = useState<DailyAttendance[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
+    const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/attendance?date=${dateFilter}`, { cache: 'no-store' });
-            if (res.ok) setRecords(await res.json());
+            const data = await api.get<DailyAttendance[]>(`/hr/attendance?date=${dateFilter}`);
+            setRecords(data);
         } catch {
             toast.error(t('common.error'));
         }
@@ -39,9 +44,22 @@ export function AttendancePage() {
 
     useEffect(() => { loadData(); }, [loadData]);
 
+    useEffect(() => {
+        // Fetch employees for manual entry dialog
+        const fetchEmployees = async () => {
+            try {
+                const data = await api.get<Employee[]>('/hr/employees');
+                setEmployees(data);
+            } catch (err) {
+                console.error("Failed to fetch employees", err);
+            }
+        };
+        fetchEmployees();
+    }, []);
+
     const formatTime = (time: string | null) => {
         if (!time) return '—';
-        return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        return new Date(time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     };
 
     const formatDuration = (mins: number) => {
@@ -52,20 +70,20 @@ export function AttendancePage() {
 
     const getStatusBadge = (status: number) => {
         const configs: Record<number, { variant: 'success' | 'warning' | 'error' | 'default', label: string }> = {
-            0: { variant: 'success', label: t('hr.attendanceStatuses.present') },
-            1: { variant: 'error', label: t('hr.attendanceStatuses.absent') },
-            2: { variant: 'warning', label: t('hr.attendanceStatuses.late') },
-            3: { variant: 'default', label: t('hr.attendanceStatuses.leave') },
-            4: { variant: 'default', label: t('hr.attendanceStatuses.holiday') },
+            1: { variant: 'success', label: t('hr.attendanceStatuses.present') },
+            2: { variant: 'error', label: t('hr.attendanceStatuses.absent') },
+            3: { variant: 'warning', label: t('hr.attendanceStatuses.late') },
+            4: { variant: 'default', label: t('hr.attendanceStatuses.leave') },
+            5: { variant: 'default', label: t('hr.attendanceStatuses.holiday') },
         };
-        const cfg = configs[status] || configs[0];
+        const cfg = configs[status] || configs[1]; // Default to Present if unknown
         return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
     };
 
     // Stats
-    const presentCount = records.filter(r => r.status === 0).length;
-    const absentCount = records.filter(r => r.status === 1).length;
-    const lateCount = records.filter(r => r.status === 2).length;
+    const presentCount = records.filter(r => r.status === 1).length;
+    const absentCount = records.filter(r => r.status === 2).length;
+    const lateCount = records.filter(r => r.status === 3).length;
 
     const columns: Column<DailyAttendance>[] = [
         {
@@ -136,6 +154,10 @@ export function AttendancePage() {
                         onChange={(e) => setDateFilter(e.target.value)}
                         className="px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
+                    <Button onClick={() => setIsManualDialogOpen(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        {t('hr.manualEntry')}
+                    </Button>
                 </div>
             </div>
 
@@ -194,6 +216,15 @@ export function AttendancePage() {
                 isLoading={isLoading}
                 searchable
                 searchPlaceholder={t('common.search')}
+            />
+
+            <ManualAttendanceDialog
+                open={isManualDialogOpen}
+                onClose={(saved) => {
+                    setIsManualDialogOpen(false);
+                    if (saved) loadData();
+                }}
+                employees={employees}
             />
         </div>
     );

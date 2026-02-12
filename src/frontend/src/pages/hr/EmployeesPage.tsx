@@ -5,29 +5,9 @@ import { DataTable, Button, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { EmployeeDialog } from './EmployeeDialog';
 import { EmployeeQRDialog } from './EmployeeQRDialog';
+import { api } from '@/lib/api';
 
-interface Employee {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    identityNumber: string;
-    jobTitle: string;
-    departmentId: string;
-    departmentName: string;
-    supervisorId: string | null;
-    supervisorName: string | null;
-    currentSalary: number;
-    status: number;
-    createdAt: string;
-}
-
-interface Department {
-    id: string;
-    name: string;
-}
-
-const API_BASE = '/api/hr';
+import type { Employee, Department } from '@/types/hr';
 
 export function EmployeesPage() {
     const { t } = useTranslation();
@@ -45,19 +25,13 @@ export function EmployeesPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [empRes, deptRes] = await Promise.all([
-                fetch(`${API_BASE}/employees`, { cache: 'no-store' }),
-                fetch(`${API_BASE}/departments`, { cache: 'no-store' })
+            const [empData, deptData] = await Promise.all([
+                api.get<Employee[]>('/hr/employees'),
+                api.get<Department[]>('/hr/departments')
             ]);
 
-            if (empRes.ok) {
-                const data = await empRes.json();
-                setEmployees(data);
-            }
-            if (deptRes.ok) {
-                const data = await deptRes.json();
-                setDepartments(data);
-            }
+            setEmployees(empData);
+            setDepartments(deptData);
         } catch (error) {
             toast.error(t('common.error'));
         }
@@ -92,13 +66,9 @@ export function EmployeesPage() {
 
         if (confirmed) {
             try {
-                const res = await fetch(`${API_BASE}/employees/${employee.id}`, { method: 'DELETE', cache: 'no-store' });
-                if (res.ok) {
-                    toast.success(t('hr.employeeDeleted'));
-                    loadData();
-                } else {
-                    toast.error(t('common.error'));
-                }
+                await api.delete(`/hr/employees/${employee.id}`);
+                toast.success(t('hr.employeeDeleted'));
+                loadData();
             } catch {
                 toast.error(t('common.error'));
             }

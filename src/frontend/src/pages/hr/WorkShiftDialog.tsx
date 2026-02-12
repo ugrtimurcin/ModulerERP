@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface WorkShift {
     id: string;
@@ -16,8 +17,6 @@ interface WorkShiftDialogProps {
     onClose: (saved: boolean) => void;
     shift: WorkShift | null;
 }
-
-const API_BASE = '/api/hr/work-shifts';
 
 export function WorkShiftDialog({ open, onClose, shift }: WorkShiftDialogProps) {
     const { t } = useTranslation();
@@ -49,23 +48,19 @@ export function WorkShiftDialog({ open, onClose, shift }: WorkShiftDialogProps) 
         setIsSubmitting(true);
 
         try {
-            const url = shift ? `${API_BASE}/${shift.id}` : API_BASE;
-            const method = shift ? 'PUT' : 'POST';
-
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
-            });
-
-            if (res.ok) {
-                toast.success(shift ? t('hr.workShiftUpdated') : t('hr.workShiftCreated'));
-                onClose(true);
+            if (shift) {
+                await api.put(`/hr/work-shifts/${shift.id}`, form);
+                toast.success(t('hr.workShiftUpdated'));
             } else {
-                toast.error(t('common.error'));
+                await api.post('/hr/work-shifts', form);
+                toast.success(t('hr.workShiftCreated'));
             }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

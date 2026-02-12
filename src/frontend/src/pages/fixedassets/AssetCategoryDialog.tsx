@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface AssetCategory {
     id: string;
@@ -17,8 +18,6 @@ interface AssetCategoryDialogProps {
     onClose: (saved: boolean) => void;
     category: AssetCategory | null;
 }
-
-const API_BASE = '/api/fixedassets';
 
 export function AssetCategoryDialog({ open, onClose, category }: AssetCategoryDialogProps) {
     const { t } = useTranslation();
@@ -64,26 +63,24 @@ export function AssetCategoryDialog({ open, onClose, category }: AssetCategoryDi
         setIsSubmitting(true);
 
         try {
-            const url = category ? `${API_BASE}/categories/${category.id}` : `${API_BASE}/categories`;
-            const method = category ? 'PUT' : 'POST';
+            const payload = {
+                ...form,
+                description: form.description || null,
+            };
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...form,
-                    description: form.description || null,
-                }),
-            });
-
-            if (res.ok) {
-                toast.success(category ? t('fixedAssets.categoryUpdated') : t('fixedAssets.categoryCreated'));
-                onClose(true);
+            if (category) {
+                await api.put(`/fixedassets/categories/${category.id}`, payload);
+                toast.success(t('fixedAssets.categoryUpdated'));
             } else {
-                toast.error(t('common.error'), await res.text());
+                await api.post('/fixedassets/categories', payload);
+                toast.success(t('fixedAssets.categoryCreated'));
             }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            onClose(true);
+        } catch (error: any) {
+            toast.error(error.message || t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

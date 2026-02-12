@@ -6,8 +6,7 @@ import { MultiSelect } from '@/components/ui/MultiSelect';
 import { Modal } from '@/components/ui/Modal';
 import { useDialog } from '@/components/ui/Dialog';
 import { useToast } from '@/components/ui/Toast';
-import { projectService } from '@/services/projectService';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 import type { ProjectResourceDto, CreateProjectResourceDto } from '@/types/project';
 
 interface ResourcesTabProps {
@@ -56,8 +55,8 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
 
     const loadResources = async () => {
         try {
-            const response = await projectService.resources.getAll(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ProjectResourceDto[] }>(`/projects/${projectId}/resources`);
+            if (response.data) {
                 setResources(response.data);
             }
         } catch (error) {
@@ -72,11 +71,11 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
         try {
             // Parallel fetch using optimized lookup endpoints
             const [empRes, assetRes] = await Promise.all([
-                api.employees.getLookup(),
-                api.assets.getLookup()
+                api.get<{ data: any[] }>('/hr/employees/lookup'),
+                api.get<{ data: any[] }>('/fixedassets/assets/lookup')
             ]);
 
-            if (empRes.success && empRes.data) {
+            if (empRes.data) {
                 // Lookup returns a direct array, not PagedResult
                 setEmployees(empRes.data.map((e: any) => ({
                     id: e.id,
@@ -85,7 +84,7 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
                     position: e.Position // Note: Capital P based on Controller anonymous type
                 })));
             }
-            if (assetRes.success && assetRes.data) {
+            if (assetRes.data) {
                 setAssets(assetRes.data.map((a: any) => ({
                     id: a.id,
                     name: a.name,
@@ -120,7 +119,7 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
             confirmText: t('common.delete'),
             onConfirm: async () => {
                 try {
-                    await projectService.resources.delete(resource.id);
+                    await api.delete(`/projectresources/${resource.id}`);
                     toast.success(t('common.success'), t('common.deleted'));
                     loadResources();
                 } catch (error) {
@@ -135,18 +134,16 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
         try {
             if (!formData.role || formData.hourlyCost < 0) return;
 
-            const response = await projectService.resources.create({
+            await api.post('/projectresources', {
                 ...formData,
                 projectId // Ensure projectId
             });
 
-            if (response.success) {
-                toast.success(t('common.success'), t('common.saved'));
-                setIsModalOpen(false);
-                loadResources();
-            } else {
-                toast.error(t('common.error'), response.error || t('common.errorSaving'));
-            }
+            // Assuming successful if no error thrown
+            toast.success(t('common.success'), t('common.saved'));
+            setIsModalOpen(false);
+            loadResources();
+
         } catch (error) {
             console.error('Failed to save resource', error);
             toast.error(t('common.error'), t('common.errorSaving'));

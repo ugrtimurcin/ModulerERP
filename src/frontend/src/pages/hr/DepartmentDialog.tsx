@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface Department {
     id: string;
@@ -23,8 +24,6 @@ interface DepartmentDialogProps {
     department: Department | null;
     employees: Employee[];
 }
-
-const API_BASE = '/api/hr';
 
 export function DepartmentDialog({ open, onClose, department, employees }: DepartmentDialogProps) {
     const { t } = useTranslation();
@@ -54,23 +53,21 @@ export function DepartmentDialog({ open, onClose, department, employees }: Depar
         setIsSubmitting(true);
 
         try {
-            const url = department ? `${API_BASE}/departments/${department.id}` : `${API_BASE}/departments`;
-            const method = department ? 'PUT' : 'POST';
+            const payload = { ...form, managerId: form.managerId || null };
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, managerId: form.managerId || null }),
-            });
-
-            if (res.ok) {
-                toast.success(department ? t('hr.departmentUpdated') : t('hr.departmentCreated'));
-                onClose(true);
+            if (department) {
+                await api.put(`/hr/departments/${department.id}`, payload);
+                toast.success(t('hr.departmentUpdated'));
             } else {
-                toast.error(t('common.error'), await res.text());
+                await api.post('/hr/departments', payload);
+                toast.success(t('hr.departmentCreated'));
             }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            onClose(true);
+        } catch (error: any) {
+            toast.error(error.message || t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

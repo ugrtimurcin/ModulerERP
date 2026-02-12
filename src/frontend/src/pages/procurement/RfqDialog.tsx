@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 
 interface RfqItem {
     id?: string;
@@ -39,9 +39,8 @@ export function RfqDialog({ open, onClose, rfq }: RfqDialogProps) {
 
     useEffect(() => {
         if (open) {
-            api.products.getAll().then(res => {
-                if (Array.isArray(res)) setProducts(res);
-                else if ((res as any).data) setProducts((res as any).data);
+            api.get<any[]>('/products').then(res => {
+                setProducts(res);
             }).catch(() => { });
         }
     }, [open]);
@@ -92,10 +91,9 @@ export function RfqDialog({ open, onClose, rfq }: RfqDialogProps) {
 
             if (rfq) {
                 // Update implementation would go here if backend supports PUT
-                // For now assuming create only based on DTOs seen or similar pattern
                 toast.info('Update not fully implemented in this demo');
             } else {
-                await api.rfqs.create(payload);
+                await api.post('/procurement/rfqs', payload);
                 toast.success(t('procurement.rfqCreated'));
                 onClose(true);
             }

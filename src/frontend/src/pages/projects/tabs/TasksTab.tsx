@@ -8,8 +8,8 @@ import { Modal } from '@/components/ui/Modal';
 import { useDialog } from '@/components/ui/Dialog';
 import { useToast } from '@/components/ui/Toast';
 import { MultiSelect } from '@/components/ui/MultiSelect';
-import { projectService } from '@/services/projectService';
-import type { ProjectTaskDto, CreateProjectTaskDto, UpdateProjectTaskDto, ProjectResourceDto } from '@/types/project';
+import { api } from '@/lib/api';
+import type { ProjectTaskDto, CreateProjectTaskDto, ProjectResourceDto } from '@/types/project';
 import { ProjectTaskStatus } from '@/types/project';
 
 interface TasksTabProps {
@@ -41,8 +41,8 @@ export function TasksTab({ projectId }: TasksTabProps) {
 
     const loadTasks = async () => {
         try {
-            const response = await projectService.tasks.getByProject(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ProjectTaskDto[] }>(`/projecttasks/project/${projectId}`);
+            if (response.data) {
                 setTasks(buildTree(response.data));
             }
         } catch (error) {
@@ -54,8 +54,8 @@ export function TasksTab({ projectId }: TasksTabProps) {
 
     const loadResources = async () => {
         try {
-            const response = await projectService.resources.getAll(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ProjectResourceDto[] }>(`/projects/${projectId}/resources`);
+            if (response.data) {
                 setResources(response.data);
             }
         } catch (error) {
@@ -118,7 +118,7 @@ export function TasksTab({ projectId }: TasksTabProps) {
             confirmText: t('common.delete'),
             onConfirm: async () => {
                 try {
-                    await projectService.tasks.delete(task.id);
+                    await api.delete(`/projecttasks/${task.id}`);
                     loadTasks();
                 } catch (error) {
                     console.error('Failed to delete task', error);
@@ -131,9 +131,8 @@ export function TasksTab({ projectId }: TasksTabProps) {
         try {
             if (!formData.name || !formData.startDate || !formData.dueDate) return;
 
-            let response;
             if (editingTask) {
-                response = await projectService.tasks.update(editingTask.id, {
+                await api.put(`/projecttasks/${editingTask.id}`, {
                     id: editingTask.id,
                     projectId,
                     name: formData.name,
@@ -141,31 +140,16 @@ export function TasksTab({ projectId }: TasksTabProps) {
                     dueDate: formData.dueDate,
                     parentTaskId: formData.parentTaskId,
                     assignedResourceIds: formData.assignedResourceIds
-                } as UpdateProjectTaskDto);
+                });
             } else {
-                response = await projectService.tasks.create({
+                await api.post('/projecttasks', {
                     projectId,
                     name: formData.name!,
                     startDate: formData.startDate,
                     dueDate: formData.dueDate,
                     parentTaskId: formData.parentTaskId,
                     assignedResourceIds: formData.assignedResourceIds
-                } as CreateProjectTaskDto);
-            }
-
-            // Note: Update returns void/undefined in current service definition, but Create returns ProjectTaskDto?
-            // Actually api.ts request<void> returns ApiResponse<void>.
-            // Let's check api.ts request signature. It returns Promise<ApiResponse<T>>.
-            // So response object will have success/error properties.
-
-            // Casting to any because projectService.tasks.update type might be inferred as Promise<ApiResponse<void>> 
-            // but the Service definition says request<void>.
-
-            const res = response as any;
-
-            if (res && res.success === false) {
-                toast.error(t('common.error'), res.error || t('common.errorSaving'));
-                return;
+                });
             }
 
             toast.success(t('common.success'), t('common.saved'));

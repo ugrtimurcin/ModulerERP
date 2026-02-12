@@ -91,6 +91,33 @@ if (app.Environment.IsDevelopment())
         // Apply migrations
         await context.Database.MigrateAsync();
         
+        var fixedAssetsContext = scope.ServiceProvider.GetRequiredService<ModulerERP.FixedAssets.Infrastructure.Persistence.FixedAssetsDbContext>();
+        await fixedAssetsContext.Database.MigrateAsync();
+
+        var hrContext = scope.ServiceProvider.GetRequiredService<ModulerERP.HR.Infrastructure.Persistence.HRDbContext>();
+        await hrContext.Database.MigrateAsync();
+
+        var inventoryContext = scope.ServiceProvider.GetRequiredService<ModulerERP.Inventory.Infrastructure.Persistence.InventoryDbContext>();
+        await inventoryContext.Database.MigrateAsync();
+
+        var procurementContext = scope.ServiceProvider.GetRequiredService<ModulerERP.Procurement.Infrastructure.Persistence.ProcurementDbContext>();
+        await procurementContext.Database.MigrateAsync();
+
+        var financeContext = scope.ServiceProvider.GetRequiredService<ModulerERP.Finance.Infrastructure.Persistence.FinanceDbContext>();
+        await financeContext.Database.MigrateAsync();
+
+        var salesContext = scope.ServiceProvider.GetRequiredService<ModulerERP.Sales.Infrastructure.Persistence.SalesDbContext>();
+        await salesContext.Database.MigrateAsync();
+
+        var crmContext = scope.ServiceProvider.GetRequiredService<ModulerERP.CRM.Infrastructure.Persistence.CRMDbContext>();
+        await crmContext.Database.MigrateAsync();
+
+        var projectContext = scope.ServiceProvider.GetRequiredService<ModulerERP.ProjectManagement.Infrastructure.Persistence.ProjectManagementDbContext>();
+        await projectContext.Database.MigrateAsync();
+
+        var manufacturingContext = scope.ServiceProvider.GetRequiredService<ModulerERP.Manufacturing.Infrastructure.Persistence.ManufacturingDbContext>();
+        await manufacturingContext.Database.MigrateAsync();
+        
         // Check for --seed argument
         if (args.Contains("--seed"))
         {

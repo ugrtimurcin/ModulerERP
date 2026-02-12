@@ -4,7 +4,7 @@ import { Upload, Trash, Download, FileText } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { Modal } from '@/components/ui/Modal';
 import { useDialog } from '@/components/ui/Dialog';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import type { ProjectDocumentDto, CreateProjectDocumentDto } from '@/types/project';
 
 interface DocumentsTabProps {
@@ -31,8 +31,8 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
 
     const loadDocuments = async () => {
         try {
-            const response = await projectService.documents.getByProject(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ProjectDocumentDto[] }>(`/projectdocuments/project/${projectId}`);
+            if (response.data) {
                 setDocuments(response.data);
             }
         } catch (error) {
@@ -49,7 +49,7 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
             confirmText: t('common.delete'),
             onConfirm: async () => {
                 try {
-                    await projectService.documents.delete(doc.id);
+                    await api.delete(`/projectdocuments/${doc.id}`);
                     loadDocuments();
                 } catch (error) {
                     console.error('Failed to delete document', error);
@@ -66,14 +66,14 @@ export function DocumentsTab({ projectId }: DocumentsTabProps) {
             const fakeFileId = crypto.randomUUID();
             const fakeUrl = `/uploads/${fakeFileId}.pdf`;
 
-            await projectService.documents.create({
+            await api.post('/projectdocuments', {
                 projectId,
                 title: formData.title,
                 documentType: formData.documentType,
                 description: formData.description || '',
                 fileUrl: fakeUrl,
                 systemFileId: undefined // In real app, upload first then get ID
-            } as CreateProjectDocumentDto);
+            });
 
             setIsModalOpen(false);
             loadDocuments();

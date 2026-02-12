@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 
 interface QualityControlDialogProps {
     open: boolean;
@@ -28,15 +28,13 @@ export function QualityControlDialog({ open, onClose }: Omit<QualityControlDialo
     useEffect(() => {
         if (open) {
             // Fetch Warehouses
-            api.warehouses.getAll().then(res => {
-                if (Array.isArray(res)) setWarehouses(res);
-                else if ((res as any).data) setWarehouses((res as any).data);
+            api.get<any[]>('/warehouses').then(res => {
+                setWarehouses(res);
             }).catch(() => { });
 
             // Fetch Pending Receipts
-            api.goodsReceipts.getAll().then((res: any) => {
-                if (Array.isArray(res)) setReceipts(res);
-                else if (res.data) setReceipts(res.data);
+            api.get<any[]>('/procurement/goods-receipts').then((res) => {
+                setReceipts(res);
             }).catch(() => { });
         }
     }, [open]);
@@ -49,7 +47,7 @@ export function QualityControlDialog({ open, onClose }: Omit<QualityControlDialo
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await api.qc.create(form);
+            await api.post('/procurement/qc', form);
             toast.success(t('procurement.inspectionCreated'));
             onClose(true);
         } catch {

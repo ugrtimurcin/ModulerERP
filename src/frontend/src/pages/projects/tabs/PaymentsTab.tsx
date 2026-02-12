@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ProgressPaymentDto } from '@/types/project';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui';
 import { Plus, Check, FileText } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
@@ -25,8 +25,8 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
 
     const loadPayments = async () => {
         try {
-            const response = await projectService.payments.getByProject(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ProgressPaymentDto[] }>(`/projects/${projectId}/payments`);
+            if (response.data) {
                 setPayments(response.data);
             }
         } catch (error) {
@@ -54,7 +54,7 @@ export function PaymentsTab({ projectId }: PaymentsTabProps) {
             confirmText: t('common.approve'),
             onConfirm: async () => {
                 try {
-                    await projectService.payments.approve(projectId, id);
+                    await api.post(`/projects/${projectId}/payments/${id}/approve`, {});
                     loadPayments();
                 } catch (error) {
                     console.error('Failed to approve', error);

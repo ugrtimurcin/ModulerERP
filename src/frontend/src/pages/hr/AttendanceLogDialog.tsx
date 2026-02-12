@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, useToast } from '@/components/ui';
 import { X, MapPin, RefreshCw } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { api } from '@/lib/api';
 
 interface AttendanceLogDialogProps {
     open: boolean;
@@ -118,8 +119,7 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
 
     useEffect(() => {
         if (open) {
-            fetch('/api/hr/employees')
-                .then(res => res.json())
+            api.get<{ id: string, firstName: string, lastName: string }[]>('/hr/employees')
                 .then(data => setEmployees(data))
                 .catch(err => console.error("Failed to load employees", err));
 
@@ -191,25 +191,9 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
             };
             if (!payload.supervisorId) payload.supervisorId = '30cc1aa6-fc36-455c-bfd3-784c6732298e';
 
-            const res = await fetch('/api/hr/attendance-logs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (res.ok) {
-                toast.success(t('hr.scanLogged'));
-                onClose(true);
-            } else {
-                setShowErrorTick(true);
-                try {
-                    const errData = await res.json();
-                    if (errData.errors) {
-                    } else {
-                    }
-                } catch {
-                }
-            }
+            await api.post('/hr/attendance/scan', payload);
+            toast.success(t('hr.scanLogged'));
+            onClose(true);
         } catch {
             setShowErrorTick(true);
         }

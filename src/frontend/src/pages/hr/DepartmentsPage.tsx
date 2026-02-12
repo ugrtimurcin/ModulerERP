@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Building2, Users } from 'lucide-react';
 import { DataTable, Button, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { DepartmentDialog } from './DepartmentDialog';
+import { api } from '@/lib/api';
 
 interface Department {
     id: string;
@@ -20,8 +21,6 @@ interface Employee {
     lastName: string;
 }
 
-const API_BASE = '/api/hr';
-
 export function DepartmentsPage() {
     const { t } = useTranslation();
     const toast = useToast();
@@ -36,13 +35,13 @@ export function DepartmentsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [deptRes, empRes] = await Promise.all([
-                fetch(`${API_BASE}/departments`, { cache: 'no-store' }),
-                fetch(`${API_BASE}/employees`, { cache: 'no-store' })
+            const [deptData, empData] = await Promise.all([
+                api.get<Department[]>('/hr/departments'),
+                api.get<Employee[]>('/hr/employees')
             ]);
 
-            if (deptRes.ok) setDepartments(await deptRes.json());
-            if (empRes.ok) setEmployees(await empRes.json());
+            setDepartments(deptData);
+            setEmployees(empData);
         } catch {
             toast.error(t('common.error'));
         }
@@ -63,10 +62,12 @@ export function DepartmentsPage() {
 
         if (confirmed) {
             try {
-                const res = await fetch(`${API_BASE}/departments/${dept.id}`, { method: 'DELETE', cache: 'no-store' });
-                if (res.ok) { toast.success(t('hr.departmentDeleted')); loadData(); }
-                else toast.error(t('common.error'));
-            } catch { toast.error(t('common.error')); }
+                await api.delete(`/hr/departments/${dept.id}`);
+                toast.success(t('hr.departmentDeleted'));
+                loadData();
+            } catch {
+                toast.error(t('common.error'));
+            }
         }
     };
 

@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface AssetReturnDialogProps {
     open: boolean;
     onClose: (saved: boolean) => void;
     assetId: string;
 }
-
-const API_BASE = '/api/fixedassets';
 
 export function AssetReturnDialog({ open, onClose, assetId }: AssetReturnDialogProps) {
     const { t } = useTranslation();
@@ -37,25 +36,20 @@ export function AssetReturnDialog({ open, onClose, assetId }: AssetReturnDialogP
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/return`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    assetId,
-                    returnedDate: form.returnedDate,
-                    endValue: form.endValue,
-                    condition: form.condition || 'good',
-                }),
+            await api.post('/fixedassets/return', {
+                assetId,
+                returnedDate: form.returnedDate,
+                endValue: form.endValue,
+                condition: form.condition || 'good',
             });
 
-            if (res.ok) {
-                toast.success(t('fixedAssets.assetReturned'));
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            toast.success(t('fixedAssets.assetReturned'));
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

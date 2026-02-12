@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui';
 import { Plus, Check, X } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import { ChangeOrderDialog } from '../components/ChangeOrderDialog';
 import type { ProjectChangeOrderDto } from '@/types/project';
 
@@ -25,8 +25,8 @@ export function ChangeOrdersTab({ projectId }: ChangeOrdersTabProps) {
     const loadChangeOrders = async () => {
         try {
             setLoading(true);
-            const response = await projectService.changeOrders.getByProject(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ProjectChangeOrderDto[] }>(`/projectchangeorders/project/${projectId}`);
+            if (response.data) {
                 setChangeOrders(response.data);
             }
         } catch (error) {
@@ -43,7 +43,7 @@ export function ChangeOrdersTab({ projectId }: ChangeOrdersTabProps) {
             confirmText: t('common.approve'),
             onConfirm: async () => {
                 try {
-                    await projectService.changeOrders.approve(id);
+                    await api.post(`/projectchangeorders/${id}/approve`, {});
                     loadChangeOrders();
                 } catch (error) {
                     console.error('Failed to approve', error);
@@ -59,7 +59,7 @@ export function ChangeOrdersTab({ projectId }: ChangeOrdersTabProps) {
             confirmText: t('common.reject'),
             onConfirm: async () => {
                 try {
-                    await projectService.changeOrders.reject(id);
+                    await api.post(`/projectchangeorders/${id}/reject`, {});
                     loadChangeOrders();
                 } catch (error) {
                     console.error('Failed to reject', error);

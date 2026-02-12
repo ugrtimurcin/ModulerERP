@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Reply, Eye } from 'lucide-react';
 import { DataTable, Button, Badge, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 import { PurchaseReturnStatus } from '@/types/procurement';
 import { PurchaseReturnDialog } from './PurchaseReturnDialog';
 
@@ -18,12 +18,8 @@ export function PurchaseReturnsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await api.returns.getAll();
-            if (Array.isArray(res)) {
-                setReturns(res);
-            } else if (res && (res as any).data && Array.isArray((res as any).data)) {
-                setReturns((res as any).data);
-            }
+            const data = await api.get<any[]>('/procurement/returns');
+            setReturns(data);
         } catch {
             setReturns([]);
         }

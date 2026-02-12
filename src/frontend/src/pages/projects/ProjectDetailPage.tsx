@@ -3,9 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import { ProjectStatus } from '@/types/project';
-import type { ProjectDto, CreateProjectDto, UpdateProjectDto } from '@/types/project';
+import type { ProjectDto, CreateProjectDto } from '@/types/project';
 import { PaymentsTab } from './tabs/PaymentsTab';
 import { TasksTab } from './tabs/TasksTab';
 import { ResourcesTab } from './tabs/ResourcesTab';
@@ -43,8 +43,8 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
 
     const loadProject = async (projectId: string) => {
         try {
-            const response = await projectService.projects.getById(projectId);
-            if (response.success && response.data) {
+            const response = await api.get<{ data: ProjectDto }>(`/projects/${projectId}`);
+            if (response.data) {
                 setProject(response.data);
                 setFormData({
                     code: response.data.code,
@@ -65,18 +65,18 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
     const handleSave = async () => {
         try {
             if (mode === 'create') {
-                const response = await projectService.projects.create(formData as CreateProjectDto);
-                if (response.success && response.data) {
+                const response = await api.post<{ data: ProjectDto }>('/projects', formData);
+                if (response.data) {
                     navigate(`/projects/${response.data.id}`);
                 }
             } else if ((mode === 'edit' || mode === 'view') && id) {
                 // 'view' mode might turn into edit if we allow inline edits or have an edit button
                 // For now assuming we are in edit mode if saving
-                await projectService.projects.update(id, {
+                await api.put(`/projects/${id}`, {
                     name: formData.name!,
                     description: formData.description!,
                     status: project?.status ?? ProjectStatus.Planning
-                } as UpdateProjectDto);
+                });
                 loadProject(id);
             }
         } catch (error) {

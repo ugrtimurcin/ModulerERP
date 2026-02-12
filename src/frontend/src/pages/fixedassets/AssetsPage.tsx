@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Building2, Package, UserCheck } from 'lucide-react';
 import { DataTable, Button, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
+import { api } from '@/lib/api';
 import { AssetDialog } from './AssetDialog';
 
 interface Asset {
@@ -33,8 +34,6 @@ interface AssetCategory {
     code: string;
 }
 
-const API_BASE = '/api/fixedassets';
-
 const AssetStatus: Record<number, { label: string; variant: 'success' | 'warning' | 'error' | 'default' }> = {
     0: { label: 'In Stock', variant: 'default' },
     1: { label: 'Assigned', variant: 'success' },
@@ -60,18 +59,12 @@ export function AssetsPage() {
         setIsLoading(true);
         try {
             const [assetsRes, categoriesRes] = await Promise.all([
-                fetch(`${API_BASE}/assets`, { cache: 'no-store' }),
-                fetch(`${API_BASE}/categories`, { cache: 'no-store' })
+                api.get<any>('/fixedassets/assets'),
+                api.get<any>('/fixedassets/categories')
             ]);
 
-            if (assetsRes.ok) {
-                const data = await assetsRes.json();
-                setAssets(data.data || data);
-            }
-            if (categoriesRes.ok) {
-                const data = await categoriesRes.json();
-                setCategories(data.data || data);
-            }
+            setAssets(assetsRes.data || assetsRes);
+            setCategories(categoriesRes.data || categoriesRes);
         } catch (error) {
             toast.error(t('common.error'));
         }
@@ -101,13 +94,9 @@ export function AssetsPage() {
 
         if (confirmed) {
             try {
-                const res = await fetch(`${API_BASE}/assets/${asset.id}`, { method: 'DELETE', cache: 'no-store' });
-                if (res.ok) {
-                    toast.success(t('fixedAssets.assetDeleted'));
-                    loadData();
-                } else {
-                    toast.error(t('common.error'));
-                }
+                await api.delete(`/fixedassets/assets/${asset.id}`);
+                toast.success(t('fixedAssets.assetDeleted'));
+                loadData();
             } catch {
                 toast.error(t('common.error'));
             }

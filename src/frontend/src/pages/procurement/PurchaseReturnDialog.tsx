@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 
 interface PurchaseReturnDialogProps {
     open: boolean;
@@ -26,12 +26,11 @@ export function PurchaseReturnDialog({ open, onClose }: Omit<PurchaseReturnDialo
 
     useEffect(() => {
         if (open) {
-            api.partners.getAll(1, 100, undefined, true).then(res => {
-                if (res && res.data) setSuppliers(res.data.data);
+            api.get<{ data: { data: { id: string; name: string }[] } }>('/partners?page=1&pageSize=100&isSupplier=true').then(res => {
+                setSuppliers(res.data.data);
             }).catch(() => { });
-            api.goodsReceipts.getAll().then((res: any) => {
-                if (Array.isArray(res)) setReceipts(res);
-                else if (res.data) setReceipts(res.data);
+            api.get<any[]>('/procurement/goods-receipts').then((res) => {
+                setReceipts(res);
             }).catch(() => { });
         }
     }, [open]);
@@ -47,7 +46,7 @@ export function PurchaseReturnDialog({ open, onClose }: Omit<PurchaseReturnDialo
                 ...form,
                 items: [] // Empty items will likely fail backend validation, but this serves as UI placeholder
             };
-            await api.returns.create(payload);
+            await api.post('/procurement/returns', payload);
             toast.success(t('procurement.returnCreated'));
             onClose(true);
         } catch {

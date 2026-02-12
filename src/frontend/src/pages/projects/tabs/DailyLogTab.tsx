@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
-import { dailyLogService } from '@/services/dailyLogService';
+import { api } from '@/lib/api';
 import type { DailyLogDto, CreateDailyLogDto } from '@/types/project';
 import { DailyLogDialog } from '../components/DailyLogDialog';
 import { DailyLogDataGrid } from '../components/DailyLogDataGrid';
@@ -26,8 +26,8 @@ export function DailyLogTab({ projectId }: DailyLogTabProps) {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await dailyLogService.getByProject(projectId);
-            if (res.success && res.data) {
+            const res = await api.get<{ data: DailyLogDto[] }>(`/dailylog/project/${projectId}`);
+            if (res.data) {
                 setLogs(res.data);
             }
         } catch (error) {
@@ -40,14 +40,10 @@ export function DailyLogTab({ projectId }: DailyLogTabProps) {
 
     const handleCreate = async (data: CreateDailyLogDto) => {
         try {
-            const res = await dailyLogService.create(data);
-            if (res.success) {
-                toast.success(t('common.success'), t('common.saved'));
-                setIsDialogOpen(false);
-                loadData();
-            } else {
-                toast.error(t('common.error'), res.error || t('common.error'));
-            }
+            await api.post('/dailylog', data);
+            toast.success(t('common.success'), t('common.saved'));
+            setIsDialogOpen(false);
+            loadData();
         } catch (error) {
             console.error('Failed to create daily log', error);
             toast.error(t('common.error'), t('common.errorSaving'));

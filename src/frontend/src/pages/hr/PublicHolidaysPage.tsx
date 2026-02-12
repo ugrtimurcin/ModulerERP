@@ -4,6 +4,7 @@ import { Plus, Trash2, Calendar } from 'lucide-react';
 import { DataTable, Button, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { PublicHolidayDialog } from './PublicHolidayDialog';
+import { api } from '@/lib/api';
 
 interface PublicHoliday {
     id: string;
@@ -11,8 +12,6 @@ interface PublicHoliday {
     name: string;
     isHalfDay: boolean;
 }
-
-const API_BASE = '/api/hr/public-holidays';
 
 export function PublicHolidaysPage() {
     const { t } = useTranslation();
@@ -26,8 +25,8 @@ export function PublicHolidaysPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(API_BASE, { cache: 'no-store' });
-            if (res.ok) setHolidays(await res.json());
+            const data = await api.get<PublicHoliday[]>('/hr/public-holidays');
+            setHolidays(data);
         } catch {
             toast.error(t('common.error'));
         }
@@ -47,10 +46,12 @@ export function PublicHolidaysPage() {
 
         if (confirmed) {
             try {
-                const res = await fetch(`${API_BASE}/${holiday.id}`, { method: 'DELETE', cache: 'no-store' });
-                if (res.ok) { toast.success(t('hr.publicHolidayDeleted')); loadData(); }
-                else toast.error(t('common.error'));
-            } catch { toast.error(t('common.error')); }
+                await api.delete(`/hr/public-holidays/${holiday.id}`);
+                toast.success(t('hr.publicHolidayDeleted'));
+                loadData();
+            } catch (error: any) {
+                toast.error(t('common.error'));
+            }
         }
     };
 

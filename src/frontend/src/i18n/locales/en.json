@@ -998,7 +998,21 @@
       "rejectLeaveTitle": "Reject Leave Request",
       "rejectLeaveMsg": "Reject leave request from {{name}}?",
       "runPayrollTitle": "Run Payroll",
-      "runPayrollMsg": "Generate payroll for {{month}} {{year}}?"
+      "runPayrollMsg": "Generate payroll for {{month}} {{year}}?",
+      "viewQR": "View QR Code",
+      "manualEntry": "Manual Entry",
+      "actionType": "Action Type",
+      "selectEmployee": "Select Employee",
+      "selectEmployeeRequired": "Please select an employee",
+      "attendanceSaved": "Attendance record saved.",
+      "legalInfo": "Legal Information",
+      "citizenshipNumber": "Citizenship Number",
+      "workPermitNumber": "Work Permit Number",
+      "workPermitExpiryDate": "Work Permit Expiry Date",
+      "bankInfo": "Bank Information",
+      "bankName": "Bank Name",
+      "iban": "IBAN",
+      "payrollDetails": "Payroll Details"
     },
     "units": {
       "min": "min",

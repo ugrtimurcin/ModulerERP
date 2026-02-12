@@ -14,7 +14,7 @@ import {
 import { CheckCircle, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
-import { dailyLogService } from '@/services/dailyLogService';
+import { api } from '@/lib/api';
 import type { DailyLogDto } from '@/types/project';
 
 interface DailyLogDataGridProps {
@@ -31,13 +31,9 @@ export function DailyLogDataGrid({ logs, onRefresh }: DailyLogDataGridProps) {
     const handleApprove = async (id: string) => {
         if (!window.confirm(t('projects.dailyLogs.confirmApprove'))) return;
         try {
-            const res = await dailyLogService.approve(id);
-            if (res.success) {
-                toast.success(t('common.success'), t('projects.dailyLogs.approved'));
-                onRefresh();
-            } else {
-                toast.error(t('common.error'), res.error || t('common.error'));
-            }
+            await api.post(`/dailylog/${id}/approve`, {});
+            toast.success(t('common.success'), t('projects.dailyLogs.approved'));
+            onRefresh();
         } catch (error) {
             console.error('Failed to approve', error);
             toast.error(t('common.error'), t('common.errorSaving'));
@@ -45,9 +41,6 @@ export function DailyLogDataGrid({ logs, onRefresh }: DailyLogDataGridProps) {
     };
 
     const handleBatchApprove = async () => {
-        // TanStack uses index by default, need to check implementation
-        // Actually, with getRowId, keys are IDs.
-
         const idsToApprove = table.getSelectedRowModel().rows
             .filter(row => !row.original.isApproved)
             .map(row => row.original.id);
@@ -57,8 +50,7 @@ export function DailyLogDataGrid({ logs, onRefresh }: DailyLogDataGridProps) {
         if (!window.confirm(t('projects.dailyLogs.confirmBatchApprove', { count: idsToApprove.length }))) return;
 
         try {
-            // Sequential for now, or add batch endpoint later
-            await Promise.all(idsToApprove.map(id => dailyLogService.approve(id)));
+            await Promise.all(idsToApprove.map(id => api.post(`/dailylog/${id}/approve`, {})));
             toast.success(t('common.success'), t('projects.dailyLogs.batchApproved'));
             setRowSelection({});
             onRefresh();

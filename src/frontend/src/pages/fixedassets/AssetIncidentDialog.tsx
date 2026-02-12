@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface AssetIncidentDialogProps {
     open: boolean;
     onClose: (saved: boolean) => void;
     assetId: string;
 }
-
-const API_BASE = '/api/fixedassets';
 
 export function AssetIncidentDialog({ open, onClose, assetId }: AssetIncidentDialogProps) {
     const { t } = useTranslation();
@@ -40,24 +39,19 @@ export function AssetIncidentDialog({ open, onClose, assetId }: AssetIncidentDia
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/incidents`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    assetId,
-                    incidentDate: form.incidentDate,
-                    description: form.description,
-                }),
+            await api.post('/fixedassets/incidents', {
+                assetId,
+                incidentDate: form.incidentDate,
+                description: form.description,
             });
 
-            if (res.ok) {
-                toast.success(t('fixedAssets.incidentReported'));
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            toast.success(t('fixedAssets.incidentReported'));
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import type {
     ProgressPaymentDto,
     CreateProgressPaymentDto,
-    UpdateProgressPaymentDto
 } from '@/types/project';
 
 import { Loader2, ArrowLeft, ArrowRight, Save } from 'lucide-react';
@@ -76,17 +75,17 @@ export function ProgressPaymentWizard({ isOpen, onClose, projectId, payment, onS
                 let savedPayment: ProgressPaymentDto;
 
                 if (currentPayment) {
-                    await projectService.payments.update(projectId, currentPayment.id, formData as UpdateProgressPaymentDto);
+                    await api.put(`/projects/${projectId}/payments/${currentPayment.id}`, formData);
                     // Refresh payment data
-                    const res = await projectService.payments.getByProject(projectId);
+                    const res = await api.get<{ data: ProgressPaymentDto[] }>(`/projects/${projectId}/payments`);
                     savedPayment = res.data?.find(p => p.id === currentPayment.id) || currentPayment;
                 } else {
-                    const res = await projectService.payments.create({ ...formData, projectId } as CreateProgressPaymentDto);
-                    if (res.success && res.data) {
+                    const res = await api.post<{ data: ProgressPaymentDto }>(`/projects/${projectId}/payments`, { ...formData, projectId });
+                    if (res.data) {
                         savedPayment = res.data;
                         onSaved(); // Notify parent list to refresh
                     } else {
-                        throw new Error(res.error || 'Failed to create');
+                        throw new Error('Failed to create');
                     }
                 }
                 setCurrentPayment(savedPayment);
@@ -107,7 +106,7 @@ export function ProgressPaymentWizard({ isOpen, onClose, projectId, payment, onS
                 try {
                     // Force recalculation by calling update or just fetch? 
                     // Fetching is safer to get server-side calculated totals
-                    const res = await projectService.payments.getByProject(projectId);
+                    const res = await api.get<{ data: ProgressPaymentDto[] }>(`/projects/${projectId}/payments`);
                     const updated = res.data?.find(p => p.id === currentPayment.id);
                     if (updated) setCurrentPayment(updated);
                     setStep(3);
@@ -119,9 +118,9 @@ export function ProgressPaymentWizard({ isOpen, onClose, projectId, payment, onS
             if (currentPayment) {
                 setLoading(true);
                 try {
-                    await projectService.payments.update(projectId, currentPayment.id, formData as UpdateProgressPaymentDto);
+                    await api.put(`/projects/${projectId}/payments/${currentPayment.id}`, formData);
                     // Refresh for Review step
-                    const res = await projectService.payments.getByProject(projectId);
+                    const res = await api.get<{ data: ProgressPaymentDto[] }>(`/projects/${projectId}/payments`);
                     const updated = res.data?.find(p => p.id === currentPayment.id);
                     if (updated) setCurrentPayment(updated);
                     setStep(4);
@@ -147,7 +146,7 @@ export function ProgressPaymentWizard({ isOpen, onClose, projectId, payment, onS
                 // If currentPayment is null (shouldn't be after Step 1), we can't show it.
                 return currentPayment ? <Step2Quantities payment={currentPayment} projectId={projectId} onRefresh={async () => {
                     // Callback to refresh payment data if needed
-                    const res = await projectService.payments.getByProject(projectId);
+                    const res = await api.get<{ data: ProgressPaymentDto[] }>(`/projects/${projectId}/payments`);
                     const updated = res.data?.find(p => p.id === currentPayment.id);
                     if (updated) setCurrentPayment(updated);
                 }} /> : <div>{t('common.loading')}</div>;

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { DataTable, Button, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface LeaveRequest {
     id: string;
@@ -17,8 +18,6 @@ interface LeaveRequest {
     requestedAt: string;
 }
 
-const API_BASE = '/api/hr';
-
 export function LeaveRequestsPage() {
     const { t } = useTranslation();
     const toast = useToast();
@@ -30,8 +29,8 @@ export function LeaveRequestsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/leave-requests`, { cache: 'no-store' });
-            if (res.ok) setRequests(await res.json());
+            const data = await api.get<LeaveRequest[]>('/hr/leave-requests');
+            setRequests(data);
         } catch {
             toast.error(t('common.error'));
         }
@@ -49,10 +48,12 @@ export function LeaveRequestsPage() {
         if (!ok) return;
 
         try {
-            const res = await fetch(`${API_BASE}/leave-requests/${req.id}/approve`, { method: 'PUT', cache: 'no-store' });
-            if (res.ok) { toast.success(t('hr.leaveApproved')); loadData(); }
-            else toast.error(t('common.error'));
-        } catch { toast.error(t('common.error')); }
+            await api.put(`/hr/leave-requests/${req.id}/approve`, {});
+            toast.success(t('hr.leaveApproved'));
+            loadData();
+        } catch {
+            toast.error(t('common.error'));
+        }
     };
 
     const handleReject = async (req: LeaveRequest) => {
@@ -64,10 +65,12 @@ export function LeaveRequestsPage() {
         if (!ok) return;
 
         try {
-            const res = await fetch(`${API_BASE}/leave-requests/${req.id}/reject`, { method: 'PUT', cache: 'no-store' });
-            if (res.ok) { toast.success(t('hr.leaveRejected')); loadData(); }
-            else toast.error(t('common.error'));
-        } catch { toast.error(t('common.error')); }
+            await api.put(`/hr/leave-requests/${req.id}/reject`, {});
+            toast.success(t('hr.leaveRejected'));
+            loadData();
+        } catch {
+            toast.error(t('common.error'));
+        }
     };
 
     const getLeaveTypeBadge = (type: number) => {

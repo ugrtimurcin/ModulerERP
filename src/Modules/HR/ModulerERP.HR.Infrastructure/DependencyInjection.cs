@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModulerERP.HR.Application;
+using ModulerERP.HR.Application.Interfaces;
 using ModulerERP.HR.Domain.Entities;
 using ModulerERP.HR.Infrastructure.Persistence;
 using ModulerERP.SharedKernel.Interfaces;
@@ -18,6 +19,7 @@ public static class DependencyInjection
                 b => b.MigrationsAssembly(typeof(HRDbContext).Assembly.FullName)));
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<HRDbContext>());
+        services.AddScoped<IHRUnitOfWork>(provider => provider.GetRequiredService<HRDbContext>());
 
         // Register Repositories
         services.AddScoped<IRepository<Employee>, HRRepository<Employee>>();

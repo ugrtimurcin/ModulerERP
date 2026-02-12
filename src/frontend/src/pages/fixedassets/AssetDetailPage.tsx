@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, UserCheck, UserMinus, Gauge, AlertTriangle, Wrench, Trash2, RefreshCw } from 'lucide-react';
 import { Button, Badge, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 import { AssetAssignDialog } from './AssetAssignDialog';
 import { AssetReturnDialog } from './AssetReturnDialog';
 import { AssetMeterLogDialog } from './AssetMeterLogDialog';
@@ -76,8 +77,6 @@ interface Disposal {
     profitLoss: number;
 }
 
-const API_BASE = '/api/fixedassets';
-
 const AssetStatus: Record<number, { label: string; variant: 'success' | 'warning' | 'error' | 'default' }> = {
     0: { label: 'In Stock', variant: 'default' },
     1: { label: 'Assigned', variant: 'success' },
@@ -114,26 +113,21 @@ export function AssetDetailPage() {
         if (!id) return;
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/assets/${id}`, { cache: 'no-store' });
-            if (res.ok) {
-                const data = await res.json();
-                setAsset(data);
-            }
-
-            // Load lifecycle data
-            const [assignRes, meterRes, incidentRes, maintRes, dispRes] = await Promise.all([
-                fetch(`${API_BASE}/assets/${id}/assignments`, { cache: 'no-store' }),
-                fetch(`${API_BASE}/assets/${id}/meter-logs`, { cache: 'no-store' }),
-                fetch(`${API_BASE}/assets/${id}/incidents`, { cache: 'no-store' }),
-                fetch(`${API_BASE}/assets/${id}/maintenances`, { cache: 'no-store' }),
-                fetch(`${API_BASE}/assets/${id}/disposals`, { cache: 'no-store' }),
+            const [assetRes, assignRes, meterRes, incidentRes, maintRes, dispRes] = await Promise.all([
+                api.get<Asset>(`/fixedassets/assets/${id}`),
+                api.get<Assignment[]>(`/fixedassets/assets/${id}/assignments`),
+                api.get<MeterLog[]>(`/fixedassets/assets/${id}/meter-logs`),
+                api.get<Incident[]>(`/fixedassets/assets/${id}/incidents`),
+                api.get<Maintenance[]>(`/fixedassets/assets/${id}/maintenances`),
+                api.get<Disposal[]>(`/fixedassets/assets/${id}/disposals`),
             ]);
 
-            if (assignRes.ok) setAssignments(await assignRes.json());
-            if (meterRes.ok) setMeterLogs(await meterRes.json());
-            if (incidentRes.ok) setIncidents(await incidentRes.json());
-            if (maintRes.ok) setMaintenances(await maintRes.json());
-            if (dispRes.ok) setDisposals(await dispRes.json());
+            setAsset(assetRes.data || (assetRes as any));
+            setAssignments(assignRes.data || (assignRes as any));
+            setMeterLogs(meterRes.data || (meterRes as any));
+            setIncidents(incidentRes.data || (incidentRes as any));
+            setMaintenances(maintRes.data || (maintRes as any));
+            setDisposals(dispRes.data || (dispRes as any));
         } catch (error) {
             toast.error(t('common.error'));
         }

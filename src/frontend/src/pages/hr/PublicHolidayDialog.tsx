@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, useToast } from '@/components/ui';
 import { X } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface PublicHolidayDialogProps {
     open: boolean;
@@ -30,22 +31,14 @@ export function PublicHolidayDialog({ open, onClose }: PublicHolidayDialogProps)
         setIsLoading(true);
 
         try {
-            const res = await fetch('/api/hr/public-holidays', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
-
-            if (res.ok) {
-                toast.success(t('hr.publicHolidayCreated'));
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
+            await api.post('/hr/public-holidays', formData);
+            toast.success(t('hr.publicHolidayCreated'));
+            onClose(true);
         } catch {
             toast.error(t('common.error'));
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     if (!open) return null;

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Eye, FileText } from 'lucide-react';
 import { DataTable, Button, Badge, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 import { RfqStatus } from '@/types/procurement';
 
 import { RfqDialog } from './RfqDialog';
@@ -19,12 +19,8 @@ export function RFQsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await api.rfqs.getAll();
-            if (Array.isArray(res)) {
-                setRfqs(res);
-            } else if (res && (res as any).data && Array.isArray((res as any).data)) {
-                setRfqs((res as any).data);
-            }
+            const data = await api.get<any[]>('/procurement/rfqs');
+            setRfqs(data);
         } catch {
             toast.error('Failed to load RFQs');
         }

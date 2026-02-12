@@ -21,8 +21,13 @@ public class Employee : BaseEntity
     public Guid? SupervisorId { get; private set; }
     public string? QrToken { get; private set; } // Encrypted
     public string? Iban { get; private set; }
+    public string? BankName { get; private set; }
     public decimal CurrentSalary { get; private set; }
     public Guid? SalaryCurrencyId { get; private set; }
+    
+    // Legal & KKTC Specifics
+    public CitizenshipType Citizenship { get; private set; } = CitizenshipType.TRNC; // Default to TRNC
+    public string? WorkPermitNumber { get; private set; }
     public DateTime? WorkPermitExpDate { get; private set; }
     
     // Redundant but helpful basics usually present in Employee tables if User doesn't exist yet
@@ -88,6 +93,15 @@ public class Employee : BaseEntity
         LastName = lastName;
         Email = email;
         Status = status;
+    }
+
+    public void UpdateLegalDetails(CitizenshipType citizenship, string? workPermitNumber, DateTime? workPermitExpDate, string? bankName, string? iban)
+    {
+        Citizenship = citizenship;
+        WorkPermitNumber = workPermitNumber;
+        WorkPermitExpDate = workPermitExpDate;
+        BankName = bankName;
+        Iban = iban;
     }
 
     public void SetSalary(decimal amount, Guid? currencyId)

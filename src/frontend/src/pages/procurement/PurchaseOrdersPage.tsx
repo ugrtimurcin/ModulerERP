@@ -4,6 +4,7 @@ import { Plus, Pencil, Eye, ShoppingCart } from 'lucide-react';
 import { DataTable, Button, Badge, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { PurchaseOrderDialog } from './PurchaseOrderDialog';
+import { api } from '@/lib/api';
 
 interface PurchaseOrder {
     id: string;
@@ -17,8 +18,6 @@ interface PurchaseOrder {
     expectedDate: string | null;
 }
 
-const API_BASE = '/api/procurement';
-
 export function PurchaseOrdersPage() {
     const { t } = useTranslation();
     const toast = useToast();
@@ -31,8 +30,8 @@ export function PurchaseOrdersPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/purchase-orders`, { cache: 'no-store' });
-            if (res.ok) setOrders(await res.json());
+            const data = await api.get<PurchaseOrder[]>('/procurement/purchase-orders');
+            setOrders(data);
         } catch {
             toast.error('Failed to load purchase orders');
         }

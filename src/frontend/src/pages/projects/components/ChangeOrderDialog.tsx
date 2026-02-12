@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/Modal';
 import { Button, Input } from '@/components/ui';
-import { projectService } from '@/services/projectService';
+import { api } from '@/lib/api';
 import type { CreateChangeOrderDto } from '@/types/project';
 
 interface ChangeOrderDialogProps {
@@ -38,7 +38,7 @@ export function ChangeOrderDialog({ isOpen, onClose, projectId, onSuccess }: Cha
     const handleSubmit = async () => {
         try {
             setLoading(true);
-            await projectService.changeOrders.create(form);
+            await api.post('/projectchangeorders', form);
             onSuccess();
             onClose();
         } catch (error) {

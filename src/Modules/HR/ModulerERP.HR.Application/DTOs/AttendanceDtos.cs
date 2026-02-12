@@ -10,16 +10,18 @@ public record DailyAttendanceDto(
     DateTime? CheckInTime,
     DateTime? CheckOutTime,
     int TotalWorkedMins,
-    int OvertimeMins,
+    int OvertimeMins, // Aggregated in Service
     AttendanceStatus Status
 );
 
 public record CheckInDto(
-    Guid EmployeeId
+    Guid EmployeeId,
+    DateTime? Time = null
 );
 
 public record CheckOutDto(
-    Guid EmployeeId
+    Guid EmployeeId,
+    DateTime? Time = null
 );
 
 public record CreateAttendanceDto(

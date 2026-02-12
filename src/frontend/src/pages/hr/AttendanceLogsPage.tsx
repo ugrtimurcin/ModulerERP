@@ -4,6 +4,7 @@ import { ScanLine, MapPin, ArrowRight, ArrowLeft } from 'lucide-react';
 import { DataTable, Button, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { AttendanceLogDialog } from './AttendanceLogDialog';
+import { api } from '@/lib/api';
 
 interface AttendanceLog {
     id: string;
@@ -13,8 +14,6 @@ interface AttendanceLog {
     locationId: string | null;
     gpsCoordinates: string | null;
 }
-
-const API_BASE = '/api/hr/attendance-logs';
 
 export function AttendanceLogsPage() {
     const { t } = useTranslation();
@@ -27,8 +26,8 @@ export function AttendanceLogsPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(API_BASE, { cache: 'no-store' });
-            if (res.ok) setLogs(await res.json());
+            const data = await api.get<AttendanceLog[]>('/hr/attendance/logs');
+            setLogs(data);
         } catch {
             toast.error(t('common.error'));
         }

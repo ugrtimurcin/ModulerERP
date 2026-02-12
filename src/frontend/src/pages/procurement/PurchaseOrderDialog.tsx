@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface PurchaseOrder {
     id: string;
@@ -29,8 +30,6 @@ interface PurchaseOrderDialogProps {
     order: PurchaseOrder | null;
 }
 
-const API_BASE = '/api/procurement';
-
 export function PurchaseOrderDialog({ open, onClose, order }: PurchaseOrderDialogProps) {
     const { t } = useTranslation();
     const toast = useToast();
@@ -48,8 +47,19 @@ export function PurchaseOrderDialog({ open, onClose, order }: PurchaseOrderDialo
     useEffect(() => {
         if (open) {
             // Load suppliers and products
-            fetch('/api/partners?type=Supplier').then(r => r.json()).then(setSuppliers).catch(() => { });
-            fetch('/api/products').then(r => r.json()).then(setProducts).catch(() => { });
+            const loadData = async () => {
+                try {
+                    const [sup, prod] = await Promise.all([
+                        api.get<{ id: string; name: string }[]>('/partners?type=Supplier'),
+                        api.get<{ id: string; name: string; unitPrice: number }[]>('/products')
+                    ]);
+                    setSuppliers(sup);
+                    setProducts(prod);
+                } catch {
+                    // Silent fail or toast? partners might be empty which is fine-ish but api error is bad.
+                }
+            };
+            loadData();
         }
     }, [open]);
 
@@ -96,23 +106,20 @@ export function PurchaseOrderDialog({ open, onClose, order }: PurchaseOrderDialo
         setIsSubmitting(true);
 
         try {
-            const url = order ? `${API_BASE}/purchase-orders/${order.id}` : `${API_BASE}/purchase-orders`;
-            const method = order ? 'PUT' : 'POST';
-
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, lines }),
-            });
-
-            if (res.ok) {
-                toast.success(order ? t('procurement.poUpdated') : t('procurement.poCreated'));
-                onClose(true);
+            const payload = { ...form, lines };
+            if (order) {
+                await api.put(`/procurement/purchase-orders/${order.id}`, payload);
+                toast.success(t('procurement.poUpdated'));
             } else {
-                toast.error(t('common.error'), await res.text());
+                await api.post('/procurement/purchase-orders', payload);
+                toast.success(t('procurement.poCreated'));
             }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            onClose(true);
+        } catch (error: any) {
+            toast.error(error.message || t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

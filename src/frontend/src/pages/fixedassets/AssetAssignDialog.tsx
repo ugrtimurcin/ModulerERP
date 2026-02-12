@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface Employee {
     id: string;
@@ -14,8 +15,6 @@ interface AssetAssignDialogProps {
     onClose: (saved: boolean) => void;
     assetId: string;
 }
-
-const API_BASE = '/api/fixedassets';
 
 export function AssetAssignDialog({ open, onClose, assetId }: AssetAssignDialogProps) {
     const { t } = useTranslation();
@@ -32,10 +31,10 @@ export function AssetAssignDialog({ open, onClose, assetId }: AssetAssignDialogP
 
     useEffect(() => {
         if (open) {
-            fetch('/api/hr/employees', { cache: 'no-store' })
-                .then(res => res.json())
-                .then(data => setEmployees(data))
+            api.get<Employee[]>('/hr/employees')
+                .then(setEmployees)
                 .catch(() => { });
+
             setForm({ employeeId: '', locationId: '', startValue: 0, condition: '' });
         }
     }, [open]);
@@ -49,26 +48,21 @@ export function AssetAssignDialog({ open, onClose, assetId }: AssetAssignDialogP
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/assign`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    assetId,
-                    employeeId: form.employeeId || null,
-                    locationId: form.locationId || null,
-                    startValue: form.startValue,
-                    condition: form.condition || null,
-                }),
+            await api.post('/fixedassets/assign', {
+                assetId,
+                employeeId: form.employeeId || null,
+                locationId: form.locationId || null,
+                startValue: form.startValue,
+                condition: form.condition || null,
             });
 
-            if (res.ok) {
-                toast.success(t('fixedAssets.assetAssigned'));
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            toast.success(t('fixedAssets.assetAssigned'));
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

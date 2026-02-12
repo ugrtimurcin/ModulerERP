@@ -5,7 +5,7 @@ import { DataTable, Badge, Button } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { PurchaseQuoteStatus } from '@/types/procurement';
 import { PurchaseQuoteDialog } from './PurchaseQuoteDialog';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 
 export function PurchaseQuotesPage() {
     const { t } = useTranslation();
@@ -17,9 +17,8 @@ export function PurchaseQuotesPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await api.purchaseQuotes.getAll();
-            if (Array.isArray(res)) setQuotes(res);
-            else if ((res as any).data) setQuotes((res as any).data);
+            const data = await api.get<any[]>('/procurement/quotes');
+            setQuotes(data);
         } catch {
             setQuotes([]);
         } finally {

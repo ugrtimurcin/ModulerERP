@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Search, ClipboardCheck } from 'lucide-react';
 import { DataTable, Button, Badge, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
-import { api } from '@/services/api';
+import { api } from '@/lib/api';
 import { QualityControlStatus } from '@/types/procurement';
 import { QualityControlDialog } from './QualityControlDialog';
 
@@ -18,12 +18,8 @@ export function QualityControlPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await api.qc.getAll();
-            if (Array.isArray(res)) {
-                setInspections(res);
-            } else if (res && (res as any).data && Array.isArray((res as any).data)) {
-                setInspections((res as any).data);
-            }
+            const data = await api.get<any[]>('/procurement/qc');
+            setInspections(data);
         } catch {
             // Toast suppressed for cleaner initial load if empty
             setInspections([]);

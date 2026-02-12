@@ -4,6 +4,7 @@ import { Plus, Trash2, Award } from 'lucide-react';
 import { DataTable, Button, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { CommissionRuleDialog } from './CommissionRuleDialog';
+import { api } from '@/lib/api';
 
 interface CommissionRule {
     id: string;
@@ -12,8 +13,6 @@ interface CommissionRule {
     percentage: number;
     basis: number; // Enum: 1=Invoiced, 2=Collected, 3=Profit
 }
-
-const API_BASE = '/api/hr/commission-rules';
 
 export function CommissionRulesPage() {
     const { t } = useTranslation();
@@ -27,8 +26,8 @@ export function CommissionRulesPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(API_BASE, { cache: 'no-store' });
-            if (res.ok) setRules(await res.json());
+            const data = await api.get<CommissionRule[]>('/hr/commission-rules');
+            setRules(data);
         } catch {
             toast.error(t('common.error'));
         }
@@ -48,10 +47,12 @@ export function CommissionRulesPage() {
 
         if (confirmed) {
             try {
-                const res = await fetch(`${API_BASE}/${rule.id}`, { method: 'DELETE', cache: 'no-store' });
-                if (res.ok) { toast.success(t('hr.commissionRuleDeleted')); loadData(); }
-                else toast.error(t('common.error'));
-            } catch { toast.error(t('common.error')); }
+                await api.delete(`/hr/commission-rules/${rule.id}`);
+                toast.success(t('hr.commissionRuleDeleted'));
+                loadData();
+            } catch {
+                toast.error(t('common.error'));
+            }
         }
     };
 

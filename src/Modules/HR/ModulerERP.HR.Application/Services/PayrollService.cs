@@ -92,7 +92,9 @@ public class PayrollService : IPayrollService
             e.OvertimePay,
             e.CommissionPay,
             e.AdvanceDeduction,
-            e.TaxDeduction,
+            e.SocialSecurityEmployee,
+            e.ProvidentFundEmployee,
+            e.IncomeTax,
             e.NetPayable
         ));
     }
@@ -130,21 +132,26 @@ public class PayrollService : IPayrollService
         // Create entries for each employee
         foreach (var emp in employees)
         {
-            var baseSalary = emp.CurrentSalary;
-            var taxDeduction = baseSalary * 0.15m; // 15% tax example
-            var netPayable = baseSalary - taxDeduction;
+            var calc = PayrollCalculator.Calculate(emp, emp.CurrentSalary, 0, 0, 0, 0); // TODO: fetch bonus/overtime/advance from repositories
 
             var entry = PayrollEntry.Create(
                 tenantId,
                 _currentUserService.UserId,
                 payroll.Id,
                 emp.Id,
-                baseSalary,
-                0, // overtime
+                calc.GrossSalary, // Using Gross as Base for now, should split if bonus exists
+                0, // overtime (included in gross calc but separate field here?)
                 0, // commission
-                0, // advance deduction
-                taxDeduction,
-                netPayable,
+                0, // bonus
+                0, // transport
+                calc.SocialSecurityEmployee,
+                calc.ProvidentFundEmployee,
+                calc.IncomeTax,
+                calc.AdvanceDeduction,
+                calc.SocialSecurityEmployer,
+                calc.ProvidentFundEmployer,
+                calc.UnemploymentInsuranceEmployer,
+                calc.NetPayable,
                 1.0m // exchange rate
             );
 
@@ -174,7 +181,7 @@ public class PayrollService : IPayrollService
 
         var entries = await _entryRepository.FindAsync(e => e.PayrollId == payroll.Id, cancellationToken);
         var totalGross = entries.Sum(e => e.BaseSalary + e.OvertimePay + e.CommissionPay);
-        var totalDeductions = entries.Sum(e => e.TaxDeduction + e.AdvanceDeduction);
+        var totalDeductions = entries.Sum(e => e.IncomeTax + e.AdvanceDeduction);
         var totalNet = entries.Sum(e => e.NetPayable);
 
         return new PayrollSummaryDto(

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button, useToast } from '@/components/ui';
+import { api } from '@/lib/api';
 
 interface Partner {
     id: string;
@@ -13,8 +14,6 @@ interface AssetMaintenanceDialogProps {
     onClose: (saved: boolean) => void;
     assetId: string;
 }
-
-const API_BASE = '/api/fixedassets';
 
 export function AssetMaintenanceDialog({ open, onClose, assetId }: AssetMaintenanceDialogProps) {
     const { t } = useTranslation();
@@ -33,10 +32,10 @@ export function AssetMaintenanceDialog({ open, onClose, assetId }: AssetMaintena
 
     useEffect(() => {
         if (open) {
-            fetch('/api/partners?type=supplier', { cache: 'no-store' })
-                .then(res => res.json())
-                .then(data => setSuppliers(data.data || data))
+            api.get<{ data: Partner[] }>('/partners?type=supplier')
+                .then(res => setSuppliers(res.data || (res as any)))
                 .catch(() => { });
+
             setForm({
                 supplierId: '',
                 serviceDate: new Date().toISOString().split('T')[0],
@@ -58,29 +57,24 @@ export function AssetMaintenanceDialog({ open, onClose, assetId }: AssetMaintena
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE}/maintenance`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    assetId,
-                    supplierId: form.supplierId,
-                    serviceDate: form.serviceDate,
-                    cost: form.cost,
-                    description: form.description,
-                    incidentId: null,
-                    nextServiceDate: form.nextServiceDate || null,
-                    nextServiceMeter: form.nextServiceMeter ? parseFloat(form.nextServiceMeter) : null,
-                }),
+            await api.post('/fixedassets/maintenance', {
+                assetId,
+                supplierId: form.supplierId,
+                serviceDate: form.serviceDate,
+                cost: form.cost,
+                description: form.description,
+                incidentId: null,
+                nextServiceDate: form.nextServiceDate || null,
+                nextServiceMeter: form.nextServiceMeter ? parseFloat(form.nextServiceMeter) : null,
             });
 
-            if (res.ok) {
-                toast.success(t('fixedAssets.maintenanceRecorded'));
-                onClose(true);
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch { toast.error(t('common.error')); }
-        finally { setIsSubmitting(false); }
+            toast.success(t('fixedAssets.maintenanceRecorded'));
+            onClose(true);
+        } catch {
+            toast.error(t('common.error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!open) return null;

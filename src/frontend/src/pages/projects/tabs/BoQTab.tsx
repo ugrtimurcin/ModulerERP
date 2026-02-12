@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, FolderPlus } from 'lucide-react';
-import { projectService } from '@/services/projectService';
-import type { BillOfQuantitiesItemDto, CreateBoQItemDto, UpdateBoQItemDto } from '@/types/project';
+import { api } from '@/lib/api';
+import type { BillOfQuantitiesItemDto, CreateBoQItemDto, UpdateBoQItemDto, ProjectDto } from '@/types/project';
 import { BoQItemDialog } from '../components/BoQItemDialog';
 import { useToast } from '@/components/ui/Toast';
 
@@ -29,8 +29,9 @@ export function BoQTab({ projectId }: BoQTabProps) {
     const loadData = async () => {
         setLoading(true);
         try {
-            const response = await projectService.projects.getById(projectId);
-            if (response.success && response.data) {
+            // Note: BoQ Items are currently part of Project Aggregate
+            const response = await api.get<{ data: ProjectDto }>(`/projects/${projectId}`);
+            if (response.data) {
                 // Ensure boQItems is populated. If backend returns null, default to empty
                 setItems(response.data.boQItems || []);
             }
@@ -64,11 +65,9 @@ export function BoQTab({ projectId }: BoQTabProps) {
         if (!window.confirm(t('common.confirmDelete'))) return;
 
         try {
-            const response = await projectService.projects.deleteBoQItem(projectId, item.id);
-            if (response.success) {
-                toast.success(t('common.deleted'));
-                loadData();
-            }
+            await api.delete(`/projects/${projectId}/boq-items/${item.id}`);
+            toast.success(t('common.deleted'));
+            loadData();
         } catch (error) {
             console.error(error);
             toast.error(t('common.errorDeleting'));
@@ -81,18 +80,15 @@ export function BoQTab({ projectId }: BoQTabProps) {
 
     const handleSubmit = async (data: CreateBoQItemDto | UpdateBoQItemDto) => {
         try {
-            let response;
             if (editingItem) {
-                response = await projectService.projects.updateBoQItem(projectId, editingItem.id, data as UpdateBoQItemDto);
+                await api.put(`/projects/${projectId}/boq-items/${editingItem.id}`, data);
             } else {
-                response = await projectService.projects.addBoQItem(projectId, data as CreateBoQItemDto);
+                await api.post(`/projects/${projectId}/boq-items`, data);
             }
 
-            if (response.success) {
-                toast.success(t('common.saved'));
-                setIsDialogOpen(false);
-                loadData();
-            }
+            toast.success(t('common.saved'));
+            setIsDialogOpen(false);
+            loadData();
         } catch (error) {
             console.error(error);
             toast.error(t('common.errorSaving'));

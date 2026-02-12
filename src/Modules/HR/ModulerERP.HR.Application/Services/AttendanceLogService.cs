@@ -11,14 +11,14 @@ public class AttendanceLogService : IAttendanceLogService
     private readonly IRepository<AttendanceLog> _logRepo;
     private readonly IRepository<DailyAttendance> _dailyRepo;
     private readonly IRepository<Employee> _employeeRepo;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHRUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
     public AttendanceLogService(
         IRepository<AttendanceLog> logRepo, 
         IRepository<DailyAttendance> dailyRepo, 
         IRepository<Employee> employeeRepo,
-        IUnitOfWork unitOfWork, 
+        IHRUnitOfWork unitOfWork, 
         ICurrentUserService currentUserService)
     {
         _logRepo = logRepo;
