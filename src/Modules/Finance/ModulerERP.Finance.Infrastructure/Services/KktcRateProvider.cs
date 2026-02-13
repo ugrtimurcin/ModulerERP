@@ -15,7 +15,7 @@ public class KktcRateProvider : IExchangeRateProvider
         _httpClient = httpClient;
     }
 
-    public async Task<Result<List<(string CurrencyCode, decimal Rate)>>> GetDailyRatesAsync(DateTime? date = null, CancellationToken cancellationToken = default)
+    public async Task<Result<List<ModulerERP.Finance.Application.DTOs.ExternalRateDto>>> GetDailyRatesAsync(DateTime? date = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -48,23 +48,23 @@ public class KktcRateProvider : IExchangeRateProvider
             // Attempt to decode. If utf-8 fails, try 1254.
             // Actually, XML decl usually says encoding.
             // Let's assume 1254 (Turkish) if not standard.
-            string response;
-            try
-            {
-                // Try UTF-8 first
-                 response = System.Text.Encoding.UTF8.GetString(bytes);
-            }
-            catch
-            {
-                 // Fallback
-                 response = System.Text.Encoding.GetEncoding(1254).GetString(bytes);
-            }
+            // string response;
+            // try
+            // {
+            //     // Try UTF-8 first
+            //      response = System.Text.Encoding.UTF8.GetString(bytes);
+            // }
+            // catch
+            // {
+            //      // Fallback
+            //      response = System.Text.Encoding.GetEncoding(1254).GetString(bytes);
+            // }
             
             // If the XML starts with weird chars or encoding declaration mismatch, we might need to handle it.
             // Better approach: Let StreamReader detect or force 1254.
             // Given the error "Invalid character set", the header is definitely bad.
             // Let's force Windows-1254 which covers Turkish.
-             response = System.Text.Encoding.GetEncoding(1254).GetString(bytes);
+            //  response = System.Text.Encoding.GetEncoding(1254).GetString(bytes);
 
             // If it's actually UTF-8 but simple ASCII chars, 1254 typically maps 1:1 for ASCII.
             // If it has a BOM, we might need to be careful.
@@ -75,42 +75,51 @@ public class KktcRateProvider : IExchangeRateProvider
             // Reading bytes bypasses header validation.
             // We'll try to parse as 1254 as it's the most robust for legacy TR sites.
             
-             response = System.Text.Encoding.GetEncoding("windows-1254").GetString(bytes);
+             // Force Windows-1254 for Turkish characters
+            string response = System.Text.Encoding.GetEncoding("windows-1254").GetString(bytes);
             
             var xdoc = XDocument.Parse(response);
-            var rates = new List<(string, decimal)>();
+            var rates = new List<ModulerERP.Finance.Application.DTOs.ExternalRateDto>();
 
             // Parse XML
             /*
              <Resmi_Kur>
                <Sembol>USD</Sembol>
                <Doviz_Satis>43.41950</Doviz_Satis>
+               <Doviz_Alis>43.10000</Doviz_Alis>
              </Resmi_Kur>
             */
 
             foreach (var kur in xdoc.Descendants("Resmi_Kur"))
             {
                 var code = kur.Element("Sembol")?.Value;
-                var rateStr = kur.Element("Doviz_Satis")?.Value;
+                var satisStr = kur.Element("Doviz_Satis")?.Value;
+                var alisStr = kur.Element("Doviz_Alis")?.Value;
 
                 if (!string.IsNullOrEmpty(code) && 
-                    !string.IsNullOrEmpty(rateStr) && 
-                    decimal.TryParse(rateStr, NumberStyles.Any, new CultureInfo("en-US"), out var rate)) // XML usually uses dot decimal
+                    !string.IsNullOrEmpty(satisStr))
                 {
-                    // Check logic: 
-                    // <Doviz_Satis> is usually the Bank's selling rate.
-                    // Depending on business need, we might use Alis or Satis. Using Satis (Selling) as conservative default for costs.
-                    // Also 'Efektif' is for cash. 'Doviz' is for account transfers. Usually 'Doviz Satis' is standard.
-                    
-                    rates.Add((code, rate));
+                    decimal.TryParse(satisStr, NumberStyles.Any, new CultureInfo("en-US"), out var sellingRate);
+                    decimal.TryParse(alisStr, NumberStyles.Any, new CultureInfo("en-US"), out var buyingRate);
+
+                    if (sellingRate > 0)
+                    {
+                        rates.Add(new ModulerERP.Finance.Application.DTOs.ExternalRateDto
+                        {
+                            CurrencyCode = code,
+                            Rate = sellingRate,       // Standard Rate = Selling Rate
+                            SellingRate = sellingRate,
+                            BuyingRate = buyingRate > 0 ? buyingRate : sellingRate // Fallback if buying missing
+                        });
+                    }
                 }
             }
 
-            return Result<List<(string, decimal)>>.Success(rates);
+            return Result<List<ModulerERP.Finance.Application.DTOs.ExternalRateDto>>.Success(rates);
         }
         catch (Exception ex)
         {
-            return Result<List<(string, decimal)>>.Failure($"Failed to fetch KKTC rates: {ex.Message}");
+            return Result<List<ModulerERP.Finance.Application.DTOs.ExternalRateDto>>.Failure($"Failed to fetch KKTC rates: {ex.Message}");
         }
     }
 }

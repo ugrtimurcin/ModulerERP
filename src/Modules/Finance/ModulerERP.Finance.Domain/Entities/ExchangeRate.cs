@@ -20,6 +20,12 @@ public class ExchangeRate : BaseEntity
     
     /// <summary>Exchange rate</summary>
     public decimal Rate { get; private set; }
+
+    /// <summary>Buying Rate</summary>
+    public decimal BuyingRate { get; private set; }
+
+    /// <summary>Selling Rate</summary>
+    public decimal SellingRate { get; private set; }
     
     public ExchangeRateSource Source { get; private set; } = ExchangeRateSource.Manual;
 
@@ -31,17 +37,21 @@ public class ExchangeRate : BaseEntity
         Guid toCurrencyId,
         DateTime rateDate,
         decimal rate,
+        decimal buyingRate,
+        decimal sellingRate,
         ExchangeRateSource source = ExchangeRateSource.Manual)
     {
-        if (rate <= 0)
-            throw new ArgumentException("Rate must be positive");
+        if (rate <= 0 && buyingRate <= 0 && sellingRate <= 0)
+            throw new ArgumentException("At least one rate must be positive");
 
         var entity = new ExchangeRate
         {
             FromCurrencyId = fromCurrencyId,
             ToCurrencyId = toCurrencyId,
-            RateDate = rateDate.Date,
+            RateDate = rateDate, // Keep full timestamp
             Rate = rate,
+            BuyingRate = buyingRate,
+            SellingRate = sellingRate,
             Source = source
         };
         entity.SetTenant(tenantId);
@@ -55,9 +65,11 @@ public class ExchangeRate : BaseEntity
     /// <summary>Reverse convert amount</summary>
     public decimal ReverseConvert(decimal amount) => amount / Rate;
 
-    public void UpdateRate(decimal newRate)
+    public void UpdateRates(decimal rate, decimal buyingRate, decimal sellingRate)
     {
-        if (newRate <= 0) throw new ArgumentException("Rate must be positive");
-        Rate = newRate;
+        if (rate <= 0 && buyingRate <= 0 && sellingRate <= 0) throw new ArgumentException("At least one rate must be positive");
+        Rate = rate;
+        BuyingRate = buyingRate;
+        SellingRate = sellingRate;
     }
 }

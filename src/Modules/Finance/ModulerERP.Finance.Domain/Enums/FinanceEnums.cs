@@ -61,5 +61,6 @@ public enum ExchangeRateSource
     Manual = 1,
     TCMB = 2,     // Central Bank of Turkey
     ECB = 3,      // European Central Bank
-    Custom = 4
+    Custom = 4,
+    CentralBank = 5
 }

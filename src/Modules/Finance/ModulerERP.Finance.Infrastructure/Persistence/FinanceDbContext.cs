@@ -5,9 +5,11 @@ using ModulerERP.SharedKernel.Entities;
 using ModulerERP.SharedKernel.Enums;
 using System.Text.Json;
 
+using ModulerERP.Finance.Application.Interfaces;
+
 namespace ModulerERP.Finance.Infrastructure.Persistence;
 
-public class FinanceDbContext : DbContext, IUnitOfWork
+public class FinanceDbContext : DbContext, IUnitOfWork, IFinanceUnitOfWork
 {
     private readonly Guid _tenantId;
     private readonly ICurrentUserService _currentUserService;

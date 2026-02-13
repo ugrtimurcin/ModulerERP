@@ -603,7 +603,9 @@
             "fetchFailed": "Dış kaynak kuru getirilemedi",
             "selectDateAndCurrency": "Lütfen tarih ve para birimi seçiniz",
             "fromCurrency": "Kaynak Para Birimi",
-            "toCurrency": "Hedef Para Birimi (Baz)"
+            "toCurrency": "Hedef Para Birimi (Baz)",
+            "buyingRate": "Alış Kuru",
+            "sellingRate": "Satış Kuru"
         },
         "accounts": {
             "title": "Hesap Planı",

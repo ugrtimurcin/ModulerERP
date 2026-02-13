@@ -9,9 +9,10 @@ import type { ProjectChangeOrderDto } from '@/types/project';
 
 interface ChangeOrdersTabProps {
     projectId: string;
+    currencySymbol?: string;
 }
 
-export function ChangeOrdersTab({ projectId }: ChangeOrdersTabProps) {
+export function ChangeOrdersTab({ projectId, currencySymbol = 'TRY' }: ChangeOrdersTabProps) {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
     const [changeOrders, setChangeOrders] = useState<ProjectChangeOrderDto[]>([]);
@@ -70,7 +71,14 @@ export function ChangeOrdersTab({ projectId }: ChangeOrdersTabProps) {
 
     if (loading) return <div>{t('common.loading')}</div>;
 
-    const formatCurrency = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
+    const formatCurrency = (val: number) => {
+        // Simple fallback if code is not standard
+        try {
+            return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: currencySymbol }).format(val);
+        } catch {
+            return `${val.toLocaleString('tr-TR')} ${currencySymbol}`;
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -146,6 +154,7 @@ export function ChangeOrdersTab({ projectId }: ChangeOrdersTabProps) {
                 onClose={() => setIsCreateModalOpen(false)}
                 projectId={projectId}
                 onSuccess={loadChangeOrders}
+                currencySymbol={currencySymbol}
             />
         </div>
     );

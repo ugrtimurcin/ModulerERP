@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash, User, Truck, Pencil } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { MultiSelect } from '@/components/ui/MultiSelect';
 import { Modal } from '@/components/ui/Modal';
 import { useDialog } from '@/components/ui/Dialog';
@@ -12,6 +12,8 @@ import type { ProjectResourceDto, CreateProjectResourceDto } from '@/types/proje
 interface ResourcesTabProps {
     projectId: string;
 }
+
+type Currency = { id: string; code: string; symbol: string; name: string };
 
 // Extended state for multi-select
 interface ResourceFormState extends Omit<CreateProjectResourceDto, 'employeeId' | 'assetId'> {
@@ -31,7 +33,9 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
     const [resourceType, setResourceType] = useState<'employee' | 'asset' | 'other'>('other');
     const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string; position: string }[]>([]);
     const [assets, setAssets] = useState<{ id: string; name: string; serialNumber: string }[]>([]);
+    const [currencies, setCurrencies] = useState<{ value: string; label: string }[]>([]);
     const [loadingLookups, setLoadingLookups] = useState(false);
+    const [editingResource, setEditingResource] = useState<ProjectResourceDto | null>(null);
 
     // Form State
     const [formData, setFormData] = useState<ResourceFormState>({
@@ -45,6 +49,7 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
 
     useEffect(() => {
         loadResources();
+        loadLookups();
     }, [projectId]);
 
     useEffect(() => {
@@ -52,6 +57,14 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
             loadLookups();
         }
     }, [isModalOpen]);
+
+    useEffect(() => {
+        // Auto-select first currency if creating and no currency set
+        if (isModalOpen && !editingResource && currencies.length > 0 &&
+            (formData.currencyId === '00000000-0000-0000-0000-000000000000' || !formData.currencyId)) {
+            setFormData(prev => ({ ...prev, currencyId: currencies[0].value }));
+        }
+    }, [isModalOpen, editingResource, currencies, formData.currencyId]);
 
     const loadResources = async () => {
         try {
@@ -70,9 +83,10 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
         setLoadingLookups(true);
         try {
             // Parallel fetch using optimized lookup endpoints
-            const [empRes, assetRes] = await Promise.all([
+            const [empRes, assetRes, currRes] = await Promise.all([
                 api.get<any[]>('/hr/employees/lookup'),
-                api.get<any[]>('/fixedassets/assets/lookup')
+                api.get<any[]>('/fixedassets/assets/lookup'),
+                api.get<{ data: Currency[] }>('/currencies/active')
             ]);
 
             if (empRes && Array.isArray(empRes)) {
@@ -89,6 +103,15 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
                     id: a.id,
                     name: a.name,
                     serialNumber: a.serialNumber
+                })));
+            }
+
+            // Handle Currencies
+            const currData = currRes.data || [];
+            if (Array.isArray(currData)) {
+                setCurrencies(currData.map(c => ({
+                    value: c.id,
+                    label: `${c.code} (${c.symbol})`
                 })));
             }
         } catch (error) {
@@ -111,8 +134,6 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
         setResourceType('other');
         setIsModalOpen(true);
     };
-
-    const [editingResource, setEditingResource] = useState<ProjectResourceDto | null>(null);
 
     const handleEditClick = (resource: ProjectResourceDto) => {
         setEditingResource(resource);
@@ -250,7 +271,7 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="text-sm font-medium">
-                                            {resource.hourlyCost} {t('common.currency')}
+                                            {resource.hourlyCost} {currencies.find(c => c.value === resource.currencyId)?.label.split('(')[1]?.replace(')', '') || 'TRY'}
                                         </div>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-600" onClick={() => handleEditClick(resource)}>
                                             <Pencil className="h-4 w-4" />
@@ -334,7 +355,13 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
                             onChange={(e) => setFormData({ ...formData, hourlyCost: parseFloat(e.target.value) })}
                             required
                         />
-                        {/* Currency Select would go here */}
+                        <Select
+                            label={t('common.currency')}
+                            options={currencies}
+                            value={formData.currencyId}
+                            onChange={(e) => setFormData({ ...formData, currencyId: e.target.value })}
+                            required
+                        />
                     </div>
 
                     <div className="flex justify-end space-x-2 mt-4">

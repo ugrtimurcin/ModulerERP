@@ -10,9 +10,10 @@ interface ChangeOrderDialogProps {
     onClose: () => void;
     projectId: string;
     onSuccess: () => void;
+    currencySymbol?: string;
 }
 
-export function ChangeOrderDialog({ isOpen, onClose, projectId, onSuccess }: ChangeOrderDialogProps) {
+export function ChangeOrderDialog({ isOpen, onClose, projectId, onSuccess, currencySymbol = 'TRY' }: ChangeOrderDialogProps) {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState<CreateChangeOrderDto>({
@@ -74,7 +75,7 @@ export function ChangeOrderDialog({ isOpen, onClose, projectId, onSuccess }: Cha
 
                 <div className="grid grid-cols-2 gap-4">
                     <Input
-                        label={t('projects.changeOrders.amountChange')}
+                        label={`${t('projects.changeOrders.amountChange')} (${currencySymbol})`}
                         type="number"
                         value={form.amountChange}
                         onChange={(e) => setForm({ ...form, amountChange: parseFloat(e.target.value) })}

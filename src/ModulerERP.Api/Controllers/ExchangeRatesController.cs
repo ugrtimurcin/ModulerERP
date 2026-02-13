@@ -28,7 +28,7 @@ public class ExchangeRatesController : BaseApiController
     [HttpPost]
     public async Task<ActionResult<ExchangeRateDto>> Create(CreateExchangeRateDto dto, CancellationToken cancellationToken)
     {
-        return HandleResult(await _service.CreateAsync(dto, CurrentUserId, cancellationToken));
+        return HandleResult(await _service.CreateAsync(TenantId, dto, CurrentUserId, cancellationToken));
     }
 
     [HttpPut("{id}")]
@@ -45,11 +45,11 @@ public class ExchangeRatesController : BaseApiController
     [HttpPost("sync")]
     public async Task<ActionResult<int>> Sync(CancellationToken cancellationToken)
     {
-        return HandleResult(await _service.SyncRatesAsync(CurrentUserId, cancellationToken));
+        return HandleResult(await _service.SyncRatesAsync(TenantId, CurrentUserId, cancellationToken));
     }
 
     [HttpGet("external")]
-    public async Task<ActionResult<decimal>> FetchExternal([FromQuery] DateTime date, [FromQuery] string code, CancellationToken cancellationToken)
+    public async Task<ActionResult<ExternalRateDto>> FetchExternal([FromQuery] DateTime date, [FromQuery] string code, CancellationToken cancellationToken)
     {
         return HandleResult(await _service.GetExternalRateAsync(date, code, cancellationToken));
     }

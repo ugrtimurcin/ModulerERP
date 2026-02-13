@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, useToast } from '@/components/ui';
-import { X, MapPin, RefreshCw } from 'lucide-react';
+import { X, MapPin, RefreshCw, Upload } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { api } from '@/lib/api';
 
@@ -15,10 +15,13 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [employees, setEmployees] = useState<{ id: string, firstName: string, lastName: string }[]>([]);
+    const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
     const scannerRef = useRef<Html5Qrcode | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     // Ref to track if we are currently ensuring scanner
     const initializingRef = useRef(false);
+    const isScanningRef = useRef(false);
 
     const [locationStatus, setLocationStatus] = useState<'idle' | 'locating' | 'found' | 'error'>('idle');
     const [showSuccessTick, setShowSuccessTick] = useState(false);
@@ -45,7 +48,7 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
         const exists = employeesRef.current.some(e => e.id === formData.employeeId);
         if (exists) {
             setShowSuccessTick(true);
-            toast.success(t('hr.scanSuccess'));
+            //toast.success(t('hr.scanSuccess'));
         } else {
             setShowErrorTick(true);
         }
@@ -59,6 +62,7 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
     const startScanner = useCallback(async () => {
         if (initializingRef.current) return;
         initializingRef.current = true;
+        setUploadedImage(null);
 
         try {
             // Cleanup existing first
@@ -89,19 +93,17 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
                         },
                         (decodedText) => {
                             handleScanSuccess(decodedText);
-                            // Stop scanning on success if desired, or keep scanning.
-                            // For this dialog, we probably want to pause or stop.
-                            // html5QrCode.stop().catch(console.error);
-                            // scannerRef.current = null; 
-                            // Actually, let's keep it running until they close or we decide to stop.
-                            // But usually, once scanned, we show the result.
-                            html5QrCode.pause();
+                            // html5QrCode.pause(); // Do not pause, keep scanning or stop? 
+                            // Pausing might cause "not running" error if we try to stop later?
+                            // Let's keep it running until close or upload.
                         },
                         () => {
                             // error / invalid scan, ignore
                         }
                     );
+                    isScanningRef.current = true;
                 } catch (err) {
+                    isScanningRef.current = false;
                     console.error("Error starting scanner", err);
                     // Show manual entry or error message
                 }
@@ -115,12 +117,62 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
 
     const stopScanner = useCallback(() => {
         if (scannerRef.current) {
-            scannerRef.current.stop().then(() => {
-                scannerRef.current?.clear();
+            // Only attempt to stop if we believe it's running
+            if (isScanningRef.current) {
+                scannerRef.current.stop().then(() => {
+                    scannerRef.current?.clear();
+                    scannerRef.current = null;
+                    isScanningRef.current = false;
+                }).catch(err => {
+                    console.warn("Scanner stop failed", err);
+                    scannerRef.current = null;
+                    isScanningRef.current = false;
+                });
+            } else {
+                // Just clear reference if not running
                 scannerRef.current = null;
-            }).catch(console.error);
+            }
         }
     }, []);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Create preview
+        const imageUrl = URL.createObjectURL(file);
+        setUploadedImage(imageUrl);
+
+        // Stop current scanner to free up the UI element
+        if (scannerRef.current) {
+            try {
+                if (isScanningRef.current) {
+                    await scannerRef.current.stop();
+                    isScanningRef.current = false;
+                }
+                await scannerRef.current.clear();
+                scannerRef.current = null;
+            } catch (err) {
+                console.warn("Failed to stop scanner for file upload", err);
+            }
+        }
+
+        // Wait a bit for cleanup
+        setTimeout(async () => {
+            try {
+                const html5QrCode = new Html5Qrcode("camera-reader");
+                scannerRef.current = html5QrCode;
+                const decodedText = await html5QrCode.scanFile(file, false);
+                handleScanSuccess(decodedText);
+            } catch (err) {
+                console.error("File scan failed", err);
+                //toast.error(t('common.error'), t('hr.scanFailed'));
+                setShowErrorTick(true);
+            }
+            // Reset input
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }, 100);
+    };
 
     useEffect(() => {
         if (open) {
@@ -151,11 +203,13 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
         setLocationStatus('idle');
         setShowSuccessTick(false);
         setShowErrorTick(false);
+        setUploadedImage(null);
     };
 
     const handleTryAgain = () => {
         setShowErrorTick(false);
         setFormData(prev => ({ ...prev, employeeId: '' }));
+        setUploadedImage(null);
         // Re-init scanner
         startScanner();
     };
@@ -172,7 +226,14 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
                 setFormData(prev => ({ ...prev, gpsCoordinates: coords }));
                 setLocationStatus('found');
             },
-            () => setLocationStatus('error')
+            () => {
+                setLocationStatus('error');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
         );
     };
 
@@ -225,8 +286,35 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
                 </div>
 
                 <div className="p-6 space-y-6">
-                    <div className="relative w-full overflow-hidden rounded-lg bg-gray-100 min-h-[250px]">
-                        <div id="camera-reader" className="w-full"></div>
+                    <div className="relative w-full overflow-hidden rounded-lg bg-gray-100 min-h-[250px] flex items-center justify-center bg-black">
+                        <div id="camera-reader" className={`w-full ${uploadedImage ? 'hidden' : ''}`}></div>
+
+                        {uploadedImage && (
+                            <img src={uploadedImage} alt="Scanning..." className="max-w-full max-h-[300px] object-contain" />
+                        )}
+
+                        {/* File Upload Trigger */}
+                        {!uploadedImage && (
+                            <div className="absolute top-2 right-2 z-20">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="bg-white/80 backdrop-blur"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    title={t('hr.uploadQr')}
+                                >
+                                    <Upload className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        )}
 
                         {(showSuccessTick || showErrorTick) && (
                             <style>{`
@@ -325,15 +413,14 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
                         </div>
                     )}
 
-                    <TypeSelector type={formData.type} onChange={(val) => setFormData(prev => ({ ...prev, type: val }))} t={t} />
-                    <LocationStatus status={locationStatus} t={t} />
+                    <LocationStatus status={locationStatus} coordinates={formData.gpsCoordinates} t={t} />
                     <div className="flex justify-end gap-3 pt-4 border-t border-[hsl(var(--border))]">
                         <Button type="button" variant="secondary" onClick={() => onClose(false)}>{t('common.cancel')}</Button>
 
                         {isError ? (
                             <Button onClick={handleTryAgain} variant="secondary" className="flex-1">
                                 <RefreshCw className="w-4 h-4 mr-2" />
-                                {t('common.tryAgain')}
+                                {/* ... */}
                             </Button>
                         ) : (
                             <Button onClick={handleScanSubmit} disabled={isLoading || !isValidScan}>
@@ -382,12 +469,14 @@ function LocationStatus({ status, t }: any) {
                 <MapPin className="w-4 h-4 text-gray-500" />
                 <span>{t('hr.location')}</span>
             </div>
-            <span className={status === 'found' ? 'text-emerald-600 font-medium' : 'text-gray-500'}>
-                {status === 'locating' && t('common.loading')}
-                {status === 'found' && t('hr.acquired')}
-                {status === 'error' && t('hr.notAvailable')}
-                {status === 'idle' && '-'}
-            </span>
+            <div className="text-right">
+                <span className={`block ${status === 'found' ? 'text-emerald-600 font-medium' : 'text-gray-500'}`}>
+                    {status === 'locating' && t('common.loading')}
+                    {status === 'found' && t('hr.acquired')}
+                    {status === 'error' && t('hr.notAvailable')}
+                    {status === 'idle' && '-'}
+                </span>
+            </div>
         </div>
     );
 }

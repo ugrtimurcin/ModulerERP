@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<IExchangeRateService, ExchangeRateService>();
+        services.AddScoped<ICurrencyLookupService, CurrencyLookupService>();
 
         return services;
     }

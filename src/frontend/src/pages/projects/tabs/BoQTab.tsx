@@ -8,9 +8,10 @@ import { useToast } from '@/components/ui/Toast';
 
 interface BoQTabProps {
     projectId: string;
+    currencySymbol?: string;
 }
 
-export function BoQTab({ projectId }: BoQTabProps) {
+export function BoQTab({ projectId, currencySymbol = 'TRY' }: BoQTabProps) {
     const { t } = useTranslation();
     const toast = useToast();
     const [items, setItems] = useState<BillOfQuantitiesItemDto[]>([]);
@@ -170,8 +171,8 @@ export function BoQTab({ projectId }: BoQTabProps) {
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.description')}</th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.quantity')}</th>
                             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.unit')}</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('projects.boq.income')}</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('projects.boq.expense')}</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('projects.boq.income')} ({currencySymbol})</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('projects.boq.expense')} ({currencySymbol})</th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.actions')}</th>
                         </tr>
                     </thead>

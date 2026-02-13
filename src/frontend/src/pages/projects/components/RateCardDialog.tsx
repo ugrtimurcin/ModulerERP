@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { MultiSelect } from '@/components/ui/MultiSelect';
 import { Modal } from '@/components/ui/Modal'; // Using older Modal style for consistency or new Dialog? Using Modal as per ResourcesTab
 import { useToast } from '@/components/ui/Toast';
@@ -16,6 +16,7 @@ interface RateCardDialogProps {
 }
 
 type LookupItem = { id: string; label: string };
+type Currency = { id: string; code: string; symbol: string; name: string };
 
 export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }: RateCardDialogProps) {
     const { t } = useTranslation();
@@ -35,6 +36,7 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
     // Lookups
     const [employees, setEmployees] = useState<LookupItem[]>([]);
     const [assets, setAssets] = useState<LookupItem[]>([]);
+    const [currencies, setCurrencies] = useState<{ value: string; label: string }[]>([]);
 
     useEffect(() => {
         if (isOpen) {
@@ -60,12 +62,20 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
         }
     }, [isOpen, rateCard]);
 
+    useEffect(() => {
+        // Auto-select first currency if creation mode and currencies loaded
+        if (!rateCard && currencies.length > 0 && (currencyId === '00000000-0000-0000-0000-000000000000' || !currencyId)) {
+            setCurrencyId(currencies[0].value);
+        }
+    }, [currencies, rateCard, currencyId]);
+
     const loadLookups = async () => {
         setLoadingLookups(true);
         try {
-            const [empRes, assetRes] = await Promise.all([
+            const [empRes, assetRes, currRes] = await Promise.all([
                 api.get<{ id: string; firstName: string; lastName: string; position: string }[]>('/hr/employees/lookup'),
-                api.get<{ id: string; name: string; serialNumber: string }[]>('/fixedassets/assets/lookup')
+                api.get<{ id: string; name: string; serialNumber: string }[]>('/fixedassets/assets/lookup'),
+                api.get<{ data: Currency[] }>('/currencies/active')
             ]);
 
             if (empRes) {
@@ -85,6 +95,14 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
                         label: `${a.name} (${a.serialNumber || 'No SN'})`
                     })));
                 }
+            }
+            // Handle Currencies response (CurrenciesController returns { success: true, data: [...] })
+            const currData = currRes.data || [];
+            if (Array.isArray(currData)) {
+                setCurrencies(currData.map(c => ({
+                    value: c.id,
+                    label: `${c.code} (${c.symbol})`
+                })));
             }
         } catch (error) {
             console.error("Failed to load lookups", error);
@@ -212,6 +230,14 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
                         required
                     />
                 </div>
+
+                <Select
+                    label={t('common.currency')}
+                    options={currencies}
+                    value={currencyId}
+                    onChange={(e) => setCurrencyId(e.target.value)}
+                    required
+                />
 
                 <div className="grid grid-cols-2 gap-4">
                     <Input

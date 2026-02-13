@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import QRCode from 'react-qr-code';
 import { Button } from '@/components/ui';
-import { X, Printer } from 'lucide-react';
+import { X, Printer, Download } from 'lucide-react';
 import { api } from '@/lib/api';
 
 interface EmployeeQRDialogProps {
@@ -44,6 +44,78 @@ export function EmployeeQRDialog({ open, onClose, employee }: EmployeeQRDialogPr
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
+        }
+    };
+
+    const handleDownload = () => {
+        const svg = document.getElementById("employee-qr-code");
+        if (!svg) return;
+
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+
+        // Canvas settings
+        const padding = 40;
+        const width = 600;
+        const height = 800; // Increased height for text
+        const scale = 2; // For high resolution
+
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+
+        if (ctx) {
+            ctx.scale(scale, scale);
+
+            // Fill white background
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Name
+            ctx.fillStyle = "black";
+            ctx.font = "bold 32px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(`${localEmp.firstName} ${localEmp.lastName}`, width / 2, 80);
+
+            // Draw Job Title
+            ctx.fillStyle = "#6b7280"; // Gray-500
+            ctx.font = "20px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(localEmp.jobTitle, width / 2, 120);
+
+            // Prepare QR Image
+            img.onload = () => {
+                // Draw QR Code
+                const qrSize = 400;
+                const qrX = (width - qrSize) / 2;
+                const qrY = 160;
+                ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
+
+                // Draw ID
+                ctx.fillStyle = "#9ca3af"; // Gray-400
+                ctx.font = "14px monospace";
+                ctx.textAlign = "center";
+                ctx.fillText(localEmp.id, width / 2, qrY + qrSize + 40);
+
+                // Additional Footer (Optional)
+                ctx.fillStyle = "#e5e7eb"; // Gray-200
+                ctx.fillRect(padding, qrY + qrSize + 70, width - (padding * 2), 1);
+
+                ctx.fillStyle = "#9ca3af";
+                ctx.font = "italic 16px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("Scan this code for attendance logging", width / 2, qrY + qrSize + 100);
+
+                // Trigger Download
+                const pngFile = canvas.toDataURL("image/png");
+                const downloadLink = document.createElement("a");
+                downloadLink.download = `${localEmp.firstName}_${localEmp.lastName}_Card.png`;
+                downloadLink.href = pngFile;
+                downloadLink.click();
+            };
+
+            img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
         }
     };
 
@@ -93,8 +165,8 @@ export function EmployeeQRDialog({ open, onClose, employee }: EmployeeQRDialogPr
                                     <Printer className="w-4 h-4 mr-2" />
                                     {t('common.print')}
                                 </Button>
-                                {/* Download logic simplified by reusing Print or similar */}
-                                <Button className="flex-1" variant="secondary" onClick={() => handlePrint()}>
+                                <Button className="flex-1" variant="secondary" onClick={handleDownload}>
+                                    <Download className="w-4 h-4 mr-2" />
                                     {t('common.download')}
                                 </Button>
                             </div>

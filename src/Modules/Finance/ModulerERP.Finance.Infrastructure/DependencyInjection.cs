@@ -19,6 +19,7 @@ public static class DependencyInjection
                 b => b.MigrationsAssembly(typeof(FinanceDbContext).Assembly.FullName)));
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<FinanceDbContext>());
+        services.AddScoped<IFinanceUnitOfWork>(provider => provider.GetRequiredService<FinanceDbContext>());
         services.AddScoped<IJournalEntryRepository, JournalEntryRepository>();
         
         // Register the Shared Interface Implementation

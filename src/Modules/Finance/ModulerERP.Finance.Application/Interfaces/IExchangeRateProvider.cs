@@ -6,7 +6,7 @@ public interface IExchangeRateProvider
 {
     /// <summary>
     /// Fetches the latest daily exchange rates from the provider.
-    /// Returns a list of (CurrencyCode, Rate).
+    /// Returns a list of ExternalRateDto.
     /// </summary>
-    Task<Result<List<(string CurrencyCode, decimal Rate)>>> GetDailyRatesAsync(DateTime? date = null, CancellationToken cancellationToken = default);
+    Task<Result<List<ModulerERP.Finance.Application.DTOs.ExternalRateDto>>> GetDailyRatesAsync(DateTime? date = null, CancellationToken cancellationToken = default);
 }

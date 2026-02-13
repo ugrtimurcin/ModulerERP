@@ -11,6 +11,8 @@ interface ExchangeRateDto {
     toCurrencyId: string;
     rateDate: string;
     rate: number;
+    buyingRate: number;
+    sellingRate: number;
     source: string;
 }
 
@@ -33,7 +35,9 @@ const ExchangeRatesPage: React.FC = () => {
         fromCurrencyId: '',
         toCurrencyId: '',
         rateDate: new Date().toISOString().split('T')[0],
-        rate: 0
+        rate: 0,
+        buyingRate: 0,
+        sellingRate: 0
     });
 
     const loadData = useCallback(async () => {
@@ -119,26 +123,26 @@ const ExchangeRatesPage: React.FC = () => {
                 if (!currency) continue;
 
                 try {
-                    // 1. Fetch External Rate
+                    // 1. Fetch External Rate (Returns ExternalRateDto)
                     const fetchRes = await api.finance.exchangeRates.fetchExternal(date, code);
 
-                    if (fetchRes.success && fetchRes.data > 0) {
+                    if (fetchRes.success && fetchRes.data) {
+                        const rateData = fetchRes.data; // { rate, buyingRate, sellingRate, currencyCode }
+
                         // 2. Create Rate in DB
                         const createRes = await api.finance.exchangeRates.create({
                             fromCurrencyId: currency.id,
                             toCurrencyId: baseCurrency.id,
                             rateDate: date,
-                            rate: fetchRes.data,
+                            rate: rateData.rate,
+                            buyingRate: rateData.buyingRate,
+                            sellingRate: rateData.sellingRate,
                             source: 'KKTC MB'
                         });
 
                         if (createRes.success) {
                             syncedCount++;
                         } else {
-                            // If it failed because it likely exists, we might want to update it?
-                            // But usually create returns error. 
-                            // Current API creates new.
-                            // We'll just ignore "already exists" errors quietly or log them.
                             console.warn(`Failed to create rate for ${code}:`, createRes.error);
                         }
                     } else {
@@ -190,6 +194,18 @@ const ExchangeRatesPage: React.FC = () => {
             align: 'right',
             render: (row) => row.rate.toFixed(4)
         },
+        {
+            key: 'buyingRate',
+            header: t('finance.exchangeRates.buyingRate'),
+            align: 'right',
+            render: (row) => row.buyingRate?.toFixed(4) || '-'
+        },
+        {
+            key: 'sellingRate',
+            header: t('finance.exchangeRates.sellingRate'),
+            align: 'right',
+            render: (row) => row.sellingRate?.toFixed(4) || '-'
+        },
         { key: 'source', header: t('finance.exchangeRates.source') },
         {
             key: 'id',
@@ -220,9 +236,15 @@ const ExchangeRatesPage: React.FC = () => {
         setFetchingRate(true);
         try {
             const res = await api.finance.exchangeRates.fetchExternal(formData.rateDate, code);
-            if (res.success) {
-                setFormData(prev => ({ ...prev, rate: res.data }));
-                toast.success(t('common.updatedSuccess'), t('finance.exchangeRates.rateFetched', { code, rate: res.data }));
+            if (res.success && res.data) {
+                const r = res.data;
+                setFormData(prev => ({
+                    ...prev,
+                    rate: r.rate,
+                    buyingRate: r.buyingRate,
+                    sellingRate: r.sellingRate
+                }));
+                toast.success(t('common.updatedSuccess'), t('finance.exchangeRates.rateFetched', { code, rate: r.rate }));
             } else {
                 toast.error(t('common.error'), res.error || t('finance.exchangeRates.rateNotFound'));
             }
@@ -245,7 +267,17 @@ const ExchangeRatesPage: React.FC = () => {
                         <RefreshCw className="w-4 h-4 mr-2" />
                         {t('finance.exchangeRates.syncKktc')}
                     </Button>
-                    <Button onClick={() => setIsModalOpen(true)}>
+                    <Button onClick={() => {
+                        setFormData({
+                            fromCurrencyId: '',
+                            toCurrencyId: '',
+                            rateDate: new Date().toISOString().split('T')[0],
+                            rate: 0,
+                            buyingRate: 0,
+                            sellingRate: 0
+                        });
+                        setIsModalOpen(true);
+                    }}>
                         <Plus className="w-4 h-4 mr-2" />
                         {t('finance.exchangeRates.addRate')}
                     </Button>
@@ -273,7 +305,23 @@ const ExchangeRatesPage: React.FC = () => {
                         <select
                             className="w-full p-2 border rounded-md dark:bg-gray-800"
                             value={formData.fromCurrencyId}
-                            onChange={e => setFormData({ ...formData, fromCurrencyId: e.target.value })}
+                            onChange={e => {
+                                const newFromId = e.target.value;
+                                let newToId = formData.toCurrencyId;
+                                const code = currencies.find(c => c.id === newFromId)?.code;
+                                if (['USD', 'EUR', 'GBP'].includes(code || '')) {
+                                    const tryId = currencies.find(c => c.code === 'TRY' || c.code === 'TL')?.id;
+                                    if (tryId) newToId = tryId;
+                                }
+                                setFormData({
+                                    ...formData,
+                                    fromCurrencyId: newFromId,
+                                    toCurrencyId: newToId,
+                                    rate: 0,
+                                    buyingRate: 0,
+                                    sellingRate: 0
+                                });
+                            }}
                             required
                         >
                             <option value="">{t('common.select')}</option>
@@ -287,7 +335,13 @@ const ExchangeRatesPage: React.FC = () => {
                         <select
                             className="w-full p-2 border rounded-md dark:bg-gray-800"
                             value={formData.toCurrencyId}
-                            onChange={e => setFormData({ ...formData, toCurrencyId: e.target.value })}
+                            onChange={e => setFormData({
+                                ...formData,
+                                toCurrencyId: e.target.value,
+                                rate: 0,
+                                buyingRate: 0,
+                                sellingRate: 0
+                            })}
                             required
                         >
                             <option value="">{t('common.select')}</option>
@@ -304,6 +358,26 @@ const ExchangeRatesPage: React.FC = () => {
                                 step="0.0001"
                                 value={formData.rate}
                                 onChange={e => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
+                                required
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <Input
+                                label={t('finance.exchangeRates.buyingRate')}
+                                type="number"
+                                step="0.0001"
+                                value={formData.buyingRate}
+                                onChange={e => setFormData({ ...formData, buyingRate: parseFloat(e.target.value) })}
+                                required
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <Input
+                                label={t('finance.exchangeRates.sellingRate')}
+                                type="number"
+                                step="0.0001"
+                                value={formData.sellingRate}
+                                onChange={e => setFormData({ ...formData, sellingRate: parseFloat(e.target.value) })}
                                 required
                             />
                         </div>

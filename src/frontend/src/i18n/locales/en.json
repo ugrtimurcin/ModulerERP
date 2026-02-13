@@ -659,7 +659,9 @@
       "fetchFailed": "Failed to fetch external rate",
       "selectDateAndCurrency": "Please select a date and currency",
       "fromCurrency": "From Currency",
-      "toCurrency": "To Currency"
+      "toCurrency": "To Currency",
+      "buyingRate": "Buying Rate",
+      "sellingRate": "Selling Rate"
     },
     "accounts": {
       "title": "Chart of Accounts",

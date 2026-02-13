@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { api } from '@/lib/api';
 import { ProjectStatus } from '@/types/project';
 import type { ProjectDto, CreateProjectDto } from '@/types/project';
+
+type Currency = { id: string; code: string; symbol: string; name: string };
 import { PaymentsTab } from './tabs/PaymentsTab';
 import { TasksTab } from './tabs/TasksTab';
 import { ResourcesTab } from './tabs/ResourcesTab';
@@ -21,6 +23,7 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
     const { t } = useTranslation();
     const [loading, setLoading] = useState(mode !== 'create');
     const [project, setProject] = useState<ProjectDto | null>(null);
+    const [currencies, setCurrencies] = useState<{ value: string; label: string }[]>([]);
 
     // Tabs State
     const [activeTab, setActiveTab] = useState('details');
@@ -36,10 +39,31 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
     });
 
     useEffect(() => {
+        loadCurrencies();
         if (mode !== 'create' && id) {
             loadProject(id);
         }
     }, [id, mode]);
+
+    const loadCurrencies = async () => {
+        try {
+            const response = await api.get<{ data: Currency[] }>('/currencies/active');
+            const data = response.data || [];
+            if (Array.isArray(data)) {
+                setCurrencies(data.map(c => ({
+                    value: c.id,
+                    label: `${c.code} (${c.symbol})`
+                })));
+
+                // Set default currency if creating
+                if (mode === 'create' && data.length > 0) {
+                    setFormData(prev => ({ ...prev, contractCurrencyId: data[0].id }));
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load currencies', error);
+        }
+    };
 
     const loadProject = async (projectId: string) => {
         try {
@@ -99,6 +123,8 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
             { id: 'documents', label: t('projects.tabs.documents') }
         ] : [])
     ];
+
+    const currencyCode = currencies.find(c => c.value === (project?.contractCurrencyId || formData.contractCurrencyId))?.label.split(' ')[0] || 'TRY';
 
     return (
         <div className="space-y-6">
@@ -176,6 +202,15 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                                 />
                             </div>
                             <div className="space-y-2">
+                                <Select
+                                    label={t('projects.contractCurrency')}
+                                    options={currencies}
+                                    value={formData.contractCurrencyId}
+                                    onChange={e => setFormData({ ...formData, contractCurrencyId: e.target.value })}
+                                    disabled={mode !== 'create'}
+                                />
+                            </div>
+                            <div className="space-y-2">
                                 <Input
                                     label={t('projects.startDate')}
                                     type="date"
@@ -196,7 +231,7 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                 )}
 
                 {activeTab === 'boq' && id && (
-                    <BoQTab projectId={id} />
+                    <BoQTab projectId={id} currencySymbol={currencyCode} />
                 )}
 
                 {activeTab === 'daily-logs' && id && (
@@ -208,7 +243,7 @@ export function ProjectDetailPage({ mode = 'view' }: { mode?: 'view' | 'create' 
                 )}
 
                 {activeTab === 'changeOrders' && id && (
-                    <ChangeOrdersTab projectId={id} />
+                    <ChangeOrdersTab projectId={id} currencySymbol={currencyCode} />
                 )}
 
                 {activeTab === 'rateCards' && id && (
