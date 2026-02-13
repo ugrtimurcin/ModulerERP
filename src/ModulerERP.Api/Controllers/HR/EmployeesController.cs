@@ -65,6 +65,6 @@ public class EmployeesController : BaseApiController
             e.LastName, 
             Position = e.JobTitle 
         });
-        return Ok(new { success = true, data = result });
+        return Ok(result);
     }
 }

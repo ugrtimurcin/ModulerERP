@@ -122,12 +122,12 @@ export function AssetDetailPage() {
                 api.get<Disposal[]>(`/fixedassets/assets/${id}/disposals`),
             ]);
 
-            setAsset(assetRes.data || (assetRes as any));
-            setAssignments(assignRes.data || (assignRes as any));
-            setMeterLogs(meterRes.data || (meterRes as any));
-            setIncidents(incidentRes.data || (incidentRes as any));
-            setMaintenances(maintRes.data || (maintRes as any));
-            setDisposals(dispRes.data || (dispRes as any));
+            setAsset(assetRes);
+            setAssignments(assignRes);
+            setMeterLogs(meterRes);
+            setIncidents(incidentRes);
+            setMaintenances(maintRes);
+            setDisposals(dispRes);
         } catch (error) {
             toast.error(t('common.error'));
         }

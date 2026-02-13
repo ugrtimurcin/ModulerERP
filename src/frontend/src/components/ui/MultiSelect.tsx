@@ -86,8 +86,8 @@ export function MultiSelect({
             </div>
 
             {isOpen && (
-                <div className="relative z-50">
-                    <div className="absolute top-0 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in fade-in-0 zoom-in-95">
+                <div className="relative z-[500]">
+                    <div className="absolute top-1 w-full rounded-md border bg-popover hover:bg-popover/100 text-popover-foreground shadow-lg outline-none animate-in fade-in-0 zoom-in-95 bg-white dark:bg-slate-950">
                         <div className="max-h-64 overflow-auto p-1">
                             {options.length === 0 ? (
                                 <div className="py-2 text-center text-sm text-muted-foreground">No options found.</div>

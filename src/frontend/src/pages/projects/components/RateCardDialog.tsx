@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '@/components/ui';
+import { MultiSelect } from '@/components/ui/MultiSelect';
 import { Modal } from '@/components/ui/Modal'; // Using older Modal style for consistency or new Dialog? Using Modal as per ResourcesTab
 import { useToast } from '@/components/ui/Toast';
 import { api } from '@/lib/api';
@@ -24,8 +25,9 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
 
     // Form State
     const [resourceType, setResourceType] = useState<'employee' | 'asset'>('employee');
-    const [resourceId, setResourceId] = useState('');
+    const [resourceIds, setResourceIds] = useState<string[]>([]);
     const [hourlyRate, setHourlyRate] = useState<number>(0);
+    const [overtimeRate, setOvertimeRate] = useState<number>(0);
     const [currencyId, setCurrencyId] = useState('00000000-0000-0000-0000-000000000000'); // Default
     const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().split('T')[0]);
     const [effectiveTo, setEffectiveTo] = useState<string>('');
@@ -40,16 +42,18 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
             if (rateCard) {
                 // Editing
                 setResourceType(rateCard.employeeId ? 'employee' : 'asset');
-                setResourceId(rateCard.employeeId || rateCard.assetId || '');
+                setResourceIds([rateCard.employeeId || rateCard.assetId || '']);
                 setHourlyRate(rateCard.hourlyRate);
+                setOvertimeRate(rateCard.overtimeRate || 0);
                 setCurrencyId(rateCard.currencyId);
                 setEffectiveFrom(rateCard.effectiveFrom.split('T')[0]);
                 setEffectiveTo(rateCard.effectiveTo ? rateCard.effectiveTo.split('T')[0] : '');
             } else {
                 // Creating
                 setResourceType('employee');
-                setResourceId('');
+                setResourceIds([]);
                 setHourlyRate(0);
+                setOvertimeRate(0);
                 setEffectiveFrom(new Date().toISOString().split('T')[0]);
                 setEffectiveTo('');
             }
@@ -65,16 +69,22 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
             ]);
 
             if (empRes) {
-                setEmployees(empRes.map((e) => ({
-                    id: e.id,
-                    label: `${e.firstName} ${e.lastName} (${e.position})`
-                })));
+                const empData = Array.isArray(empRes) ? empRes : (empRes as any).data;
+                if (Array.isArray(empData)) {
+                    setEmployees(empData.map((e: any) => ({
+                        id: e.id,
+                        label: `${e.firstName} ${e.lastName} (${e.position || e.JobTitle || e.jobTitle})`
+                    })));
+                }
             }
             if (assetRes) {
-                setAssets(assetRes.map((a) => ({
-                    id: a.id,
-                    label: `${a.name} (${a.serialNumber || 'No SN'})`
-                })));
+                const assetData = Array.isArray(assetRes) ? assetRes : (assetRes as any).data;
+                if (Array.isArray(assetData)) {
+                    setAssets(assetData.map((a: any) => ({
+                        id: a.id,
+                        label: `${a.name} (${a.serialNumber || 'No SN'})`
+                    })));
+                }
             }
         } catch (error) {
             console.error("Failed to load lookups", error);
@@ -85,8 +95,8 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
     };
 
     const handleSubmit = async () => {
-        if (!resourceId) {
-            toast.error(t('common.error'), "Please select a resource");
+        if (resourceIds.length === 0) {
+            toast.error(t('common.error'), "Please select at least one resource");
             return;
         }
         if (hourlyRate <= 0) {
@@ -96,24 +106,38 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
 
         setLoading(true);
         try {
-            const data: any = {
-                hourlyRate,
-                currencyId,
-                effectiveFrom: new Date(effectiveFrom).toISOString(),
-                effectiveTo: effectiveTo ? new Date(effectiveTo).toISOString() : undefined
-            };
-
-            if (!rateCard) {
-                // Creating
-                data.projectId = projectId; // Can be null for Global
-                if (resourceType === 'employee') data.employeeId = resourceId;
-                else data.assetId = resourceId;
-
-                await onSave(data as CreateResourceRateCardDto);
-            } else {
-                // Updating
+            // If editing, we only have one ID
+            if (rateCard) {
+                const data: any = {
+                    hourlyRate,
+                    overtimeRate,
+                    currencyId,
+                    effectiveFrom: new Date(effectiveFrom).toISOString(),
+                    effectiveTo: effectiveTo ? new Date(effectiveTo).toISOString() : undefined
+                };
                 await onSave(data as UpdateResourceRateCardDto);
+            } else {
+                // Creating - Batch
+                // We need to call onSave multiple times or refactor onSave to handle batch. 
+                // However, the prop expects single DTO. 
+                // Ideally backend supports batch, but here we can just loop.
+                const promises = resourceIds.map(id => {
+                    const data: any = {
+                        hourlyRate,
+                        overtimeRate,
+                        currencyId,
+                        effectiveFrom: new Date(effectiveFrom).toISOString(),
+                        effectiveTo: effectiveTo ? new Date(effectiveTo).toISOString() : undefined,
+                        projectId
+                    };
+                    if (resourceType === 'employee') data.employeeId = id;
+                    else data.assetId = id;
+                    return onSave(data as CreateResourceRateCardDto);
+                });
+
+                await Promise.all(promises);
             }
+
             onClose();
         } catch (error) {
             console.error("Save failed", error);
@@ -134,11 +158,11 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
                     <>
                         <div className="flex space-x-4 mb-4">
                             <label className="flex items-center space-x-2">
-                                <input type="radio" name="rcType" value="employee" checked={resourceType === 'employee'} onChange={() => { setResourceType('employee'); setResourceId(''); }} />
+                                <input type="radio" name="rcType" value="employee" checked={resourceType === 'employee'} onChange={() => { setResourceType('employee'); setResourceIds([]); }} />
                                 <span>Employee</span>
                             </label>
                             <label className="flex items-center space-x-2">
-                                <input type="radio" name="rcType" value="asset" checked={resourceType === 'asset'} onChange={() => { setResourceType('asset'); setResourceId(''); }} />
+                                <input type="radio" name="rcType" value="asset" checked={resourceType === 'asset'} onChange={() => { setResourceType('asset'); setResourceIds([]); }} />
                                 <span>Asset</span>
                             </label>
                         </div>
@@ -147,17 +171,13 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
                             <div>Loading...</div>
                         ) : (
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Resource</label>
-                                <select
-                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    value={resourceId}
-                                    onChange={(e) => setResourceId(e.target.value)}
-                                >
-                                    <option value="">Select...</option>
-                                    {(resourceType === 'employee' ? employees : assets).map(item => (
-                                        <option key={item.id} value={item.id}>{item.label}</option>
-                                    ))}
-                                </select>
+                                <MultiSelect
+                                    label="Resource(s)"
+                                    options={resourceType === 'employee' ? employees.map(e => ({ label: e.label, value: e.id })) : assets.map(a => ({ label: a.label, value: a.id }))}
+                                    value={resourceIds}
+                                    onChange={setResourceIds}
+                                    placeholder="Select Resources..."
+                                />
                             </div>
                         )}
                     </>
@@ -170,13 +190,28 @@ export function RateCardDialog({ isOpen, onClose, onSave, rateCard, projectId }:
                     </div>
                 )}
 
-                <Input
-                    label={t('projects.hourlyCost')}
-                    type="number"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(parseFloat(e.target.value))}
-                    required
-                />
+                <div className="grid grid-cols-2 gap-4">
+                    <Input
+                        label="Standard Rate (Hourly)"
+                        type="number"
+                        value={hourlyRate}
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setHourlyRate(isNaN(val) ? 0 : val);
+                        }}
+                        required
+                    />
+                    <Input
+                        label="Overtime Rate (Hourly)"
+                        type="number"
+                        value={overtimeRate}
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setOvertimeRate(isNaN(val) ? 0 : val);
+                        }}
+                        required
+                    />
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <Input

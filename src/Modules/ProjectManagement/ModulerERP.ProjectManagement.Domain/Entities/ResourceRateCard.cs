@@ -16,6 +16,7 @@ public class ResourceRateCard : BaseEntity
 
     // Costing
     public decimal HourlyRate { get; set; }
+    public decimal OvertimeRate { get; set; } // Standard multiplier (e.g., 1.5x) or explicit rate
     public Guid CurrencyId { get; set; }
 
     // Validity Period

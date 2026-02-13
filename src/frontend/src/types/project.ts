@@ -395,6 +395,7 @@ export interface ResourceRateCardDto {
     assetId?: string;
     assetName?: string;
     hourlyRate: number;
+    overtimeRate?: number;
     currencyId: string;
     effectiveFrom: string; // ISO Date
     effectiveTo?: string;  // ISO Date
@@ -405,6 +406,7 @@ export interface CreateResourceRateCardDto {
     employeeId?: string;
     assetId?: string;
     hourlyRate: number;
+    overtimeRate?: number;
     currencyId: string;
     effectiveFrom: string;
     effectiveTo?: string;
@@ -412,6 +414,7 @@ export interface CreateResourceRateCardDto {
 
 export interface UpdateResourceRateCardDto {
     hourlyRate: number;
+    overtimeRate?: number;
     currencyId: string;
     effectiveFrom: string;
     effectiveTo?: string;

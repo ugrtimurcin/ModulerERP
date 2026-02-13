@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash, User, Truck } from 'lucide-react';
+import { Plus, Trash, User, Truck, Pencil } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { MultiSelect } from '@/components/ui/MultiSelect';
 import { Modal } from '@/components/ui/Modal';
@@ -71,21 +71,21 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
         try {
             // Parallel fetch using optimized lookup endpoints
             const [empRes, assetRes] = await Promise.all([
-                api.get<{ data: any[] }>('/hr/employees/lookup'),
-                api.get<{ data: any[] }>('/fixedassets/assets/lookup')
+                api.get<any[]>('/hr/employees/lookup'),
+                api.get<any[]>('/fixedassets/assets/lookup')
             ]);
 
-            if (empRes.data) {
-                // Lookup returns a direct array, not PagedResult
-                setEmployees(empRes.data.map((e: any) => ({
+            if (empRes && Array.isArray(empRes)) {
+                setEmployees(empRes.map((e: any) => ({
                     id: e.id,
                     firstName: e.firstName,
                     lastName: e.lastName,
-                    position: e.Position // Note: Capital P based on Controller anonymous type
+                    position: e.position || e.Position // Handle case sensitivity
                 })));
             }
-            if (assetRes.data) {
-                setAssets(assetRes.data.map((a: any) => ({
+
+            if (assetRes && Array.isArray(assetRes)) {
+                setAssets(assetRes.map((a: any) => ({
                     id: a.id,
                     name: a.name,
                     serialNumber: a.serialNumber
@@ -112,6 +112,22 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
         setIsModalOpen(true);
     };
 
+    const [editingResource, setEditingResource] = useState<ProjectResourceDto | null>(null);
+
+    const handleEditClick = (resource: ProjectResourceDto) => {
+        setEditingResource(resource);
+        setFormData({
+            projectId,
+            role: resource.role,
+            hourlyCost: resource.hourlyCost,
+            currencyId: resource.currencyId || '00000000-0000-0000-0000-000000000000',
+            employeeIds: resource.employeeId ? [resource.employeeId] : [],
+            assetIds: resource.assetId ? [resource.assetId] : []
+        });
+        setResourceType(resource.employeeId ? 'employee' : (resource.assetId ? 'asset' : 'other'));
+        setIsModalOpen(true);
+    };
+
     const handleDeleteClick = (resource: ProjectResourceDto) => {
         confirm({
             title: t('common.delete'),
@@ -134,14 +150,24 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
         try {
             if (!formData.role || formData.hourlyCost < 0) return;
 
-            await api.post('/projectresources', {
-                ...formData,
-                projectId // Ensure projectId
-            });
+            if (editingResource) {
+                // Update existing
+                await api.put(`/projectresources/${editingResource.id}`, {
+                    ...formData,
+                    projectId // Ensure projectId
+                });
+            } else {
+                // Create new
+                await api.post('/projectresources', {
+                    ...formData,
+                    projectId // Ensure projectId
+                });
+            }
 
             // Assuming successful if no error thrown
             toast.success(t('common.success'), t('common.saved'));
             setIsModalOpen(false);
+            setEditingResource(null); // Reset editing state
             loadResources();
 
         } catch (error) {
@@ -226,6 +252,9 @@ export function ResourcesTab({ projectId }: ResourcesTabProps) {
                                         <div className="text-sm font-medium">
                                             {resource.hourlyCost} {t('common.currency')}
                                         </div>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-600" onClick={() => handleEditClick(resource)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => handleDeleteClick(resource)}>
                                             <Trash className="h-4 w-4" />
                                         </Button>

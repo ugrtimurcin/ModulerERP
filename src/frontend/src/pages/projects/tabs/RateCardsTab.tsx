@@ -28,9 +28,9 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
     const loadRateCards = async () => {
         setLoading(true);
         try {
-            const response = await api.get<{ data: ResourceRateCardDto[] }>(`/projects/rate-cards?projectId=${projectId}`);
-            if (response.data) {
-                setRateCards(response.data);
+            const response = await api.get<ResourceRateCardDto[]>(`/projects/rate-cards?projectId=${projectId}`);
+            if (Array.isArray(response)) {
+                setRateCards(response);
             }
         } catch (error) {
             console.error('Failed to load rate cards', error);
@@ -106,7 +106,8 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
                                     <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                         <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.type')}</th>
                                         <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.resource')}</th>
-                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.rate')}</th>
+                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Standard Rate</th>
+                                        <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Overtime Rate</th>
                                         <th className="h-12 px-4 align-middle font-medium text-muted-foreground">{t('projects.tabs.rateCard.effectiveFrom')}</th>
                                         <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[100px]">{t('projects.tabs.rateCard.actions')}</th>
                                     </tr>
@@ -123,6 +124,9 @@ export function RateCardsTab({ projectId }: RateCardsTabProps) {
                                             </td>
                                             <td className="p-4 align-middle font-mono">
                                                 {card.hourlyRate.toFixed(2)}
+                                            </td>
+                                            <td className="p-4 align-middle font-mono">
+                                                {card.overtimeRate?.toFixed(2) || '0.00'}
                                             </td>
                                             <td className="p-4 align-middle">
                                                 {new Date(card.effectiveFrom).toLocaleDateString()}

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, useToast } from '@/components/ui';
 import { X, MapPin, RefreshCw } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { api } from '@/lib/api';
 
 interface AttendanceLogDialogProps {
@@ -16,7 +16,7 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
     const [isLoading, setIsLoading] = useState(false);
     const [employees, setEmployees] = useState<{ id: string, firstName: string, lastName: string }[]>([]);
 
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const scannerRef = useRef<Html5Qrcode | null>(null);
     // Ref to track if we are currently ensuring scanner
     const initializingRef = useRef(false);
 
@@ -64,9 +64,10 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
             // Cleanup existing first
             if (scannerRef.current) {
                 try {
+                    await scannerRef.current.stop();
                     await scannerRef.current.clear();
                 } catch (e) {
-                    console.warn("Failed to clear scanner", e);
+                    // console.warn("Failed to stop/clear scanner", e);
                 }
                 scannerRef.current = null;
             }
@@ -76,32 +77,34 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
 
             const element = document.getElementById('camera-reader');
             if (element && open) {
-                const scanner = new Html5QrcodeScanner(
-                    "camera-reader",
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    false
-                );
-                scannerRef.current = scanner;
+                const html5QrCode = new Html5Qrcode("camera-reader");
+                scannerRef.current = html5QrCode;
 
-                // Render can throw if element issue
-                scanner.render((decodedText) => {
-                    handleScanSuccess(decodedText);
-                    // Stop scanning on success? 
-                    // Usually we want to pause or stop. 
-                    // If we clear, the camera goes away.
-                    // User wants result shown in green box.
-                    // We will clear it to show the Tick animation clearly?
-                    // "animated tick should be placed in camera area, but if employee does not exist ... try again button. when user click it camera should be appear"
-                    // This implies camera DISAPPEARS or gets covered.
-                    // Our overlay covers it, so we can keep camera running behind or stop it.
-                    // Stopping saves battery. Let's stop it.
-                    if (scannerRef.current) {
-                        scannerRef.current.clear().catch(console.error);
-                        scannerRef.current = null;
-                    }
-                }, () => {
-                    // Suppress scanning errors
-                });
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        (decodedText) => {
+                            handleScanSuccess(decodedText);
+                            // Stop scanning on success if desired, or keep scanning.
+                            // For this dialog, we probably want to pause or stop.
+                            // html5QrCode.stop().catch(console.error);
+                            // scannerRef.current = null; 
+                            // Actually, let's keep it running until they close or we decide to stop.
+                            // But usually, once scanned, we show the result.
+                            html5QrCode.pause();
+                        },
+                        () => {
+                            // error / invalid scan, ignore
+                        }
+                    );
+                } catch (err) {
+                    console.error("Error starting scanner", err);
+                    // Show manual entry or error message
+                }
             }
         } catch (err) {
             // Scanner init error
@@ -112,8 +115,10 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
 
     const stopScanner = useCallback(() => {
         if (scannerRef.current) {
-            scannerRef.current.clear().catch(console.error);
-            scannerRef.current = null;
+            scannerRef.current.stop().then(() => {
+                scannerRef.current?.clear();
+                scannerRef.current = null;
+            }).catch(console.error);
         }
     }, []);
 

@@ -27,7 +27,7 @@ public class ResourceRateCardService : IResourceRateCardService
         }
         else
         {
-            // Return only Global cards? Or all?
+        // Return only Global cards? Or all?
             // Usually settings page wants all global definitions.
             query = query.Where(x => x.ProjectId == null);
         }
@@ -42,6 +42,7 @@ public class ResourceRateCardService : IResourceRateCardService
                 x.AssetId,
                 null, // Name not available
                 x.HourlyRate,
+                x.OvertimeRate,
                 x.CurrencyId,
                 x.EffectiveFrom,
                 x.EffectiveTo
@@ -57,6 +58,7 @@ public class ResourceRateCardService : IResourceRateCardService
             EmployeeId = dto.EmployeeId,
             AssetId = dto.AssetId,
             HourlyRate = dto.HourlyRate,
+            OvertimeRate = dto.OvertimeRate,
             CurrencyId = dto.CurrencyId,
             EffectiveFrom = dto.EffectiveFrom,
             EffectiveTo = dto.EffectiveTo
@@ -66,7 +68,7 @@ public class ResourceRateCardService : IResourceRateCardService
         entity.SetCreator(userId);
 
         _context.ResourceRateCards.Add(entity);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(CancellationToken.None);
 
         return new ResourceRateCardDto(
             entity.Id,
@@ -76,6 +78,7 @@ public class ResourceRateCardService : IResourceRateCardService
             entity.AssetId,
             null,
             entity.HourlyRate,
+            entity.OvertimeRate,
             entity.CurrencyId,
             entity.EffectiveFrom,
             entity.EffectiveTo
@@ -90,13 +93,14 @@ public class ResourceRateCardService : IResourceRateCardService
         if (entity == null) throw new KeyNotFoundException("Rate Card not found");
 
         entity.HourlyRate = dto.HourlyRate;
+        entity.OvertimeRate = dto.OvertimeRate;
         entity.CurrencyId = dto.CurrencyId;
         entity.EffectiveFrom = dto.EffectiveFrom;
         entity.EffectiveTo = dto.EffectiveTo;
 
         entity.SetUpdater(userId);
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(CancellationToken.None);
     }
 
     public async Task DeleteAsync(Guid tenantId, Guid userId, Guid id)

@@ -8,6 +8,7 @@ public record ResourceRateCardDto(
     Guid? AssetId,
     string? AssetName,
     decimal HourlyRate,
+    decimal OvertimeRate,
     Guid CurrencyId,
     DateTime EffectiveFrom,
     DateTime? EffectiveTo
@@ -18,6 +19,7 @@ public record CreateResourceRateCardDto(
     Guid? EmployeeId,
     Guid? AssetId,
     decimal HourlyRate,
+    decimal OvertimeRate,
     Guid CurrencyId,
     DateTime EffectiveFrom,
     DateTime? EffectiveTo
@@ -25,6 +27,7 @@ public record CreateResourceRateCardDto(
 
 public record UpdateResourceRateCardDto(
     decimal HourlyRate,
+    decimal OvertimeRate,
     Guid CurrencyId,
     DateTime EffectiveFrom,
     DateTime? EffectiveTo
