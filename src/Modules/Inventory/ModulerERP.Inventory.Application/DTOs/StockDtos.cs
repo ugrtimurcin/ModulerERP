@@ -19,13 +19,18 @@ public class CreateStockMovementDto
 
 public class CreateStockTransferDto
 {
-    public Guid ProductId { get; set; }
     public Guid SourceWarehouseId { get; set; }
-    public Guid TargetWarehouseId { get; set; }
-    public decimal Quantity { get; set; }
+    public Guid DestinationWarehouseId { get; set; }
+    public List<StockTransferItemDto> Items { get; set; } = new();
     public string? ReferenceNumber { get; set; }
     public string? Notes { get; set; }
     public DateTime? TransferDate { get; set; }
+}
+
+public class StockTransferItemDto
+{
+    public Guid ProductId { get; set; }
+    public decimal Quantity { get; set; }
 }
 
 public class StockMovementDto

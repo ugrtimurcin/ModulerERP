@@ -50,9 +50,11 @@ public class WarehouseService : IWarehouseService
             dto.Code,
             dto.Name,
             userId,
+            dto.Type, // Added
             dto.Description,
             dto.IsDefault,
-            dto.BranchId);
+            dto.BranchId,
+            dto.ProjectId); // Added
             
         if (!string.IsNullOrEmpty(dto.Address))
             warehouse.SetAddress(dto.Address);
@@ -81,7 +83,7 @@ public class WarehouseService : IWarehouseService
             warehouse.RemoveDefault();
         }
 
-        warehouse.Update(dto.Name, dto.Description);
+        warehouse.Update(dto.Name, dto.Description, warehouse.Type);
         
         if (!string.IsNullOrEmpty(dto.Address))
             warehouse.SetAddress(dto.Address);

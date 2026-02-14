@@ -1,11 +1,12 @@
+using ModulerERP.SharedKernel.Entities;
+
 namespace ModulerERP.Inventory.Domain.Entities;
 
 /// <summary>
 /// Stock transfer line items.
 /// </summary>
-public class StockTransferLine
+public class StockTransferLine : BaseEntity
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
     public Guid StockTransferId { get; private set; }
     public Guid ProductId { get; private set; }
     
@@ -23,18 +24,23 @@ public class StockTransferLine
 
     private StockTransferLine() { } // EF Core
 
-    public static StockTransferLine Create(Guid stockTransferId, Guid productId, decimal quantity, string? notes = null)
+    public static StockTransferLine Create(Guid tenantId, Guid stockTransferId, Guid productId, decimal quantity, Guid createdByUserId, string? notes = null)
     {
         if (quantity <= 0)
             throw new ArgumentException("Quantity must be greater than zero", nameof(quantity));
 
-        return new StockTransferLine
+        var line = new StockTransferLine
         {
             StockTransferId = stockTransferId,
             ProductId = productId,
             Quantity = quantity,
             Notes = notes
         };
+        
+        line.SetTenant(tenantId);
+        line.SetCreator(createdByUserId);
+
+        return line;
     }
 
     public void SetReceivedQuantity(decimal receivedQuantity)

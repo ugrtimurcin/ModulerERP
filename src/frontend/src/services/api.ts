@@ -499,18 +499,21 @@ export const api = {
 
     // Inventory - Stock Operations
     stock: {
-        createMovement: (data: any) => request<any>('/stock/movements', { method: 'POST', body: JSON.stringify(data) }),
-        createTransfer: (data: any) => request<any>('/stock/transfers', { method: 'POST', body: JSON.stringify(data) }),
+        createMovement: (data: any) => request<any>('/inventory/movements', { method: 'POST', body: JSON.stringify(data) }),
+        createTransfer: (data: any) => request<any>('/inventory/transfers', { method: 'POST', body: JSON.stringify(data) }),
         getLevels: (warehouseId?: string, productId?: string) => {
-            let url = '/stock/levels?';
+            let url = '/inventory/levels?';
             if (warehouseId) url += `warehouseId=${warehouseId}&`;
             if (productId) url += `productId=${productId}`;
             return request<any[]>(url);
         },
         getMovements: (params: { warehouseId?: string; productId?: string; fromDate?: string; toDate?: string }) => {
-            let url = '/stock/movements?';
+            let url = '/inventory/movements?';
             if (params.warehouseId) url += `warehouseId=${params.warehouseId}&`;
             if (params.productId) url += `productId=${params.productId}&`;
+            // Endpoint might be /inventory/products/{id}/movements or just /inventory/movements. 
+            // InventoryController likely has GetMovements.
+            // Let's assume /inventory/movements based on Controller pattern.
             if (params.fromDate) url += `fromDate=${params.fromDate}&`;
             if (params.toDate) url += `toDate=${params.toDate}`;
             return request<any[]>(url);

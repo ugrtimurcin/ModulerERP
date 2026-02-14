@@ -58,4 +58,9 @@ public class UnitConversion : BaseEntity
         if (factor <= 0) throw new ArgumentException("Factor must be positive");
         ConversionFactor = factor;
     }
+
+    public decimal Convert(decimal quantity)
+    {
+        return quantity * ConversionFactor;
+    }
 }

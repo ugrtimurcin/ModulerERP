@@ -37,6 +37,9 @@ public static class DependencyInjection
         services.AddScoped<IRepository<StockLevel>, InventoryRepository<StockLevel>>();
         services.AddScoped<IRepository<Product>, InventoryRepository<Product>>();
         services.AddScoped<IRepository<Warehouse>, InventoryRepository<Warehouse>>();
+        services.AddScoped<IRepository<StockTransfer>, InventoryRepository<StockTransfer>>();
+        services.AddScoped<IRepository<StockTransferLine>, InventoryRepository<StockTransferLine>>();
+        services.AddScoped<IRepository<InventoryReservation>, InventoryRepository<InventoryReservation>>();
         
         services.AddScoped<IStockService, StockService>();
         services.AddScoped<IStockReservationService, StockReservationService>();

@@ -2,6 +2,7 @@ using MediatR;
 using ModulerERP.Inventory.Application.DTOs;
 using ModulerERP.Inventory.Application.Interfaces;
 using ModulerERP.SharedKernel.IntegrationEvents;
+using ModulerERP.Inventory.Domain.Entities;
 
 namespace ModulerERP.Inventory.Infrastructure.Consumers;
 
@@ -28,7 +29,9 @@ public class ProjectCreatedConsumer : INotificationHandler<ProjectCreatedEvent>
             Description = $"Virtual Warehouse for Project {message.ProjectCode}",
             Address = "Project Site",
             IsDefault = false,
-            BranchId = null
+            BranchId = null,
+            Type = WarehouseType.ProjectSite,
+            ProjectId = message.ProjectId
         };
 
         try

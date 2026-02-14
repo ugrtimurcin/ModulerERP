@@ -317,6 +317,18 @@ export function ProductDetailPage({ mode }: ProductDetailPageProps) {
                                 <Layers className="w-4 h-4" />
                                 {t('inventory.stock')}
                             </button>
+                            <button
+                                onClick={() => setActiveTab('history')}
+                                className={`
+                                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2
+                                    ${activeTab === 'history'
+                                        ? 'border-[hsl(var(--primary))] text-[hsl(var(--primary))]'
+                                        : 'border-transparent text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:border-[hsl(var(--border))]'}
+                                `}
+                            >
+                                <div className="w-4 h-4">⏱️</div> {/* Lucide icon replacement needed? History icon */}
+                                {t('inventory.history', 'History')}
+                            </button>
                         </>
                     )}
                 </nav>
@@ -511,7 +523,29 @@ export function ProductDetailPage({ mode }: ProductDetailPageProps) {
                     </div>
                 )}
 
-                {(activeTab === 'barcodes' || activeTab === 'prices' || activeTab === 'stock') && (
+                {(activeTab === 'stock') && (
+                    <div className="space-y-6">
+                        <div className="bg-[hsl(var(--card))] rounded-lg border border-[hsl(var(--border))] shadow-sm overflow-hidden">
+                            <div className="p-4 border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))/20]">
+                                <h3 className="font-medium">Stock by Warehouse</h3>
+                            </div>
+                            <StockLevelsTable productId={id!} />
+                        </div>
+                    </div>
+                )}
+
+                {(activeTab === 'history') && (
+                    <div className="space-y-6">
+                        <div className="bg-[hsl(var(--card))] rounded-lg border border-[hsl(var(--border))] shadow-sm overflow-hidden">
+                            <div className="p-4 border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))/20]">
+                                <h3 className="font-medium">Transaction History</h3>
+                            </div>
+                            <ProductMovementsTable productId={id!} />
+                        </div>
+                    </div>
+                )}
+
+                {(activeTab === 'barcodes' || activeTab === 'prices') && (
                     <div className="p-8 border-2 border-dashed rounded-lg text-center text-[hsl(var(--muted-foreground))] flex flex-col items-center justify-center">
                         <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
                         <p>This tab is currently under construction.</p>
@@ -520,5 +554,93 @@ export function ProductDetailPage({ mode }: ProductDetailPageProps) {
                 )}
             </div>
         </div>
+    );
+}
+
+function StockLevelsTable({ productId }: { productId: string }) {
+    const [levels, setLevels] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        api.stock.getLevels(undefined, productId).then(res => {
+            if (res.success && res.data) setLevels(res.data);
+            setLoading(false);
+        });
+    }, [productId]);
+
+    if (loading) return <div className="p-4 text-center">Loading stock...</div>;
+    if (levels.length === 0) return <div className="p-4 text-center text-muted-foreground">No stock records found.</div>;
+
+    return (
+        <table className="w-full text-sm text-left">
+            <thead className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] uppercase font-medium">
+                <tr>
+                    <th className="px-4 py-3">Warehouse</th>
+                    <th className="px-4 py-3 text-right">On Hand</th>
+                    <th className="px-4 py-3 text-right">Reserved</th>
+                    <th className="px-4 py-3 text-right">Available</th>
+                    <th className="px-4 py-3 text-right">On Order</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-[hsl(var(--border))]">
+                {levels.map((l: any) => (
+                    <tr key={l.warehouseId} className="hover:bg-[hsl(var(--muted))/50]">
+                        <td className="px-4 py-3 font-medium">{l.warehouseName}</td>
+                        <td className="px-4 py-3 text-right">{l.quantityOnHand}</td>
+                        <td className="px-4 py-3 text-right text-yellow-600">{l.quantityReserved}</td>
+                        <td className="px-4 py-3 text-right text-green-600 font-bold">{l.quantityAvailable}</td>
+                        <td className="px-4 py-3 text-right text-blue-600">{l.quantityOnOrder}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+}
+
+function ProductMovementsTable({ productId }: { productId: string }) {
+    const [movements, setMovements] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        api.stock.getMovements({ productId }).then(res => {
+            if (res.success && res.data) setMovements(res.data);
+            setLoading(false);
+        });
+    }, [productId]);
+
+    if (loading) return <div className="p-4 text-center">Loading history...</div>;
+    if (movements.length === 0) return <div className="p-4 text-center text-muted-foreground">No transactions found.</div>;
+
+    return (
+        <table className="w-full text-sm text-left">
+            <thead className="bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] uppercase font-medium">
+                <tr>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Warehouse</th>
+                    <th className="px-4 py-3 text-right">Quantity</th>
+                    <th className="px-4 py-3">Reference</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-[hsl(var(--border))]">
+                {movements.map((m: any) => (
+                    <tr key={m.id} className="hover:bg-[hsl(var(--muted))/50]">
+                        <td className="px-4 py-3">{new Date(m.movementDate).toLocaleDateString()}</td>
+                        <td className="px-4 py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${m.direction === 'In' ? 'bg-green-100 text-green-800' :
+                                m.direction === 'Out' ? 'bg-red-100 text-red-800' : 'bg-gray-100'
+                                }`}>
+                                {m.type}
+                            </span>
+                        </td>
+                        <td className="px-4 py-3">{m.warehouseName}</td>
+                        <td className={`px-4 py-3 text-right font-medium ${m.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {m.quantity > 0 ? '+' : ''}{m.quantity}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{m.referenceNumber || '-'}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
     );
 }

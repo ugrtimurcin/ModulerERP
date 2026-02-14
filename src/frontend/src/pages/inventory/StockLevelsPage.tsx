@@ -66,7 +66,32 @@ export default function StockLevelsPage() {
         }
     };
 
-    const filteredLevels = levels.filter(level =>
+    // Grouping Logic
+    const [groupByProduct, setGroupByProduct] = useState(true);
+
+    const groupedLevels = groupByProduct
+        ? Object.values(levels.reduce((acc, level) => {
+            if (!acc[level.productId]) {
+                acc[level.productId] = {
+                    ...level,
+                    warehouseName: 'Multiple',
+                    quantityOnHand: 0,
+                    quantityReserved: 0,
+                    quantityAvailable: 0,
+                    quantityOnOrder: 0,
+                    details: []
+                };
+            }
+            acc[level.productId].quantityOnHand += level.quantityOnHand;
+            acc[level.productId].quantityReserved += level.quantityReserved;
+            acc[level.productId].quantityAvailable += level.quantityAvailable;
+            acc[level.productId].quantityOnOrder += level.quantityOnOrder;
+            acc[level.productId].details.push(level);
+            return acc;
+        }, {} as Record<string, any>))
+        : levels;
+
+    const filteredLevels = groupedLevels.filter(level =>
         level.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         level.productSku.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -75,18 +100,27 @@ export default function StockLevelsPage() {
         {
             key: 'product',
             header: t('inventory.product', 'Product'),
-            render: (level) => (
+            render: (level: any) => (
                 <div>
                     <div className="text-sm font-medium text-gray-900">{level.productName}</div>
                     <div className="text-sm text-gray-500">{level.productSku}</div>
+                    {groupByProduct && (
+                        <div className="text-xs text-gray-400 mt-1">
+                            {level.details?.length} Warehouse(s)
+                        </div>
+                    )}
                 </div>
             )
         },
         {
             key: 'warehouse',
             header: t('inventory.warehouse', 'Warehouse'),
-            render: (level) => (
-                <span className="text-sm text-gray-500">{level.warehouseName}</span>
+            render: (level: any) => (
+                groupByProduct ? (
+                    <span className="text-sm text-gray-500 italic">Multiple ({level.details?.length})</span>
+                ) : (
+                    <span className="text-sm text-gray-500">{level.warehouseName}</span>
+                )
             )
         },
         {
@@ -129,6 +163,9 @@ export default function StockLevelsPage() {
                     </p>
                 </div>
                 <div className="flex space-x-3">
+                    <Button variant="outline" onClick={() => setGroupByProduct(!groupByProduct)}>
+                        {groupByProduct ? 'Ungroup' : 'Group by Product'}
+                    </Button>
                     <Button variant="secondary" onClick={loadStockLevels}>
                         <RefreshCw className="w-4 h-4 mr-2" />
                         {t('common.refresh', 'Refresh')}
@@ -170,7 +207,7 @@ export default function StockLevelsPage() {
             <DataTable
                 data={filteredLevels}
                 columns={columns}
-                keyField="id"
+                keyField="id" // Ideally composite key if ungrouped, but "id" works if unique per stock level
                 isLoading={loading}
                 pagination={{
                     page: 1,

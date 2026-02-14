@@ -67,7 +67,7 @@ public class CreateProductDto
     public string Sku { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public ProductType Type { get; set; } = ProductType.Inventory;
+    public ProductType Type { get; set; } = ProductType.StockItem;
     public Guid UnitOfMeasureId { get; set; }
     public Guid? CategoryId { get; set; }
     

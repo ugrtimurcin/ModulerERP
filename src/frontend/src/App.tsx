@@ -22,6 +22,7 @@ import { ProductsPage } from '@/pages/inventory/ProductsPage';
 import { ToastContainer, Dialog } from '@/components/ui';
 import { ProductDetailPage } from './pages/inventory/ProductDetailPage';
 import StockLevelsPage from './pages/inventory/StockLevelsPage';
+import StockTransferWizard from './pages/inventory/StockTransferWizard';
 import StockMovementsPage from './pages/inventory/StockMovementsPage';
 import QuotesPage from './pages/sales/QuotesPage';
 import OrdersPage from './pages/sales/OrdersPage';
@@ -112,7 +113,9 @@ function App() {
           <Route path="/inventory/products/new" element={<ProductDetailPage mode="create" />} />
           <Route path="/inventory/products/:id" element={<ProductDetailPage mode="edit" />} />
           <Route path="/inventory/products/:id" element={<ProductDetailPage mode="edit" />} />
+          <Route path="/inventory/products/:id" element={<ProductDetailPage mode="edit" />} />
           <Route path="/inventory/levels" element={<StockLevelsPage />} />
+          <Route path="/inventory/transfers/new" element={<StockTransferWizard />} />
           <Route path="/inventory/movements" element={<StockMovementsPage />} />
           <Route path="/inventory/brands" element={<BrandsPage />} />
           <Route path="/inventory/*" element={<PlaceholderPage titleKey="nav.inventory" />} />

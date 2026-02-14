@@ -1,5 +1,6 @@
 using ModulerERP.SharedKernel.Entities;
 using ModulerERP.Inventory.Domain.Enums;
+using ModulerERP.SharedKernel.ValueObjects;
 
 namespace ModulerERP.Inventory.Domain.Entities;
 
@@ -28,10 +29,10 @@ public class StockMovement : BaseEntity
     public string? ReferenceNumber { get; private set; }
     
     /// <summary>Total cost of movement (for FIFO/Avg costing)</summary>
-    public decimal? TotalCost { get; private set; }
+    public Money? TotalCost { get; private set; }
     
     /// <summary>Unit cost at time of movement</summary>
-    public decimal? UnitCost { get; private set; }
+    public Money? UnitCost { get; private set; }
     
     /// <summary>Notes/Reason</summary>
     public string? Notes { get; private set; }
@@ -57,7 +58,7 @@ public class StockMovement : BaseEntity
         string? referenceType = null,
         Guid? referenceId = null,
         string? referenceNumber = null,
-        decimal? unitCost = null,
+        Money? unitCost = null,
         string? notes = null,
         DateTime? movementDate = null)
     {
@@ -72,7 +73,7 @@ public class StockMovement : BaseEntity
             ReferenceId = referenceId,
             ReferenceNumber = referenceNumber,
             UnitCost = unitCost,
-            TotalCost = unitCost.HasValue ? unitCost.Value * Math.Abs(quantity) : null,
+            TotalCost = unitCost?.Multiply(Math.Abs(quantity)),
             Notes = notes,
             MovementDate = movementDate ?? DateTime.UtcNow
         };

@@ -64,6 +64,13 @@ public class StockTransfer : BaseEntity
         ReceivedDate = DateTime.UtcNow;
     }
 
+    public void SetStatus(TransferStatus status)
+    {
+        Status = status;
+        if (status == TransferStatus.InTransit) ShippedDate = DateTime.UtcNow;
+        if (status == TransferStatus.Completed) ReceivedDate = DateTime.UtcNow;
+    }
+
     public void Cancel()
     {
         if (Status == TransferStatus.Completed)

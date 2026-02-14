@@ -5,14 +5,17 @@ namespace ModulerERP.Inventory.Domain.Enums;
 /// </summary>
 public enum ProductType
 {
-    /// <summary>Physical item tracked in inventory</summary>
-    Inventory = 1,
-    /// <summary>Time-based work</summary>
+    StockItem = 1,
     Service = 2,
-    /// <summary>Non-inventory physical item</summary>
-    NonInventory = 3,
-    /// <summary>Digital product</summary>
+    ExpenseItem = 3, // Non-stock
     Digital = 4
+}
+
+public enum TrackingMethod
+{
+    Quantity = 1,
+    Batch = 2,
+    Serial = 3
 }
 
 /// <summary>

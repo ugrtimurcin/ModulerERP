@@ -1,5 +1,6 @@
 using ModulerERP.SharedKernel.Entities;
 using ModulerERP.Inventory.Domain.Enums;
+using ModulerERP.SharedKernel.ValueObjects;
 
 namespace ModulerERP.Inventory.Domain.Entities;
 
@@ -15,7 +16,7 @@ public class Product : BaseEntity
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     
-    public ProductType Type { get; private set; } = ProductType.Inventory;
+    public ProductType Type { get; private set; } = ProductType.StockItem;
     
     public Guid? CategoryId { get; private set; }
     public Guid UnitOfMeasureId { get; private set; }
@@ -26,14 +27,14 @@ public class Product : BaseEntity
     /// <summary>Default sales UOM if different from base</summary>
     public Guid? SalesUomId { get; private set; }
     
-    /// <summary>Default buy price in base currency</summary>
-    public decimal PurchasePrice { get; private set; }
+    /// <summary>Default buy price</summary>
+    public Money PurchasePrice { get; private set; }
     
-    /// <summary>Default sell price in base currency</summary>
-    public decimal SalesPrice { get; private set; }
+    /// <summary>Default sell price</summary>
+    public Money SalesPrice { get; private set; }
     
     /// <summary>Current cost per unit (updated by costing method)</summary>
-    public decimal CostPrice { get; private set; }
+    public Money CostPrice { get; private set; }
     
     /// <summary>For FIFO/Standard costing</summary>
     public CostingMethod CostingMethod { get; private set; } = CostingMethod.WeightedAverage;
@@ -71,14 +72,8 @@ public class Product : BaseEntity
     /// <summary>Can be purchased?</summary>
     public bool IsPurchasable { get; private set; } = true;
     
-    /// <summary>Track stock levels?</summary>
-    public bool TrackInventory { get; private set; } = true;
-    
-    /// <summary>Track individual serial numbers?</summary>
-    public bool TrackSerials { get; private set; }
-    
-    /// <summary>Track lot/batch numbers?</summary>
-    public bool TrackBatches { get; private set; }
+    /// <summary>How to track inventory (Quantity, Serial, Batch)</summary>
+    public TrackingMethod TrackingMethod { get; private set; } = TrackingMethod.Quantity;
 
     // Navigation
     public ProductCategory? Category { get; private set; }
@@ -103,8 +98,8 @@ public class Product : BaseEntity
         Guid unitOfMeasureId,
         Guid createdByUserId,
         Guid? categoryId = null,
-        decimal purchasePrice = 0,
-        decimal salesPrice = 0)
+        Money? purchasePrice = null,
+        Money? salesPrice = null)
     {
         if (string.IsNullOrWhiteSpace(sku))
             throw new ArgumentException("SKU is required", nameof(sku));
@@ -118,9 +113,9 @@ public class Product : BaseEntity
             Type = type,
             UnitOfMeasureId = unitOfMeasureId,
             CategoryId = categoryId,
-            PurchasePrice = purchasePrice,
-            SalesPrice = salesPrice,
-            CostPrice = purchasePrice
+            PurchasePrice = purchasePrice ?? Money.Zero("TRY"), // Default to TRY if not specified
+            SalesPrice = salesPrice ?? Money.Zero("TRY"),
+            CostPrice = purchasePrice ?? Money.Zero("TRY")
         };
 
         product.SetTenant(tenantId);
@@ -135,13 +130,13 @@ public class Product : BaseEntity
         CategoryId = categoryId;
     }
 
-    public void UpdatePricing(decimal purchasePrice, decimal salesPrice)
+    public void UpdatePricing(Money purchasePrice, Money salesPrice)
     {
         PurchasePrice = purchasePrice;
         SalesPrice = salesPrice;
     }
 
-    public void UpdateCostPrice(decimal costPrice) => CostPrice = costPrice;
+    public void UpdateCostPrice(Money costPrice) => CostPrice = costPrice;
 
     public void SetStockLevels(decimal minStockLevel, decimal reorderLevel)
     {
@@ -152,10 +147,10 @@ public class Product : BaseEntity
     public void EnableVariants() => HasVariants = true;
     public void SetAsVariant(Guid parentProductId) => ParentProductId = parentProductId;
     
-    public void SetTradeSettings(bool isSellable, bool isPurchasable, bool trackInventory)
+    public void SetTradeSettings(bool isSellable, bool isPurchasable, TrackingMethod trackingMethod)
     {
         IsSellable = isSellable;
         IsPurchasable = isPurchasable;
-        TrackInventory = trackInventory;
+        TrackingMethod = trackingMethod;
     }
 }

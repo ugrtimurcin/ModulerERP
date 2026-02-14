@@ -1,3 +1,5 @@
+using ModulerERP.Inventory.Domain.Entities;
+
 namespace ModulerERP.Inventory.Application.DTOs;
 
 public class WarehouseDto
@@ -20,6 +22,8 @@ public class CreateWarehouseDto
     public bool IsDefault { get; set; }
     public Guid? BranchId { get; set; }
     public string? Address { get; set; }
+    public WarehouseType Type { get; set; } = WarehouseType.Central;
+    public Guid? ProjectId { get; set; }
 }
 
 public class UpdateWarehouseDto
