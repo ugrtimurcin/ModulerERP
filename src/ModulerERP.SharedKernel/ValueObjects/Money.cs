@@ -5,8 +5,10 @@ namespace ModulerERP.SharedKernel.ValueObjects;
 /// </summary>
 public sealed class Money : IEquatable<Money>
 {
-    public decimal Amount { get; }
-    public string CurrencyCode { get; }
+    public decimal Amount { get; private set; }
+    public string CurrencyCode { get; private set; }
+
+    private Money() { }
 
     private Money(decimal amount, string currencyCode)
     {

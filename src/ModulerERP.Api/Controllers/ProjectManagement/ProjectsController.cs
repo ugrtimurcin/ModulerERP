@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using ModulerERP.SystemCore.Application.Constants;
 using ModulerERP.ProjectManagement.Application.DTOs;
 using ModulerERP.ProjectManagement.Application.Interfaces;
 
 namespace ModulerERP.Api.Controllers.ProjectManagement;
 
+[Authorize]
 public class ProjectsController : BaseApiController
 {
     private readonly IProjectService _projectService;
@@ -14,12 +17,14 @@ public class ProjectsController : BaseApiController
     }
 
     [HttpGet]
+    [Authorize(Policy = Permissions.Projects.View)]
     public async Task<ActionResult<List<ProjectDto>>> GetAll()
     {
         return OkResult(await _projectService.GetAllAsync(TenantId));
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = Permissions.Projects.View)]
     public async Task<ActionResult<ProjectDto>> GetById(Guid id)
     {
         try
@@ -33,12 +38,14 @@ public class ProjectsController : BaseApiController
     }
 
     [HttpPost]
+    [Authorize(Policy = Permissions.Projects.Manage)]
     public async Task<ActionResult<ProjectDto>> Create(CreateProjectDto dto)
     {
         return OkResult(await _projectService.CreateAsync(TenantId, CurrentUserId, dto));
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = Permissions.Projects.Manage)]
     public async Task<ActionResult> Update(Guid id, UpdateProjectDto dto)
     {
         try
@@ -53,6 +60,7 @@ public class ProjectsController : BaseApiController
     }
 
     [HttpPost("{id}/boq-items")]
+    [Authorize(Policy = Permissions.Projects.Manage)]
     public async Task<ActionResult<BillOfQuantitiesItemDto>> AddBoQItem(Guid id, CreateBoQItemDto dto)
     {
         try
@@ -67,6 +75,7 @@ public class ProjectsController : BaseApiController
     }
 
     [HttpPut("{id}/boq-items/{itemId}")]
+    [Authorize(Policy = Permissions.Projects.Manage)]
     public async Task<ActionResult> UpdateBoQItem(Guid id, Guid itemId, UpdateBoQItemDto dto)
     {
         try
@@ -81,6 +90,7 @@ public class ProjectsController : BaseApiController
     }
 
     [HttpDelete("{id}/boq-items/{itemId}")]
+    [Authorize(Policy = Permissions.Projects.Manage)]
     public async Task<ActionResult> DeleteBoQItem(Guid id, Guid itemId)
     {
         await _projectService.DeleteBoQItemAsync(TenantId, id, itemId);
@@ -88,6 +98,7 @@ public class ProjectsController : BaseApiController
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = Permissions.Projects.Manage)]
     public async Task<ActionResult> Delete(Guid id)
     {
         await _projectService.DeleteAsync(TenantId, id);

@@ -33,6 +33,25 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(e => e.ParentProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Money Value Objects
+        builder.OwnsOne(e => e.PurchasePrice, money =>
+        {
+            money.Property(p => p.Amount).HasColumnName("PurchasePriceAmount").HasPrecision(18, 2);
+            money.Property(p => p.CurrencyCode).HasColumnName("PurchasePriceCurrency").HasMaxLength(3);
+        });
+
+        builder.OwnsOne(e => e.SalesPrice, money =>
+        {
+            money.Property(p => p.Amount).HasColumnName("SalesPriceAmount").HasPrecision(18, 2);
+            money.Property(p => p.CurrencyCode).HasColumnName("SalesPriceCurrency").HasMaxLength(3);
+        });
+
+        builder.OwnsOne(e => e.CostPrice, money =>
+        {
+            money.Property(p => p.Amount).HasColumnName("CostPriceAmount").HasPrecision(18, 2);
+            money.Property(p => p.CurrencyCode).HasColumnName("CostPriceCurrency").HasMaxLength(3);
+        });
+
         // Soft delete filter
         builder.HasQueryFilter(e => !e.IsDeleted);
     }

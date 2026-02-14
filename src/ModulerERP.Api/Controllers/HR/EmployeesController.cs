@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using ModulerERP.SystemCore.Application.Constants;
 using ModulerERP.HR.Application.DTOs;
 using ModulerERP.HR.Application.Interfaces;
 
@@ -18,6 +19,7 @@ public class EmployeesController : BaseApiController
     }
 
     [HttpGet]
+    [Authorize(Policy = Permissions.HR.View)]
     public async Task<IActionResult> GetEmployees(CancellationToken ct)
     {
         var employees = await _employeeService.GetAllAsync(ct);
@@ -25,6 +27,7 @@ public class EmployeesController : BaseApiController
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = Permissions.HR.View)]
     public async Task<IActionResult> GetEmployee(Guid id, CancellationToken ct)
     {
         var employee = await _employeeService.GetByIdAsync(id, ct);
@@ -33,6 +36,7 @@ public class EmployeesController : BaseApiController
     }
 
     [HttpPost]
+    [Authorize(Policy = Permissions.HR.ManageEmployees)]
     public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeDto dto, CancellationToken ct)
     {
         var employee = await _employeeService.CreateAsync(dto, ct);
@@ -40,6 +44,7 @@ public class EmployeesController : BaseApiController
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = Permissions.HR.ManageEmployees)]
     public async Task<IActionResult> UpdateEmployee(Guid id, [FromBody] UpdateEmployeeDto dto, CancellationToken ct)
     {
         await _employeeService.UpdateAsync(id, dto, ct);
@@ -47,6 +52,7 @@ public class EmployeesController : BaseApiController
     }
 
     [HttpPut("{id:guid}/generate-qr")]
+    [Authorize(Policy = Permissions.HR.ManageEmployees)]
     public async Task<IActionResult> GenerateQrToken(Guid id, CancellationToken ct)
     {
         var token = await _employeeService.GenerateQrTokenAsync(id, ct);
@@ -54,6 +60,7 @@ public class EmployeesController : BaseApiController
     }
 
     [HttpGet("lookup")]
+    [Authorize(Policy = Permissions.HR.View)]
     public async Task<IActionResult> GetEmployeesLookup(CancellationToken ct)
     {
         var employees = await _employeeService.GetAllAsync(ct);

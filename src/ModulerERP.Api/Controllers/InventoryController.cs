@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using ModulerERP.SystemCore.Application.Constants;
 using ModulerERP.Inventory.Application.DTOs;
 using ModulerERP.Inventory.Application.Features.Inventory.Commands;
 using ModulerERP.Inventory.Application.Interfaces;
@@ -7,6 +9,7 @@ using ModulerERP.Inventory.Application.Interfaces;
 namespace ModulerERP.Api.Controllers;
 
 [Route("api/inventory")]
+[Authorize]
 public class InventoryController : BaseApiController
 {
     private readonly IMediator _mediator;
@@ -19,6 +22,7 @@ public class InventoryController : BaseApiController
     }
 
     [HttpPost("transfers")]
+    [Authorize(Policy = Permissions.Inventory.Transfers)]
     public async Task<ActionResult<Guid>> CreateTransfer(CreateStockTransferDto dto)
     {
         var command = new CreateStockTransferCommand(dto);
@@ -27,6 +31,7 @@ public class InventoryController : BaseApiController
     }
 
     [HttpPost("movements")]
+    [Authorize(Policy = Permissions.Inventory.StockAdjust)]
     public async Task<ActionResult<Guid>> CreateMovement(CreateStockMovementDto dto)
     {
          // Assuming AdjustStockCommand handles generic movements or I need CreateStockMovementCommand
@@ -39,6 +44,7 @@ public class InventoryController : BaseApiController
     }
 
     [HttpPost("transfers/{id}/receive")]
+    [Authorize(Policy = Permissions.Inventory.Transfers)]
     public async Task<ActionResult<Guid>> ReceiveGoods(Guid id)
     {
         var command = new ReceiveGoodsCommand(id);
@@ -47,6 +53,7 @@ public class InventoryController : BaseApiController
     }
 
     [HttpGet("levels")]
+    [Authorize(Policy = Permissions.Inventory.View)]
     public async Task<ActionResult<IEnumerable<StockLevelDto>>> GetStockLevels(
         [FromQuery] Guid? warehouseId, 
         [FromQuery] Guid? productId, 
@@ -58,6 +65,7 @@ public class InventoryController : BaseApiController
     }
 
     [HttpGet("movements")]
+    [Authorize(Policy = Permissions.Inventory.View)]
     public async Task<ActionResult<IEnumerable<StockMovementDto>>> GetMovements(
         [FromQuery] Guid? warehouseId,
         [FromQuery] Guid? productId,

@@ -10,6 +10,7 @@ namespace ModulerERP.Api.Controllers;
 public class SystemController : ControllerBase
 {
     [HttpGet("permissions")]
+    [Authorize(Policy = Permissions.Roles.View)]
     public IActionResult GetPermissions()
     {
         var permissions = Permissions.GetAll();

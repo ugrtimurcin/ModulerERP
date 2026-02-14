@@ -50,6 +50,19 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
             .HasForeignKey(e => e.WarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Money Value Objects
+        builder.OwnsOne(e => e.TotalCost, money =>
+        {
+            money.Property(p => p.Amount).HasColumnName("TotalCostAmount").HasPrecision(18, 2);
+            money.Property(p => p.CurrencyCode).HasColumnName("TotalCostCurrency").HasMaxLength(3);
+        });
+
+        builder.OwnsOne(e => e.UnitCost, money =>
+        {
+            money.Property(p => p.Amount).HasColumnName("UnitCostAmount").HasPrecision(18, 2);
+            money.Property(p => p.CurrencyCode).HasColumnName("UnitCostCurrency").HasMaxLength(3);
+        });
+
         builder.HasQueryFilter(e => !e.IsDeleted);
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using ModulerERP.SystemCore.Application.Interfaces;
+using ModulerERP.SystemCore.Application.Constants;
 using ModulerERP.SharedKernel.Interfaces; // Added for IExchangeRateService
 using ModulerERP.SystemCore.Infrastructure.Persistence;
 using ModulerERP.SystemCore.Infrastructure.Services;
@@ -57,7 +58,13 @@ public static class DependencyInjection
             };
         });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            foreach (var permission in Permissions.GetAll())
+            {
+                options.AddPolicy(permission, policy => policy.RequireClaim("permission", permission));
+            }
+        });
 
         // Register Services
         services.AddScoped<IUserService, UserService>();

@@ -149,6 +149,12 @@ public class AuthService : IAuthService
         {
             var permissionsJson = System.Text.Json.JsonSerializer.Serialize(permissions);
             claims.Add(new Claim("permissions", permissionsJson, System.Text.Json.JsonValueKind.Array.ToString()));
+
+            // Add individual permission claims for policy-based auth
+            foreach (var permission in permissions)
+            {
+                claims.Add(new Claim("permission", permission));
+            }
         }
 
         var token = new JwtSecurityToken(
