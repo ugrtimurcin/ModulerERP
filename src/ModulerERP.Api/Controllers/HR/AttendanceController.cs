@@ -1,7 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ModulerERP.HR.Application.DTOs;
-using ModulerERP.HR.Application.Interfaces;
+using ModulerERP.HR.Application.Features.Attendance.Queries;
+using ModulerERP.HR.Application.Features.Attendance.Commands;
 
 namespace ModulerERP.Api.Controllers.HR;
 
@@ -10,15 +12,11 @@ namespace ModulerERP.Api.Controllers.HR;
 [Route("api/hr/attendance")]
 public class AttendanceController : BaseApiController
 {
-    private readonly IAttendanceService _attendanceService;
-    private readonly IAttendanceLogService _logService;
+    private readonly ISender _sender;
 
-    public AttendanceController(
-        IAttendanceService attendanceService,
-        IAttendanceLogService logService)
+    public AttendanceController(ISender sender)
     {
-        _attendanceService = attendanceService;
-        _logService = logService;
+        _sender = sender;
     }
 
     [HttpGet]
@@ -28,7 +26,8 @@ public class AttendanceController : BaseApiController
             ? DateTime.UtcNow.Date 
             : DateTime.Parse(date);
         
-        var attendance = await _attendanceService.GetByDateAsync(targetDate, ct);
+        var query = new GetAttendanceByDateQuery(targetDate);
+        var attendance = await _sender.Send(query, ct);
         return Ok(attendance);
     }
 
@@ -37,7 +36,8 @@ public class AttendanceController : BaseApiController
     {
         try
         {
-            var result = await _attendanceService.CheckInAsync(dto.EmployeeId, dto.Time, ct);
+            var command = new CheckInCommand(dto.EmployeeId, dto.Time);
+            var result = await _sender.Send(command, ct);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -51,7 +51,8 @@ public class AttendanceController : BaseApiController
     {
         try
         {
-            await _attendanceService.CheckOutAsync(dto.EmployeeId, dto.Time, ct);
+            var command = new CheckOutCommand(dto.EmployeeId, dto.Time);
+            await _sender.Send(command, ct);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -60,21 +61,19 @@ public class AttendanceController : BaseApiController
         }
     }
 
-    // ========== NEW ENDPOINTS (Preparing for Phase 2/3) ==========
-
     [HttpPost("scan")]
     public async Task<ActionResult<Guid>> LogScan(CreateAttendanceLogDto dto, CancellationToken ct)
     {
-        // This was previously in AttendanceLogsController
-        var id = await _logService.LogScanAsync(dto, ct);
+        var command = new LogAttendanceScanCommand(dto);
+        var id = await _sender.Send(command, ct);
         return Ok(id);
     }
     
     [HttpGet("logs")]
     public async Task<ActionResult<IReadOnlyList<AttendanceLogDto>>> GetLogs([FromQuery] Guid? employeeId, [FromQuery] DateTime? date, CancellationToken ct)
     {
-        // This was previously in AttendanceLogsController
-        var result = await _logService.GetLogsAsync(employeeId, date, ct);
+        var query = new GetAttendanceLogsQuery(employeeId, date);
+        var result = await _sender.Send(query, ct);
         return Ok(result);
     }
 }

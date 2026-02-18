@@ -4,20 +4,8 @@ import { DollarSign, Play, FileText, Calendar, Users } from 'lucide-react';
 import { DataTable, Button, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { PayrollDetailDialog } from './PayrollDetailDialog';
-import { api } from '@/lib/api';
-
-interface PayrollRun {
-    id: string;
-    periodYear: number;
-    periodMonth: number;
-    status: number;
-    employeeCount: number;
-    totalGross: number;
-    totalNet: number;
-    totalDeductions: number;
-    processedAt: string | null;
-    currencyCode: string;
-}
+import { payrollService } from '@/services/hr/payrollService';
+import type { PayrollRun } from '@/services/hr/payrollService';
 
 export function PayrollPage() {
     const { t } = useTranslation();
@@ -32,7 +20,8 @@ export function PayrollPage() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await api.get<PayrollRun[]>(`/hr/payroll?year=${selectedYear}`);
+            const data = await payrollService.getByYear(selectedYear);
+            console.log('Payroll Runs:', data);
             setRuns(data);
         } catch {
             toast.error(t('common.error'));
@@ -51,20 +40,18 @@ export function PayrollPage() {
         if (!ok) return;
 
         try {
-            await api.post('/hr/payroll/run', {
+            await payrollService.runPayroll({
                 year: new Date().getFullYear(),
                 month: new Date().getMonth() + 1
             });
             toast.success(t('hr.payrollGenerated'));
             loadData();
         } catch (error: any) {
-            // The api utility throws an Error with the message from the server if available
             toast.error(error.message || t('common.error'));
         }
     };
 
     const getMonthName = (month: number) => {
-        // Use browser locale naturally, or force specific locale if needed
         return new Date(2000, month, 1).toLocaleString('default', { month: 'long' });
     };
 
@@ -81,66 +68,49 @@ export function PayrollPage() {
 
     const formatCurrency = (amount: number, code: string = 'TRY') => {
         if (amount === undefined || amount === null) return '-';
-        // Try to respect locale for currency formatting
-        // If code is TRY, use tr-TR, otherwise en-US or default
         const locale = code === 'TRY' ? 'tr-TR' : 'en-US';
         return new Intl.NumberFormat(locale, { style: 'currency', currency: code }).format(amount);
     };
 
     const columns: Column<PayrollRun>[] = [
         {
-            key: 'periodMonth',
+            key: 'period',
             header: t('hr.period'),
-            render: (run) => (
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white">
-                        <Calendar className="w-5 h-5" />
+            render: (run) => {
+                const [year, month] = run.period.split('-').map(Number);
+                return (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white">
+                            <Calendar className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="font-semibold">{getMonthName(month - 1)} {year}</p>
+                            {run.createdAt && (
+                                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                                    {t('common.created')}: {new Date(run.createdAt).toLocaleDateString()}
+                                </p>
+                            )}
+                        </div>
                     </div>
-                    <div>
-                        <p className="font-semibold">{getMonthName(run.periodMonth - 1)} {run.periodYear}</p>
-                        {run.processedAt && (
-                            <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                                {t('common.processed')}: {new Date(run.processedAt).toLocaleDateString()}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            ),
+                );
+            },
         },
         {
-            key: 'employeeCount',
+            key: 'entryCount',
             header: t('hr.employees'),
             render: (run) => (
                 <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
-                    <span className="font-mono">{run.employeeCount}</span>
+                    <span className="font-mono">{run.entryCount}</span>
                 </div>
             ),
         },
         {
-            key: 'totalGross',
-            header: t('hr.grossPay'),
-            render: (run) => (
-                <span className="font-mono font-medium text-green-600">
-                    {formatCurrency(run.totalGross, run.currencyCode)}
-                </span>
-            ),
-        },
-        {
-            key: 'totalDeductions',
-            header: t('hr.deductions'),
-            render: (run) => (
-                <span className="font-mono text-red-600">
-                    {formatCurrency(run.totalDeductions * -1, run.currencyCode)}
-                </span>
-            ),
-        },
-        {
-            key: 'totalNet',
+            key: 'totalAmount',
             header: t('hr.netPay'),
             render: (run) => (
                 <span className="font-mono font-bold">
-                    {formatCurrency(run.totalNet, run.currencyCode)}
+                    {formatCurrency(run.totalAmount, run.currencyCode || 'TRY')}
                 </span>
             ),
         },
@@ -151,9 +121,8 @@ export function PayrollPage() {
         },
     ];
 
-    // Summary stats
-    const totalGross = runs.reduce((sum, r) => sum + r.totalGross, 0);
-    const totalNet = runs.reduce((sum, r) => sum + r.totalNet, 0);
+    // Simple summary from available data (Net only for now)
+    const totalNet = runs.reduce((sum, r) => sum + r.totalAmount, 0);
 
     return (
         <div className="space-y-6">
@@ -180,19 +149,8 @@ export function PayrollPage() {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[hsl(var(--card))] rounded-xl p-4 border border-[hsl(var(--border))]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t('hr.stats.ytdGross')}</p>
-                            <p className="text-xl font-bold">{formatCurrency(totalGross)}</p>
-                        </div>
-                    </div>
-                </div>
+            {/* Summary Cards - Simplified since we only have Net Pay in list logic for now */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[hsl(var(--card))] rounded-xl p-4 border border-[hsl(var(--border))]">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center">

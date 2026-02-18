@@ -58,8 +58,17 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsDeducted")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("RepaymentDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("RequestDate")
                         .HasColumnType("timestamp with time zone");
@@ -141,6 +150,69 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("AttendanceLogs", "hr");
+                });
+
+            modelBuilder.Entity("ModulerERP.HR.Domain.Entities.Bonus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsProcessed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Period")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("Bonuses", "hr");
                 });
 
             modelBuilder.Entity("ModulerERP.HR.Domain.Entities.CommissionRule", b =>
@@ -345,6 +417,9 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("ChildCount")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Citizenship")
                         .HasColumnType("integer");
 
@@ -388,6 +463,12 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsPensioner")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSpouseWorking")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("JobTitle")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -397,12 +478,18 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("MaritalStatus")
+                        .HasColumnType("integer");
+
                     b.Property<string>("QrToken")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
                     b.Property<Guid?>("SalaryCurrencyId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("SocialSecurityType")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -412,6 +499,9 @@ namespace ModulerERP.HR.Infrastructure.Migrations
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal>("TransportAmount")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -505,6 +595,57 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.HasIndex("EmployeeId1");
 
                     b.ToTable("LeaveRequests", "hr");
+                });
+
+            modelBuilder.Entity("ModulerERP.HR.Domain.Entities.MinimumWage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("GrossAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MinimumWages", "hr");
                 });
 
             modelBuilder.Entity("ModulerERP.HR.Domain.Entities.Payroll", b =>
@@ -651,6 +792,9 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.Property<decimal>("TransportationAllowance")
                         .HasColumnType("numeric");
 
+                    b.Property<decimal>("UnemploymentInsuranceEmployee")
+                        .HasColumnType("numeric");
+
                     b.Property<decimal>("UnemploymentInsuranceEmployer")
                         .HasColumnType("decimal(18,2)");
 
@@ -671,6 +815,55 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.HasIndex("PayrollId1");
 
                     b.ToTable("PayrollEntries", "hr");
+                });
+
+            modelBuilder.Entity("ModulerERP.HR.Domain.Entities.PayrollParameter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PayrollParameters", "hr");
                 });
 
             modelBuilder.Entity("ModulerERP.HR.Domain.Entities.PeriodCommission", b =>
@@ -835,6 +1028,151 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                     b.ToTable("SalaryHistory", "hr");
                 });
 
+            modelBuilder.Entity("ModulerERP.HR.Domain.Entities.SocialSecurityRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CitizenshipType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("EmployeeDeductionRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<decimal>("EmployerDeductionRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("ProvidentFundEmployeeRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<decimal>("ProvidentFundEmployerRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<string>("SocialSecurityType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("UnemploymentInsuranceEmployeeRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<decimal>("UnemploymentInsuranceEmployerRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SocialSecurityRules", "hr");
+                });
+
+            modelBuilder.Entity("ModulerERP.HR.Domain.Entities.TaxRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("LowerLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Rate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("UpperLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TaxRules", "hr");
+                });
+
             modelBuilder.Entity("ModulerERP.HR.Domain.Entities.WorkShift", b =>
                 {
                     b.Property<Guid>("Id")
@@ -954,6 +1292,17 @@ namespace ModulerERP.HR.Infrastructure.Migrations
                 {
                     b.HasOne("ModulerERP.HR.Domain.Entities.Employee", "Employee")
                         .WithMany("AttendanceLogs")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ModulerERP.HR.Domain.Entities.Bonus", b =>
+                {
+                    b.HasOne("ModulerERP.HR.Domain.Entities.Employee", "Employee")
+                        .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -3,20 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { X, Printer } from 'lucide-react';
 import { DataTable, Button, useToast } from '@/components/ui';
 import type { Column } from '@/components/ui';
-import { api } from '@/lib/api';
-
-interface PayrollEntry {
-    id: string;
-    employeeName: string;
-    baseSalary: number;
-    overtimePay: number;
-    commissionPay: number;
-    socialSecurityEmployee: number;
-    providentFundEmployee: number;
-    incomeTax: number;
-    advanceDeduction: number;
-    netPayable: number;
-}
+import { payrollService } from '@/services/hr/payrollService';
+import type { PayrollEntry } from '@/services/hr/payrollService';
 
 interface PayrollDetailDialogProps {
     open: boolean;
@@ -35,7 +23,7 @@ export function PayrollDetailDialog({ open, onClose, payrollRunId }: PayrollDeta
             setIsLoading(true);
             const loadSlips = async () => {
                 try {
-                    const data = await api.get<PayrollEntry[]>(`/hr/payroll/${payrollRunId}/slips`);
+                    const data = await payrollService.getSlips(payrollRunId);
                     setEntries(data);
                 } catch {
                     toast.error(t('common.error'));
@@ -75,6 +63,16 @@ export function PayrollDetailDialog({ open, onClose, payrollRunId }: PayrollDeta
             render: (rec) => <span className="text-green-600">{formatCurrency(rec.commissionPay)}</span>
         },
         {
+            key: 'bonusPay',
+            header: t('hr.bonus'),
+            render: (rec) => <span className="text-green-600">{formatCurrency(rec.bonusPay || 0)}</span>
+        },
+        {
+            key: 'transportAmount',
+            header: t('hr.transport'),
+            render: (rec) => <span className="text-green-600">{formatCurrency(rec.transportAmount || 0)}</span>
+        },
+        {
             key: 'socialSecurityEmployee',
             header: t('hr.socialSecurity'),
             render: (rec) => <span className="text-red-600">-{formatCurrency(rec.socialSecurityEmployee)}</span>
@@ -106,7 +104,7 @@ export function PayrollDetailDialog({ open, onClose, payrollRunId }: PayrollDeta
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-[hsl(var(--card))] rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-[hsl(var(--border))] flex flex-col">
+            <div className="relative bg-[hsl(var(--card))] rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden border border-[hsl(var(--border))] flex flex-col">
                 <div className="bg-[hsl(var(--card))] px-6 py-4 border-b border-[hsl(var(--border))] flex items-center justify-between shrink-0">
                     <h2 className="text-xl font-semibold">
                         {t('hr.payrollDetails')}

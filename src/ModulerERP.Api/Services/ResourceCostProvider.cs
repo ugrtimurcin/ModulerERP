@@ -1,25 +1,28 @@
 using ModulerERP.FixedAssets.Application.Interfaces;
-using ModulerERP.HR.Application.Interfaces;
 using ModulerERP.ProjectManagement.Application.Interfaces;
+using MediatR; // Added
 
 namespace ModulerERP.Api.Services;
 
 public class ResourceCostProvider : IResourceCostProvider
 {
-    private readonly IEmployeeService _employeeService;
     private readonly IFixedAssetService _assetService;
+    private readonly ISender _sender;
 
     public ResourceCostProvider(
-        IEmployeeService employeeService,
-        IFixedAssetService assetService)
+        IFixedAssetService assetService,
+        ISender sender)
     {
-        _employeeService = employeeService;
         _assetService = assetService;
+        _sender = sender;
     }
 
     public async Task<decimal?> GetEmployeeHourlyCostAsync(Guid employeeId, CancellationToken ct = default)
     {
-        var employee = await _employeeService.GetByIdAsync(employeeId, ct);
+        // Use CQRS Query instead of Service
+        var query = new ModulerERP.HR.Application.Features.Employees.Queries.GetEmployeeByIdQuery(employeeId);
+        var employee = await _sender.Send(query, ct);
+        
         if (employee != null)
         {
             // MVP Logic: Assume monthly salary / 160 hours

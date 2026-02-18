@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ModulerERP.HR.Application.DTOs;
+using ModulerERP.HR.Application.Features.LeaveRequests.Queries;
+using ModulerERP.HR.Application.Features.LeaveRequests.Commands;
 using ModulerERP.HR.Application.Interfaces;
+using MediatR;
 
 namespace ModulerERP.Api.Controllers.HR;
 
@@ -8,24 +11,26 @@ namespace ModulerERP.Api.Controllers.HR;
 [Route("api/hr/leave-requests")]
 public class LeaveRequestsController : BaseApiController
 {
-    private readonly ILeaveRequestService _leaveRequestService;
+    private readonly ISender _sender;
 
-    public LeaveRequestsController(ILeaveRequestService leaveRequestService)
+    public LeaveRequestsController(ISender sender)
     {
-        _leaveRequestService = leaveRequestService;
+        _sender = sender;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetLeaveRequests(CancellationToken ct)
+    public async Task<IActionResult> GetLeaveRequests([FromQuery] Guid? employeeId, CancellationToken ct)
     {
-        var requests = await _leaveRequestService.GetAllAsync(ct);
+        var query = new GetLeaveRequestsQuery(employeeId);
+        var requests = await _sender.Send(query, ct);
         return Ok(requests);
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetLeaveRequest(Guid id, CancellationToken ct)
     {
-        var request = await _leaveRequestService.GetByIdAsync(id, ct);
+        var query = new GetLeaveRequestByIdQuery(id);
+        var request = await _sender.Send(query, ct);
         if (request == null) return NotFound();
         return Ok(request);
     }
@@ -35,7 +40,15 @@ public class LeaveRequestsController : BaseApiController
     {
         try
         {
-            var request = await _leaveRequestService.CreateAsync(dto, ct);
+            var command = new CreateLeaveRequestCommand(
+                dto.EmployeeId,
+                dto.Type,
+                dto.StartDate,
+                dto.EndDate,
+                dto.DaysCount,
+                dto.Reason
+            );
+            var request = await _sender.Send(command, ct);
             return CreatedAtAction(nameof(GetLeaveRequest), new { id = request.Id }, request);
         }
         catch (ArgumentException ex)
@@ -49,7 +62,8 @@ public class LeaveRequestsController : BaseApiController
     {
         try
         {
-            await _leaveRequestService.ApproveAsync(id, ct);
+            var command = new ApproveLeaveRequestCommand(id);
+            await _sender.Send(command, ct);
             return NoContent();
         }
         catch (KeyNotFoundException)
@@ -67,7 +81,8 @@ public class LeaveRequestsController : BaseApiController
     {
         try
         {
-            await _leaveRequestService.RejectAsync(id, ct);
+            var command = new RejectLeaveRequestCommand(id);
+            await _sender.Send(command, ct);
             return NoContent();
         }
         catch (KeyNotFoundException)

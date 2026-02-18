@@ -112,13 +112,13 @@ const navItems: NavItem[] = [
         children: [
             { labelKey: 'nav.employees', href: '/hr/employees' },
             { labelKey: 'nav.departments', href: '/hr/departments' },
-            { labelKey: 'nav.leaveRequests', href: '/hr/leave' },
+            { labelKey: 'nav.leaveRequests', href: '/hr/leave-requests' },
             { labelKey: 'nav.payroll', href: '/hr/payroll' },
             { labelKey: 'nav.workShifts', href: '/hr/work-shifts' },
             { labelKey: 'nav.advanceRequests', href: '/hr/advance-requests' },
             { labelKey: 'nav.publicHolidays', href: '/hr/public-holidays' },
-            { labelKey: 'nav.commissionRules', href: '/hr/commission-rules' },
             { labelKey: 'nav.attendanceLogs', href: '/hr/attendance-logs' },
+            { labelKey: 'nav.settings', href: '/hr/settings' },
         ],
     },
     {

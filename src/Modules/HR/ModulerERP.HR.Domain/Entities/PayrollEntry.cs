@@ -15,6 +15,7 @@ public class PayrollEntry : BaseEntity
     // Deductions (Employee)
     public decimal SocialSecurityEmployee { get; private set; } // 9%
     public decimal ProvidentFundEmployee { get; private set; } // 5%
+    public decimal UnemploymentInsuranceEmployee { get; private set; }
     public decimal IncomeTax { get; private set; }
     public decimal AdvanceDeduction { get; private set; }
     
@@ -43,11 +44,12 @@ public class PayrollEntry : BaseEntity
         decimal transport,
         decimal socialSecurityEmp,
         decimal providentFundEmp,
+        decimal unemploymentInsEmp,
         decimal incomeTax,
         decimal advance,
         decimal socialSecurityEmplr,
         decimal providentFundEmplr,
-        decimal unemploymentIns,
+        decimal unemploymentInsEmplr,
         decimal net,
         decimal rate)
     {
@@ -62,11 +64,12 @@ public class PayrollEntry : BaseEntity
             TransportationAllowance = transport,
             SocialSecurityEmployee = socialSecurityEmp,
             ProvidentFundEmployee = providentFundEmp,
+            UnemploymentInsuranceEmployee = unemploymentInsEmp,
             IncomeTax = incomeTax,
             AdvanceDeduction = advance,
             SocialSecurityEmployer = socialSecurityEmplr,
             ProvidentFundEmployer = providentFundEmplr,
-            UnemploymentInsuranceEmployer = unemploymentIns,
+            UnemploymentInsuranceEmployer = unemploymentInsEmplr,
             NetPayable = net,
             ExchangeRate = rate
         };

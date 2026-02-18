@@ -434,33 +434,7 @@ export function AttendanceLogDialog({ open, onClose }: AttendanceLogDialogProps)
     );
 }
 
-function TypeSelector({ type, onChange, t }: { type: number, onChange: (v: number) => void, t: any }) {
-    return (
-        <div>
-            <label className="block text-sm font-medium mb-1.5">{t('common.type')}</label>
-            <div className="grid grid-cols-2 gap-3">
-                <button
-                    type="button"
-                    onClick={() => onChange(1)}
-                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${type === 1
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
-                        : 'border-[hsl(var(--border))] hover:bg-[hsl(var(--accent))]'}`}
-                >
-                    {t('hr.checkIn')}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => onChange(2)}
-                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${type === 2
-                        ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
-                        : 'border-[hsl(var(--border))] hover:bg-[hsl(var(--accent))]'}`}
-                >
-                    {t('hr.checkOut')}
-                </button>
-            </div>
-        </div>
-    );
-}
+
 
 function LocationStatus({ status, t }: any) {
     return (

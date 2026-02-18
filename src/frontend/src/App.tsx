@@ -50,6 +50,7 @@ import { PurchaseReturnsPage } from '@/pages/procurement/PurchaseReturnsPage';
 import { PublicHolidaysPage } from '@/pages/hr/PublicHolidaysPage';
 import { CommissionRulesPage } from '@/pages/hr/CommissionRulesPage';
 import { AttendanceLogsPage } from '@/pages/hr/AttendanceLogsPage';
+import { HRSettingsPage } from '@/pages/hr/HRSettingsPage';
 import { AssetsPage } from '@/pages/fixedassets/AssetsPage';
 import { AssetCategoriesPage } from '@/pages/fixedassets/AssetCategoriesPage';
 import { AssetDetailPage } from '@/pages/fixedassets/AssetDetailPage';
@@ -156,6 +157,7 @@ function App() {
           <Route path="/hr/public-holidays" element={<PublicHolidaysPage />} />
           <Route path="/hr/commission-rules" element={<CommissionRulesPage />} />
           <Route path="/hr/attendance-logs" element={<AttendanceLogsPage />} />
+          <Route path="/hr/settings" element={<HRSettingsPage />} />
           <Route path="/hr/*" element={<PlaceholderPage titleKey="nav.hr" />} />
 
           {/* Fixed Assets */}

@@ -24,9 +24,16 @@ public class Employee : BaseEntity
     public string? BankName { get; private set; }
     public decimal CurrentSalary { get; private set; }
     public Guid? SalaryCurrencyId { get; private set; }
+    public decimal TransportAmount { get; private set; }
     
     // Legal & KKTC Specifics
     public CitizenshipType Citizenship { get; private set; } = CitizenshipType.TRNC; // Default to TRNC
+    public SocialSecurityType SocialSecurityType { get; private set; } = SocialSecurityType.Standard;
+    public MaritalStatus MaritalStatus { get; private set; } = MaritalStatus.Single;
+    public bool IsSpouseWorking { get; private set; }
+    public int ChildCount { get; private set; }
+    public bool IsPensioner { get; private set; }
+
     public string? WorkPermitNumber { get; private set; }
     public DateTime? WorkPermitExpDate { get; private set; }
     
@@ -62,7 +69,12 @@ public class Employee : BaseEntity
         string jobTitle,
         string identityNumber,
         decimal salary,
-        Guid? userId = null)
+        decimal transportAmount = 0,
+        Guid? userId = null,
+        MaritalStatus maritalStatus = MaritalStatus.Single,
+        bool isSpouseWorking = false,
+        int childCount = 0,
+        bool isPensioner = false)
     {
         var emp = new Employee
         {
@@ -73,7 +85,12 @@ public class Employee : BaseEntity
             JobTitle = jobTitle,
             IdentityNumber = identityNumber,
             CurrentSalary = salary,
-            UserId = userId
+            TransportAmount = transportAmount,
+            UserId = userId,
+            MaritalStatus = maritalStatus,
+            IsSpouseWorking = isSpouseWorking,
+            ChildCount = childCount,
+            IsPensioner = isPensioner
         };
         emp.SetTenant(tenantId);
         emp.SetCreator(createdBy);
@@ -95,19 +112,35 @@ public class Employee : BaseEntity
         Status = status;
     }
 
-    public void UpdateLegalDetails(CitizenshipType citizenship, string? workPermitNumber, DateTime? workPermitExpDate, string? bankName, string? iban)
+    public void UpdateLegalDetails(
+        CitizenshipType citizenship, 
+        SocialSecurityType socialSecurityType,
+        string? workPermitNumber, 
+        DateTime? workPermitExpDate, 
+        string? bankName, 
+        string? iban,
+        MaritalStatus maritalStatus,
+        bool isSpouseWorking,
+        int childCount,
+        bool isPensioner)
     {
         Citizenship = citizenship;
+        SocialSecurityType = socialSecurityType;
         WorkPermitNumber = workPermitNumber;
         WorkPermitExpDate = workPermitExpDate;
         BankName = bankName;
         Iban = iban;
+        MaritalStatus = maritalStatus;
+        IsSpouseWorking = isSpouseWorking;
+        ChildCount = childCount;
+        IsPensioner = isPensioner;
     }
 
-    public void SetSalary(decimal amount, Guid? currencyId)
+    public void SetSalary(decimal amount, Guid? currencyId, decimal transportAmount = 0)
     {
         CurrentSalary = amount;
         SalaryCurrencyId = currencyId;
+        TransportAmount = transportAmount;
         // Should trigger history update in Service
     }
 

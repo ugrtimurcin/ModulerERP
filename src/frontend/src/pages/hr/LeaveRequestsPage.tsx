@@ -4,6 +4,7 @@ import { Plus, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { DataTable, Button, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { api } from '@/lib/api';
+import { LeaveRequestDialog } from './LeaveRequestDialog';
 
 interface LeaveRequest {
     id: string;
@@ -25,6 +26,7 @@ export function LeaveRequestsPage() {
 
     const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -150,7 +152,7 @@ export function LeaveRequestsPage() {
                     </h1>
                     <p className="text-[hsl(var(--muted-foreground))]">{t('hr.leaveRequestsSubtitle')}</p>
                 </div>
-                <Button onClick={() => { }}>
+                <Button onClick={() => setCreateDialogOpen(true)}>
                     <Plus className="w-4 h-4" />
                     {t('hr.createLeaveRequest')}
                 </Button>
@@ -210,6 +212,14 @@ export function LeaveRequestsPage() {
                         </button>
                     </div>
                 ) : null}
+            />
+
+            <LeaveRequestDialog
+                open={createDialogOpen}
+                onClose={(saved) => {
+                    setCreateDialogOpen(false);
+                    if (saved) loadData();
+                }}
             />
         </div>
     );

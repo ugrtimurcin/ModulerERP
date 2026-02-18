@@ -5,7 +5,8 @@ public record DepartmentDto(
     string Name,
     string? Description,
     Guid? ManagerId,
-    string? ManagerName
+    string? ManagerName,
+    DateTime CreatedAt
 );
 
 public record CreateDepartmentDto(

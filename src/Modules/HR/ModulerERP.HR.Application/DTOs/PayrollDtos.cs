@@ -22,6 +22,8 @@ public record PayrollEntryDto(
     decimal BaseSalary,
     decimal OvertimePay,
     decimal CommissionPay,
+    decimal BonusPay,
+    decimal TransportAmount,
     decimal AdvanceDeduction,
     decimal SocialSecurityEmployee,
     decimal ProvidentFundEmployee,

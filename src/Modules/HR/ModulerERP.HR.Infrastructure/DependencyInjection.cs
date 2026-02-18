@@ -35,9 +35,19 @@ public static class DependencyInjection
         services.AddScoped<IRepository<PublicHoliday>, HRRepository<PublicHoliday>>();
         services.AddScoped<IRepository<CommissionRule>, HRRepository<CommissionRule>>();
         services.AddScoped<IRepository<PeriodCommission>, HRRepository<PeriodCommission>>();
+        services.AddScoped<IRepository<Bonus>, HRRepository<Bonus>>();
+        services.AddScoped<IRepository<TaxRule>, HRRepository<TaxRule>>();
+        services.AddScoped<IRepository<SocialSecurityRule>, HRRepository<SocialSecurityRule>>();
+        services.AddScoped<IRepository<MinimumWage>, HRRepository<MinimumWage>>();
+        services.AddScoped<IRepository<PayrollParameter>, HRRepository<PayrollParameter>>();
         
         // Add Application Services
         services.AddHRApplication();
+
+        // Register MediatR Handlers from Infrastructure (Queries)
+        services.AddMediatR(cfg => {
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
+        });
 
         return services;
     }

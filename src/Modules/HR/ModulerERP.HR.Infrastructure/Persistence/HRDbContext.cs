@@ -26,11 +26,15 @@ public class HRDbContext : DbContext, IHRUnitOfWork
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
     public DbSet<PublicHoliday> PublicHolidays => Set<PublicHoliday>();
     public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
-    public DbSet<PeriodCommission> PeriodCommissions => Set<PeriodCommission>();
-    public DbSet<AdvanceRequest> AdvanceRequests => Set<AdvanceRequest>();
+    public DbSet<PeriodCommission> PeriodCommissions { get; set; }
+    public DbSet<AdvanceRequest> AdvanceRequests { get; set; }
+    public DbSet<Bonus> Bonuses { get; set; }
     public DbSet<Payroll> Payrolls => Set<Payroll>();
     public DbSet<PayrollEntry> PayrollEntries => Set<PayrollEntry>();
     public DbSet<SalaryHistory> SalaryHistory => Set<SalaryHistory>();
+    public DbSet<MinimumWage> MinimumWages => Set<MinimumWage>();
+    public DbSet<PayrollParameter> PayrollParameters => Set<PayrollParameter>();
+    public DbSet<TaxRule> TaxRules => Set<TaxRule>();
 
     // Shared Audit Log (mapped to system_core schema)
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -62,6 +66,8 @@ public class HRDbContext : DbContext, IHRUnitOfWork
         modelBuilder.Entity<PayrollEntry>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<WorkShift>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<SalaryHistory>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<MinimumWage>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PayrollParameter>().HasQueryFilter(e => !e.IsDeleted);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HRDbContext).Assembly);
     }

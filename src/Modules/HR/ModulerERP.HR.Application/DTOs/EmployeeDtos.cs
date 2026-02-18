@@ -8,15 +8,23 @@ public record EmployeeDto(
     string LastName,
     string Email,
     string IdentityNumber,
+    CitizenshipType Citizenship,
+    SocialSecurityType SocialSecurityType,
+    string? WorkPermitNumber,
+    DateTime? WorkPermitExpiryDate,
     string JobTitle,
     Guid DepartmentId,
-    string DepartmentName, // Flattened for display
+    string DepartmentName,
     Guid? SupervisorId,
     string? SupervisorName,
     decimal CurrentSalary,
-    DateTime? StartDate,
+    DateTime StartDate,
     EmploymentStatus Status,
-    string? QrToken
+    string? QrToken,
+    MaritalStatus MaritalStatus,
+    bool IsSpouseWorking,
+    int ChildCount,
+    bool IsPensioner
 );
 
 public record CreateEmployeeDto(
@@ -24,20 +32,42 @@ public record CreateEmployeeDto(
     string LastName,
     string Email,
     string IdentityNumber,
+    CitizenshipType Citizenship,
+    SocialSecurityType SocialSecurityType,
+    string? WorkPermitNumber,
+    DateTime? WorkPermitExpiryDate,
     string JobTitle,
     Guid DepartmentId,
     Guid? SupervisorId,
     decimal CurrentSalary,
-    Guid? UserId // Optional linkage
+    decimal TransportAmount,
+    string? BankName,
+    string? Iban,
+    Guid? UserId,
+    MaritalStatus MaritalStatus,
+    bool IsSpouseWorking,
+    int ChildCount,
+    bool IsPensioner
 );
 
 public record UpdateEmployeeDto(
     string FirstName,
     string LastName,
     string Email,
+    CitizenshipType Citizenship,
+    SocialSecurityType SocialSecurityType,
+    string? WorkPermitNumber,
+    DateTime? WorkPermitExpiryDate,
     string JobTitle,
     Guid DepartmentId,
     Guid? SupervisorId,
     decimal CurrentSalary,
-    EmploymentStatus Status
+    decimal TransportAmount,
+    string? BankName,
+    string? Iban,
+    EmploymentStatus Status,
+    MaritalStatus MaritalStatus,
+    bool IsSpouseWorking,
+    int ChildCount,
+    bool IsPensioner
 );
