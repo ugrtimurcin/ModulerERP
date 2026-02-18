@@ -24,6 +24,7 @@ public record ContactDetailDto(
     string? Email,
     string? Phone,
     bool IsPrimary,
+    AddressDto? Address,
     bool IsActive,
     DateTime CreatedAt);
 
@@ -34,7 +35,8 @@ public record CreateContactDto(
     string? Position = null,
     string? Email = null,
     string? Phone = null,
-    bool IsPrimary = false);
+    bool IsPrimary = false,
+    AddressDto? Address = null);
 
 public record UpdateContactDto(
     string FirstName,
@@ -43,4 +45,5 @@ public record UpdateContactDto(
     string? Email = null,
     string? Phone = null,
     bool? IsPrimary = null,
+    AddressDto? Address = null,
     bool? IsActive = null);

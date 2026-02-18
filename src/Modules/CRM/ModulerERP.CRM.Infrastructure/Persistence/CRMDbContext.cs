@@ -1,48 +1,53 @@
 using Microsoft.EntityFrameworkCore;
-using ModulerERP.CRM.Domain.Entities;
 using ModulerERP.SharedKernel.Entities;
 using ModulerERP.SharedKernel.Enums;
 using ModulerERP.SharedKernel.Interfaces;
+using ModulerERP.CRM.Domain.Entities;
+using ModulerERP.CRM.Application.Interfaces;
 using System.Text.Json;
 
 namespace ModulerERP.CRM.Infrastructure.Persistence;
 
-/// <summary>
-/// DbContext for CRM module entities.
-/// </summary>
-public class CRMDbContext : DbContext
+public class CRMDbContext : DbContext, ICRMUnitOfWork
 {
-    public DbSet<BusinessPartner> BusinessPartners => Set<BusinessPartner>();
-    public DbSet<BusinessPartnerGroup> BusinessPartnerGroups => Set<BusinessPartnerGroup>();
-    public DbSet<Contact> Contacts => Set<Contact>();
-    public DbSet<SaleAgent> SaleAgents => Set<SaleAgent>();
+    private readonly ICurrentUserService _currentUserService;
+
+    public CRMDbContext(DbContextOptions<CRMDbContext> options, ICurrentUserService currentUserService)
+        : base(options)
+    {
+        _currentUserService = currentUserService;
+    }
+
+    // Core CRM entities
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<Opportunity> Opportunities => Set<Opportunity>();
+    public DbSet<BusinessPartner> BusinessPartners => Set<BusinessPartner>();
+    public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<EntityTag> EntityTags => Set<EntityTag>();
+
+    // Sales & Commission entities
+    public DbSet<SaleAgent> SaleAgents => Set<SaleAgent>();
+    public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
+
+    // Partner management
+    public DbSet<BusinessPartnerGroup> BusinessPartnerGroups => Set<BusinessPartnerGroup>();
     public DbSet<PartnerBalance> PartnerBalances => Set<PartnerBalance>();
-    
+
     // Shared Audit Log (mapped to system_core schema)
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
-    private readonly ICurrentUserService _currentUserService;
-
-    public CRMDbContext(
-        DbContextOptions<CRMDbContext> options,
-        ICurrentUserService currentUserService) 
-        : base(options) 
-    {
-        _currentUserService = currentUserService;
-    }
+    // EF Core caches the model. For global query filters to work dynamically,
+    // the filter expression must close over a field/property that changes per-request.
+    // A local variable captured at OnModelCreating time would freeze the value.
+    private Guid _tenantId => _currentUserService.TenantId;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
-        // Set default schema
         modelBuilder.HasDefaultSchema("crm");
 
         // Map AuditLog to system_core table
@@ -53,177 +58,24 @@ public class CRMDbContext : DbContext
             entity.Property(e => e.OldValues).HasColumnType("jsonb");
             entity.Property(e => e.NewValues).HasColumnType("jsonb");
         });
-        
-        // BusinessPartner
-        modelBuilder.Entity<BusinessPartner>(entity =>
-        {
-            entity.ToTable("BusinessPartners");
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => new { e.TenantId, e.Code }).IsUnique();
-            entity.HasIndex(e => e.TenantId);
-            
-            entity.HasOne(e => e.Group)
-                .WithMany()
-                .HasForeignKey(e => e.GroupId)
-                .OnDelete(DeleteBehavior.SetNull);
-                
-            entity.HasOne(e => e.ParentPartner)
-                .WithMany(e => e.ChildPartners)
-                .HasForeignKey(e => e.ParentPartnerId)
-                .OnDelete(DeleteBehavior.Restrict);
-                
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // BusinessPartnerGroup
-        modelBuilder.Entity<BusinessPartnerGroup>(entity =>
-        {
-            entity.ToTable("BusinessPartnerGroups");
-            entity.HasKey(e => e.Id);
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // Contact
-        modelBuilder.Entity<Contact>(entity =>
-        {
-            entity.ToTable("Contacts");
-            entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.Partner)
-                .WithMany(e => e.Contacts)
-                .HasForeignKey(e => e.PartnerId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // Lead
-        modelBuilder.Entity<Lead>(entity =>
-        {
-            entity.ToTable("Leads");
-            entity.HasKey(e => e.Id);
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // Opportunity
-        modelBuilder.Entity<Opportunity>(entity =>
-        {
-            entity.ToTable("Opportunities");
-            entity.HasKey(e => e.Id);
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // Activity
-        modelBuilder.Entity<Activity>(entity =>
-        {
-            entity.ToTable("Activities");
-            entity.HasKey(e => e.Id);
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // SupportTicket
-        modelBuilder.Entity<SupportTicket>(entity =>
-        {
-            entity.ToTable("SupportTickets");
-            entity.HasKey(e => e.Id);
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // PartnerBalance
-        modelBuilder.Entity<PartnerBalance>(entity =>
-        {
-            entity.ToTable("PartnerBalances");
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => new { e.TenantId, e.PartnerId, e.CurrencyId }).IsUnique();
-            entity.HasOne(e => e.Partner)
-                .WithMany(e => e.Balances)
-                .HasForeignKey(e => e.PartnerId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-        
-        // TicketMessage
-        modelBuilder.Entity<TicketMessage>(entity =>
-        {
-            entity.ToTable("TicketMessages");
-            entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.Ticket)
-                .WithMany()
-                .HasForeignKey(e => e.TicketId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // Tag
-        modelBuilder.Entity<Tag>(entity =>
-        {
-            entity.ToTable("Tags");
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => new { e.TenantId, e.Name }).IsUnique();
-            entity.HasQueryFilter(e => !e.IsDeleted);
-        });
-        
-        // EntityTag
-        modelBuilder.Entity<EntityTag>(entity =>
-        {
-            entity.ToTable("EntityTags");
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => new { e.TenantId, e.TagId, e.EntityId, e.EntityType }).IsUnique();
-            entity.HasOne(e => e.Tag)
-                .WithMany(e => e.EntityTags)
-                .HasForeignKey(e => e.TagId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
 
-    private Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? _currentTransaction;
+        // ── Global Query Filters: Soft Delete + Tenant Isolation ──
+        // Referencing _tenantId (a property) ensures EF evaluates it per-query
+        modelBuilder.Entity<Lead>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<Opportunity>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<BusinessPartner>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<Contact>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<Activity>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<SupportTicket>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<TicketMessage>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<Tag>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<EntityTag>().HasQueryFilter(e => e.TenantId == _tenantId);
+        modelBuilder.Entity<SaleAgent>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<CommissionRule>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<BusinessPartnerGroup>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<PartnerBalance>().HasQueryFilter(e => e.TenantId == _tenantId);
 
-    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        if (_currentTransaction != null) return;
-        _currentTransaction = await Database.BeginTransactionAsync(cancellationToken);
-    }
-
-    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        try 
-        {
-            await SaveChangesAsync(cancellationToken);
-            
-            if (_currentTransaction != null)
-            {
-                await _currentTransaction.CommitAsync(cancellationToken);
-            }
-        }
-        catch
-        {
-            await RollbackTransactionAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            if (_currentTransaction != null)
-            {
-                _currentTransaction.Dispose();
-                _currentTransaction = null;
-            }
-        }
-    }
-
-    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (_currentTransaction != null)
-            {
-                await _currentTransaction.RollbackAsync(cancellationToken);
-            }
-        }
-        finally
-        {
-            if (_currentTransaction != null)
-            {
-                _currentTransaction.Dispose();
-                _currentTransaction = null;
-            }
-        }
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CRMDbContext).Assembly);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -232,7 +84,6 @@ public class CRMDbContext : DbContext
         var userId = _currentUserService.UserId;
         var tenantId = _currentUserService.TenantId;
 
-        // separating new entries because we need to save first to get their IDs
         var auditEntries = new List<AuditLog>();
 
         foreach (var entry in entries)
@@ -255,7 +106,6 @@ public class CRMDbContext : DbContext
             }
             else if (entry.State == EntityState.Deleted)
             {
-                // Soft Delete Handling
                 if (entry.Entity is ISoftDeletable softDeletable)
                 {
                     entry.State = EntityState.Modified;
@@ -279,10 +129,9 @@ public class CRMDbContext : DbContext
             foreach (var property in entry.Properties)
             {
                 if (property.IsTemporary) continue;
-                
-                string propertyName = property.Metadata.Name;
                 if (property.Metadata.IsPrimaryKey()) continue;
 
+                var propertyName = property.Metadata.Name;
                 var originalValue = property.OriginalValue;
                 var currentValue = property.CurrentValue;
 
@@ -305,7 +154,6 @@ public class CRMDbContext : DbContext
                 }
             }
 
-            // Skip if nothing changed in Update
             if (entry.State == EntityState.Modified && affectedColumns.Count == 0 && action != AuditAction.SoftDelete)
                 continue;
 
@@ -323,10 +171,8 @@ public class CRMDbContext : DbContext
             auditEntries.Add(auditLog);
         }
 
-        // Save changes to generate IDs for new entities
         var result = await base.SaveChangesAsync(cancellationToken);
 
-        // Now save audit logs
         if (auditEntries.Count > 0)
         {
             await AuditLogs.AddRangeAsync(auditEntries, cancellationToken);
@@ -334,5 +180,21 @@ public class CRMDbContext : DbContext
         }
 
         return result;
+    }
+
+    // ICRMUnitOfWork / IUnitOfWork implementation
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        await Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        await Database.CommitTransactionAsync(cancellationToken);
+    }
+
+    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        await Database.RollbackTransactionAsync(cancellationToken);
     }
 }

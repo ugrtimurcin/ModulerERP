@@ -1,11 +1,12 @@
 using ModulerERP.SharedKernel.Entities;
+using ModulerERP.SharedKernel.ValueObjects;
 using ModulerERP.CRM.Domain.Enums;
 
 namespace ModulerERP.CRM.Domain.Entities;
 
 /// <summary>
 /// Central entity for Customers and Suppliers.
-/// TRNC-specific features: multi-currency, granular phone fields.
+/// TRNC-specific features: multi-currency, granular phone fields, TRNC-aware addresses.
 /// </summary>
 public class BusinessPartner : BaseEntity
 {
@@ -52,6 +53,13 @@ public class BusinessPartner : BaseEntity
     public string? Landline { get; private set; }
     public string? Fax { get; private set; }
     public string? WhatsappNumber { get; private set; }
+
+    // ── TRNC-Aware Addresses ──
+    /// <summary>Official billing/registration address</summary>
+    public Address? BillingAddress { get; private set; }
+
+    /// <summary>Goods delivery address (may differ from billing)</summary>
+    public Address? ShippingAddress { get; private set; }
 
     // Navigation
     public BusinessPartnerGroup? Group { get; private set; }
@@ -128,6 +136,9 @@ public class BusinessPartner : BaseEntity
         Fax = fax;
         WhatsappNumber = whatsappNumber;
     }
+
+    public void UpdateBillingAddress(Address? address) => BillingAddress = address;
+    public void UpdateShippingAddress(Address? address) => ShippingAddress = address;
 
     public void SetGroup(Guid? groupId) => GroupId = groupId;
     public void SetParentPartner(Guid? parentPartnerId) => ParentPartnerId = parentPartnerId;

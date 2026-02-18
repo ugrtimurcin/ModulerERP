@@ -1,10 +1,12 @@
 using ModulerERP.SharedKernel.Entities;
+using ModulerERP.SharedKernel.ValueObjects;
 using ModulerERP.CRM.Domain.Enums;
 
 namespace ModulerERP.CRM.Domain.Entities;
 
 /// <summary>
 /// Sales pipeline with weighted forecasting.
+/// Uses Money value object for type-safe currency handling.
 /// </summary>
 public class Opportunity : BaseEntity
 {
@@ -13,9 +15,10 @@ public class Opportunity : BaseEntity
     public Guid? LeadId { get; private set; }
     public Guid? PartnerId { get; private set; }
     
-    /// <summary>Estimated deal value in default currency</summary>
-    public decimal EstimatedValue { get; private set; }
+    /// <summary>Estimated deal value with currency (type-safe)</summary>
+    public Money EstimatedValue { get; private set; } = Money.Zero("TRY");
     
+    /// <summary>FK to Currencies table for relational integrity</summary>
     public Guid? CurrencyId { get; private set; }
     
     public OpportunityStage Stage { get; private set; } = OpportunityStage.Discovery;
@@ -34,7 +37,7 @@ public class Opportunity : BaseEntity
     public ICollection<Activity> Activities { get; private set; } = new List<Activity>();
 
     /// <summary>Weighted value for forecasting</summary>
-    public decimal WeightedValue => EstimatedValue * (Probability / 100m);
+    public decimal WeightedValue => EstimatedValue.Amount * (Probability / 100m);
 
     private Opportunity() { } // EF Core
 
@@ -42,6 +45,7 @@ public class Opportunity : BaseEntity
         Guid tenantId,
         string title,
         decimal estimatedValue,
+        string currencyCode,
         Guid createdByUserId,
         Guid? leadId = null,
         Guid? partnerId = null,
@@ -57,7 +61,7 @@ public class Opportunity : BaseEntity
             Title = title,
             LeadId = leadId,
             PartnerId = partnerId,
-            EstimatedValue = estimatedValue,
+            EstimatedValue = Money.Create(estimatedValue, currencyCode),
             CurrencyId = currencyId,
             AssignedUserId = assignedUserId,
             ExpectedCloseDate = expectedCloseDate,
@@ -84,9 +88,9 @@ public class Opportunity : BaseEntity
         };
     }
 
-    public void UpdateValue(decimal estimatedValue, Guid? currencyId)
+    public void UpdateValue(decimal estimatedValue, string currencyCode, Guid? currencyId)
     {
-        EstimatedValue = estimatedValue;
+        EstimatedValue = Money.Create(estimatedValue, currencyCode);
         CurrencyId = currencyId;
     }
 

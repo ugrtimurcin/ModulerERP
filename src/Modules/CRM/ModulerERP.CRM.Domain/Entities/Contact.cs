@@ -1,4 +1,5 @@
 using ModulerERP.SharedKernel.Entities;
+using ModulerERP.SharedKernel.ValueObjects;
 
 namespace ModulerERP.CRM.Domain.Entities;
 
@@ -20,6 +21,9 @@ public class Contact : BaseEntity
     
     /// <summary>Is this the main point of contact?</summary>
     public bool IsPrimary { get; private set; }
+
+    /// <summary>Contact's office/personal address</summary>
+    public Address? Address { get; private set; }
 
     // Navigation
     public BusinessPartner? Partner { get; private set; }
@@ -66,6 +70,8 @@ public class Contact : BaseEntity
         Email = email;
         Phone = phone;
     }
+
+    public void UpdateAddress(Address? address) => Address = address;
 
     public void SetAsPrimary() => IsPrimary = true;
     public void RemovePrimary() => IsPrimary = false;

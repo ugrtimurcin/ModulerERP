@@ -1,6 +1,17 @@
 namespace ModulerERP.CRM.Application.DTOs;
 
-// Opportunity DTOs
+// ── Address sub-DTO for request/response ──
+public record AddressDto(
+    string? Street = null,
+    string? District = null,
+    string? City = null,
+    string? ZipCode = null,
+    string? Country = null,
+    string? Block = null,
+    string? Parcel = null);
+
+// ── Opportunity DTOs ──
+
 public record OpportunityListDto(
     Guid Id,
     string Title,
@@ -41,6 +52,7 @@ public record OpportunityDetailDto(
 public record CreateOpportunityDto(
     string Title,
     decimal EstimatedValue,
+    string CurrencyCode = "TRY",
     Guid? LeadId = null,
     Guid? PartnerId = null,
     Guid? CurrencyId = null,
@@ -51,6 +63,7 @@ public record CreateOpportunityDto(
 public record UpdateOpportunityDto(
     string Title,
     decimal EstimatedValue,
+    string CurrencyCode = "TRY",
     Guid? PartnerId = null,
     Guid? CurrencyId = null,
     string? Stage = null,

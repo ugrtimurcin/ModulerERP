@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ModulerERP.CRM.Domain\ModulerERP.CRM.Domain.csproj" />
     <ProjectReference Include="..\..\..\ModulerERP.SharedKernel\ModulerERP.SharedKernel.csproj" />
   </ItemGroup>

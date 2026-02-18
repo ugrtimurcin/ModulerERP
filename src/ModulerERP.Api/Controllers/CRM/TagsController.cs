@@ -1,0 +1,43 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using ModulerERP.CRM.Application.Features.Tags.Commands;
+using ModulerERP.CRM.Infrastructure.Features.Tags.Queries;
+
+namespace ModulerERP.Api.Controllers.CRM;
+
+[Authorize]
+[Route("api/crm/tags")]
+public class TagsController : BaseApiController
+{
+    private readonly ISender _sender;
+    public TagsController(ISender sender) => _sender = sender;
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] string? entityType = null, CancellationToken ct = default)
+    {
+        var result = await _sender.Send(new GetTagsQuery(entityType), ct);
+        return Ok(new { success = true, data = result });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateTagCommand command, CancellationToken ct)
+    {
+        var result = await _sender.Send(command, ct);
+        return Ok(new { success = true, data = result });
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTagCommand command, CancellationToken ct)
+    {
+        var result = await _sender.Send(command with { Id = id }, ct);
+        return Ok(new { success = true, data = result });
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await _sender.Send(new DeleteTagCommand(id), ct);
+        return Ok(new { success = true, message = "Tag deleted" });
+    }
+}

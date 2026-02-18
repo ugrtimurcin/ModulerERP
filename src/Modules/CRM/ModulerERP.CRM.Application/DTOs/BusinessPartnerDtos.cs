@@ -15,7 +15,7 @@ public record BusinessPartnerListDto(
     DateTime CreatedAt);
 
 /// <summary>
-/// Detailed DTO for BusinessPartner (full fields).
+/// Detailed DTO for BusinessPartner (full fields including addresses).
 /// </summary>
 public record BusinessPartnerDetailDto(
     Guid Id,
@@ -38,6 +38,8 @@ public record BusinessPartnerDetailDto(
     string? Landline,
     string? Fax,
     string? WhatsappNumber,
+    AddressDto? BillingAddress,
+    AddressDto? ShippingAddress,
     bool IsActive,
     DateTime CreatedAt);
 
@@ -56,7 +58,9 @@ public record CreateBusinessPartnerDto(
     string? TaxNumber = null,
     string? IdentityNumber = null,
     string? Email = null,
-    string? MobilePhone = null);
+    string? MobilePhone = null,
+    AddressDto? BillingAddress = null,
+    AddressDto? ShippingAddress = null);
 
 /// <summary>
 /// DTO for updating a BusinessPartner.
@@ -80,4 +84,6 @@ public record UpdateBusinessPartnerDto(
     int PaymentTermDays = 30,
     decimal CreditLimit = 0,
     decimal DefaultDiscountRate = 0,
+    AddressDto? BillingAddress = null,
+    AddressDto? ShippingAddress = null,
     bool? IsActive = null);
