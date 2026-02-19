@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ModulerERP.Sales.Application.Interfaces;
 using ModulerERP.Sales.Domain.Entities;
 using ModulerERP.SharedKernel.Entities;
 using ModulerERP.SharedKernel.Enums;
@@ -7,7 +8,7 @@ using System.Text.Json;
 
 namespace ModulerERP.Sales.Infrastructure.Persistence;
 
-public class SalesDbContext : DbContext, IUnitOfWork
+public class SalesDbContext : DbContext, ISalesUnitOfWork
 {
     public DbSet<Quote> Quotes => Set<Quote>();
     public DbSet<QuoteLine> QuoteLines => Set<QuoteLine>();
@@ -21,6 +22,14 @@ public class SalesDbContext : DbContext, IUnitOfWork
     public DbSet<Shipment> Shipments => Set<Shipment>();
     public DbSet<ShipmentLine> ShipmentLines => Set<ShipmentLine>();
     
+    public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
+    public DbSet<SalesReturnLine> SalesReturnLines => Set<SalesReturnLine>();
+    
+    public DbSet<CreditNote> CreditNotes => Set<CreditNote>();
+    public DbSet<CreditNoteLine> CreditNoteLines => Set<CreditNoteLine>();
+    
+    public DbSet<SalesPayment> SalesPayments => Set<SalesPayment>();
+    
     public DbSet<PriceList> PriceLists => Set<PriceList>();
     public DbSet<PriceListItem> PriceListItems => Set<PriceListItem>();
 
@@ -28,6 +37,7 @@ public class SalesDbContext : DbContext, IUnitOfWork
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     private readonly ICurrentUserService _currentUserService;
+    private Guid TenantId => _currentUserService.TenantId;
 
     public SalesDbContext(
         DbContextOptions<SalesDbContext> options,
@@ -52,6 +62,17 @@ public class SalesDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.OldValues).HasColumnType("jsonb");
             entity.Property(e => e.NewValues).HasColumnType("jsonb");
         });
+
+        // ── Global Query Filters (Tenant Isolation + Soft Delete) ──
+        modelBuilder.Entity<Quote>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<Order>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<Invoice>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<Shipment>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<SalesReturn>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<CreditNote>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<SalesPayment>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<PriceList>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
+        modelBuilder.Entity<PriceListItem>().HasQueryFilter(e => e.TenantId == TenantId && !e.IsDeleted);
         
         // Apply configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SalesDbContext).Assembly);

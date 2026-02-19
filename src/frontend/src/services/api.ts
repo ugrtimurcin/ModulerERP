@@ -525,6 +525,7 @@ export const api = {
         delete: (id: string) => request<any>(`/sales/quotes/${id}`, { method: 'DELETE' }),
         send: (id: string) => request<any>(`/sales/quotes/${id}/send`, { method: 'POST' }),
         accept: (id: string) => request<any>(`/sales/quotes/${id}/accept`, { method: 'POST' }),
+        reject: (id: string) => request<any>(`/sales/quotes/${id}/reject`, { method: 'POST' }),
     },
 
     // Sales - Orders
@@ -537,23 +538,25 @@ export const api = {
         confirm: (id: string) => request<any>(`/sales/orders/${id}/confirm`, { method: 'POST' }),
         cancel: (id: string) => request<any>(`/sales/orders/${id}/cancel`, { method: 'POST' }),
     },
+    // Sales - Invoices
     invoices: {
         getAll: (page = 1, pageSize = 20) => request<PagedResult<any>>(`/sales/invoices?page=${page}&pageSize=${pageSize}`),
         getById: (id: string) => request<any>(`/sales/invoices/${id}`),
         create: (data: any) => request<any>('/sales/invoices', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) => request<any>(`/sales/invoices/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: string) => request<any>(`/sales/invoices/${id}`, { method: 'DELETE' }),
         issue: (id: string) => request<any>(`/sales/invoices/${id}/issue`, { method: 'POST' }),
+        recordPayment: (id: string, amount: number) => request<any>(`/sales/invoices/${id}/record-payment`, { method: 'POST', body: JSON.stringify(amount) }),
         cancel: (id: string) => request<any>(`/sales/invoices/${id}/cancel`, { method: 'POST' }),
     },
     // Sales - Shipments
     shipments: {
-        getAll: (page = 1, pageSize = 20) => request<PagedResult<any>>(`/shipments?page=${page}&pageSize=${pageSize}`),
-        getById: (id: string) => request<any>(`/shipments/${id}`),
-        create: (data: any) => request<any>('/shipments', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) => request<any>(`/shipments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        ship: (id: string) => request<any>(`/shipments/${id}/ship`, { method: 'POST' }),
-        deliver: (id: string) => request<any>(`/shipments/${id}/deliver`, { method: 'POST' }),
+        getAll: (page = 1, pageSize = 20) => request<PagedResult<any>>(`/sales/shipments?page=${page}&pageSize=${pageSize}`),
+        getById: (id: string) => request<any>(`/sales/shipments/${id}`),
+        create: (data: any) => request<any>('/sales/shipments', { method: 'POST', body: JSON.stringify(data) }),
+        delete: (id: string) => request<any>(`/sales/shipments/${id}`, { method: 'DELETE' }),
+        ship: (id: string) => request<any>(`/sales/shipments/${id}/ship`, { method: 'POST' }),
+        deliver: (id: string) => request<any>(`/sales/shipments/${id}/deliver`, { method: 'POST' }),
+        setWaybill: (id: string, data: any) => request<any>(`/sales/shipments/${id}/waybill`, { method: 'POST', body: JSON.stringify(data) }),
     },
 
     // Procurement - Goods Receipts

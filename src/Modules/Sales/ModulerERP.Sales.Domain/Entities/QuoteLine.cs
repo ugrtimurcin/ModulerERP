@@ -29,12 +29,10 @@ public class QuoteLine
     /// <summary>Line discount amount</summary>
     public decimal DiscountAmount { get; private set; }
     
-    /// <summary>Tax percentage for this line</summary>
     public decimal TaxPercent { get; private set; }
-    
-    /// <summary>Line total before tax</summary>
+    public decimal TaxAmount { get; private set; }
+    public Guid? TaxRuleId { get; private set; }
     public decimal LineTotal { get; private set; }
-    
     public string? Notes { get; private set; }
 
     // Navigation
@@ -85,6 +83,8 @@ public class QuoteLine
     {
         var grossTotal = Quantity * UnitPrice;
         DiscountAmount = grossTotal * (DiscountPercent / 100);
-        LineTotal = grossTotal - DiscountAmount;
+        var netAmount = grossTotal - DiscountAmount;
+        TaxAmount = netAmount * (TaxPercent / 100);
+        LineTotal = netAmount; // Line total before tax
     }
 }

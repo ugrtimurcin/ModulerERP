@@ -175,7 +175,10 @@ const ShipmentDialog: React.FC<ShipmentDialogProps> = ({ isOpen, onClose, onSave
         try {
             let res;
             if (shipmentId) {
-                res = await api.shipments.update(shipmentId, dto);
+                // No update endpoint exists — shipments are immutable once created.
+                toast.error(t('common.error'), 'Shipments cannot be edited. Delete and recreate instead.');
+                setLoading(false);
+                return;
             } else {
                 res = await api.shipments.create(dto);
             }

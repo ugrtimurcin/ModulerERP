@@ -13,11 +13,23 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         builder.Property(x => x.QuoteNumber).IsRequired().HasMaxLength(50);
         builder.HasIndex(x => x.QuoteNumber).IsUnique();
 
-        builder.Property(x => x.ExchangeRate).HasPrecision(18, 4);
+        builder.Property(x => x.ExchangeRate).HasPrecision(18, 6);
         builder.Property(x => x.SubTotal).HasPrecision(18, 4);
         builder.Property(x => x.DiscountAmount).HasPrecision(18, 4);
         builder.Property(x => x.TaxAmount).HasPrecision(18, 4);
         builder.Property(x => x.TotalAmount).HasPrecision(18, 4);
+
+        // Dual currency
+        builder.Property(x => x.LocalExchangeRate).HasPrecision(18, 6);
+        builder.Property(x => x.LocalSubTotal).HasPrecision(18, 4);
+        builder.Property(x => x.LocalTaxAmount).HasPrecision(18, 4);
+        builder.Property(x => x.LocalTotalAmount).HasPrecision(18, 4);
+
+        // Stopaj & Document Discount
+        builder.Property(x => x.WithholdingTaxRate).HasPrecision(5, 2);
+        builder.Property(x => x.WithholdingTaxAmount).HasPrecision(18, 4);
+        builder.Property(x => x.DocumentDiscountRate).HasPrecision(5, 2);
+        builder.Property(x => x.DocumentDiscountAmount).HasPrecision(18, 4);
 
         builder.Property(x => x.ShippingAddress).HasColumnType("jsonb");
         builder.Property(x => x.BillingAddress).HasColumnType("jsonb");
@@ -45,6 +57,7 @@ public class QuoteLineConfiguration : IEntityTypeConfiguration<QuoteLine>
         builder.Property(x => x.DiscountPercent).HasPrecision(5, 2);
         builder.Property(x => x.DiscountAmount).HasPrecision(18, 4);
         builder.Property(x => x.TaxPercent).HasPrecision(5, 2);
+        builder.Property(x => x.TaxAmount).HasPrecision(18, 4);
         builder.Property(x => x.LineTotal).HasPrecision(18, 4);
     }
 }

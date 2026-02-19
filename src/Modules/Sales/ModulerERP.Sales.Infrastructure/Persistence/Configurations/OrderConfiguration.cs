@@ -13,11 +13,23 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.OrderNumber).IsRequired().HasMaxLength(50);
         builder.HasIndex(x => x.OrderNumber).IsUnique();
 
-        builder.Property(x => x.ExchangeRate).HasPrecision(18, 4);
+        builder.Property(x => x.ExchangeRate).HasPrecision(18, 6);
         builder.Property(x => x.SubTotal).HasPrecision(18, 4);
         builder.Property(x => x.DiscountAmount).HasPrecision(18, 4);
         builder.Property(x => x.TaxAmount).HasPrecision(18, 4);
         builder.Property(x => x.TotalAmount).HasPrecision(18, 4);
+
+        // Dual currency
+        builder.Property(x => x.LocalExchangeRate).HasPrecision(18, 6);
+        builder.Property(x => x.LocalSubTotal).HasPrecision(18, 4);
+        builder.Property(x => x.LocalTaxAmount).HasPrecision(18, 4);
+        builder.Property(x => x.LocalTotalAmount).HasPrecision(18, 4);
+
+        // Stopaj & Document Discount
+        builder.Property(x => x.WithholdingTaxRate).HasPrecision(5, 2);
+        builder.Property(x => x.WithholdingTaxAmount).HasPrecision(18, 4);
+        builder.Property(x => x.DocumentDiscountRate).HasPrecision(5, 2);
+        builder.Property(x => x.DocumentDiscountAmount).HasPrecision(18, 4);
 
         builder.Property(x => x.ShippingAddress).HasColumnType("jsonb");
         builder.Property(x => x.BillingAddress).HasColumnType("jsonb");
@@ -30,7 +42,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.HasMany(x => x.Shipments)
                .WithOne()
-               .HasForeignKey("OrderId") // Assuming implicit FK if not explicitly defined in Shipment
+               .HasForeignKey("OrderId")
                .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Invoices)
@@ -54,6 +66,9 @@ public class OrderLineConfiguration : IEntityTypeConfiguration<OrderLine>
         builder.Property(x => x.DiscountPercent).HasPrecision(5, 2);
         builder.Property(x => x.DiscountAmount).HasPrecision(18, 4);
         builder.Property(x => x.TaxPercent).HasPrecision(5, 2);
+        builder.Property(x => x.TaxAmount).HasPrecision(18, 4);
+        builder.Property(x => x.ShippedQuantity).HasPrecision(18, 4);
+        builder.Property(x => x.InvoicedQuantity).HasPrecision(18, 4);
         builder.Property(x => x.LineTotal).HasPrecision(18, 4);
     }
 }

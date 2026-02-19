@@ -8,20 +8,25 @@ public class PriceListConfiguration : IEntityTypeConfiguration<PriceList>
 {
     public void Configure(EntityTypeBuilder<PriceList> builder)
     {
-        builder.ToTable("PriceLists");
-
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Code)
-            .IsRequired()
-            .HasMaxLength(50);
-            
-        builder.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.Description).HasMaxLength(500);
 
-        builder.Property(x => x.Name)
-            .IsRequired()
-            .HasMaxLength(200);
+        builder.HasMany(x => x.Items)
+               .WithOne(x => x.PriceList)
+               .HasForeignKey(x => x.PriceListId)
+               .OnDelete(DeleteBehavior.Cascade);
+    }
+}
 
-        builder.HasQueryFilter(e => !e.IsDeleted);
+public class PriceListItemConfiguration : IEntityTypeConfiguration<PriceListItem>
+{
+    public void Configure(EntityTypeBuilder<PriceListItem> builder)
+    {
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Price).HasPrecision(18, 4);
+        builder.Property(x => x.MinQuantity).HasPrecision(18, 4);
     }
 }

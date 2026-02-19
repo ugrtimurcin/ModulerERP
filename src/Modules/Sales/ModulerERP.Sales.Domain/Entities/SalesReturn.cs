@@ -4,33 +4,37 @@ using ModulerERP.Sales.Domain.Enums;
 namespace ModulerERP.Sales.Domain.Entities;
 
 /// <summary>
-/// Customer returns (RMA) processing.
+/// Customer returns (RMA) with dual-currency for KKTC compliance.
 /// </summary>
 public class SalesReturn : BaseEntity
 {
-    /// <summary>Return number (e.g., 'RET-2026-001')</summary>
     public string ReturnNumber { get; private set; } = string.Empty;
-    
+
     public Guid? InvoiceId { get; private set; }
     public Guid PartnerId { get; private set; }
-    
+
     public ReturnStatus Status { get; private set; } = ReturnStatus.Pending;
-    
+
+    // ── Transaction Currency ──
     public Guid CurrencyId { get; private set; }
     public decimal ExchangeRate { get; private set; } = 1;
-    
-    /// <summary>Reason for return</summary>
+
+    // ── Local Currency (KKTC: TRY) ──
+    public Guid? LocalCurrencyId { get; private set; }
+    public decimal LocalExchangeRate { get; private set; } = 1;
+    public decimal LocalTotalAmount { get; private set; }
+    public decimal LocalRefundAmount { get; private set; }
+
+    // ── Details ──
     public string Reason { get; private set; } = string.Empty;
-    
-    /// <summary>Warehouse to receive returned goods</summary>
     public Guid? WarehouseId { get; private set; }
-    
+
     public DateTime? ApprovedDate { get; private set; }
     public DateTime? ReceivedDate { get; private set; }
     public DateTime? RefundedDate { get; private set; }
-    
+
     public string? Notes { get; private set; }
-    
+
     public decimal TotalAmount { get; private set; }
     public decimal RefundAmount { get; private set; }
 
@@ -49,7 +53,9 @@ public class SalesReturn : BaseEntity
         string reason,
         Guid createdByUserId,
         Guid? invoiceId = null,
-        Guid? warehouseId = null)
+        Guid? warehouseId = null,
+        Guid? localCurrencyId = null,
+        decimal localExchangeRate = 1)
     {
         var salesReturn = new SalesReturn
         {
@@ -59,7 +65,9 @@ public class SalesReturn : BaseEntity
             ExchangeRate = exchangeRate,
             Reason = reason,
             InvoiceId = invoiceId,
-            WarehouseId = warehouseId
+            WarehouseId = warehouseId,
+            LocalCurrencyId = localCurrencyId,
+            LocalExchangeRate = localExchangeRate
         };
 
         salesReturn.SetTenant(tenantId);
@@ -67,26 +75,46 @@ public class SalesReturn : BaseEntity
         return salesReturn;
     }
 
+    // ── Status Transitions (with guards) ──
+
     public void Approve()
     {
+        if (Status != ReturnStatus.Pending)
+            throw new InvalidOperationException($"Cannot approve return in '{Status}' status. Must be Pending.");
         Status = ReturnStatus.Approved;
         ApprovedDate = DateTime.UtcNow;
     }
 
     public void Receive()
     {
+        if (Status != ReturnStatus.Approved)
+            throw new InvalidOperationException($"Cannot receive return in '{Status}' status. Must be Approved.");
         Status = ReturnStatus.Received;
         ReceivedDate = DateTime.UtcNow;
     }
 
     public void Refund(decimal amount)
     {
+        if (Status != ReturnStatus.Received)
+            throw new InvalidOperationException($"Cannot refund return in '{Status}' status. Must be Received.");
         Status = ReturnStatus.Refunded;
         RefundAmount = amount;
+        LocalRefundAmount = amount * LocalExchangeRate;
         RefundedDate = DateTime.UtcNow;
     }
 
-    public void Reject() => Status = ReturnStatus.Rejected;
+    public void Reject()
+    {
+        if (Status != ReturnStatus.Pending)
+            throw new InvalidOperationException($"Cannot reject return in '{Status}' status. Must be Pending.");
+        Status = ReturnStatus.Rejected;
+    }
 
-    public void UpdateTotalAmount(decimal totalAmount) => TotalAmount = totalAmount;
+    public void UpdateTotalAmount(decimal totalAmount)
+    {
+        TotalAmount = totalAmount;
+        LocalTotalAmount = totalAmount * LocalExchangeRate;
+    }
+
+    public void SetNotes(string? notes) => Notes = notes;
 }

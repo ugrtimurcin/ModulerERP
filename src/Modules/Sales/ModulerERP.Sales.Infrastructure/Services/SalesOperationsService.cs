@@ -1,27 +1,30 @@
-using ModulerERP.Sales.Application.Interfaces;
+using MediatR;
+using ModulerERP.Sales.Application.Features.Invoices.Commands;
 using ModulerERP.SharedKernel.Interfaces;
 
 namespace ModulerERP.Sales.Infrastructure.Services;
 
 public class SalesOperationsService : ISalesOperationsService
 {
-    private readonly IInvoiceService _invoiceService;
+    private readonly ISender _sender;
 
-    public SalesOperationsService(IInvoiceService invoiceService)
+    public SalesOperationsService(ISender sender)
     {
-        _invoiceService = invoiceService;
+        _sender = sender;
     }
 
     public async Task<Guid> CreateInvoiceFromProjectPaymentAsync(Guid tenantId, Guid customerId, decimal amount, string description, Guid currencyId)
     {
-        // This is a simplified integration.
-        // In reality, we would map the DTO properly.
-        // Assuming IInvoiceService has a method to create invoice.
-        // Since I don't know the exact signature of CreateAsync in IInvoiceService, I will treat this as a placeholder
-        // or need to inspect IInvoiceService.
-        
-        // return await _invoiceService.CreateAsync(...);
-        
-        return Guid.NewGuid(); // Placeholder to allow build and runtime flow
+        var now = DateTime.UtcNow;
+        var command = new CreateInvoiceCommand(
+            PartnerId: customerId,
+            CurrencyId: currencyId,
+            ExchangeRate: 1,
+            InvoiceDate: now,
+            DueDate: now.AddDays(30),
+            Notes: description);
+
+        var invoice = await _sender.Send(command);
+        return invoice.Id;
     }
 }

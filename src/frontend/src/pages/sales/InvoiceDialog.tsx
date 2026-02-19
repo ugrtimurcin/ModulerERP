@@ -207,7 +207,11 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({ isOpen, onClose, onSave, 
         try {
             let res;
             if (invoiceId) {
-                res = await api.invoices.update(invoiceId, dto);
+                // No update endpoint exists — invoices are immutable once created.
+                // Cancel and recreate if needed.
+                toast.error(t('common.error'), 'Invoices cannot be edited. Delete and recreate instead.');
+                setLoading(false);
+                return;
             } else {
                 res = await api.invoices.create(dto);
             }

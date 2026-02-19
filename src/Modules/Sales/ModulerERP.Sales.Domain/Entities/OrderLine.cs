@@ -25,6 +25,8 @@ public class OrderLine
     public decimal DiscountPercent { get; private set; }
     public decimal DiscountAmount { get; private set; }
     public decimal TaxPercent { get; private set; }
+    public decimal TaxAmount { get; private set; }
+    public Guid? TaxRuleId { get; private set; }
     public decimal LineTotal { get; private set; }
     
     public string? Notes { get; private set; }
@@ -84,6 +86,8 @@ public class OrderLine
     {
         var grossTotal = Quantity * UnitPrice;
         DiscountAmount = grossTotal * (DiscountPercent / 100);
-        LineTotal = grossTotal - DiscountAmount;
+        var netAmount = grossTotal - DiscountAmount;
+        TaxAmount = netAmount * (TaxPercent / 100);
+        LineTotal = netAmount; // Line total before tax
     }
 }

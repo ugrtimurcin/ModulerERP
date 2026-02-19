@@ -4,36 +4,34 @@ using ModulerERP.Sales.Domain.Enums;
 namespace ModulerERP.Sales.Domain.Entities;
 
 /// <summary>
-/// Physical delivery to customer with tracking.
+/// Physical delivery with İrsaliye (waybill) support for KKTC compliance.
 /// </summary>
 public class Shipment : BaseEntity
 {
-    /// <summary>Shipment number (e.g., 'SHP-2026-001')</summary>
     public string ShipmentNumber { get; private set; } = string.Empty;
-    
+
     public Guid OrderId { get; private set; }
     public Guid WarehouseId { get; private set; }
-    
+
     public ShipmentStatus Status { get; private set; } = ShipmentStatus.Pending;
-    
-    /// <summary>Carrier name (e.g., 'DHL', 'FedEx')</summary>
+
+    // ── Carrier & Tracking ──
     public string? Carrier { get; private set; }
-    
-    /// <summary>Carrier tracking number</summary>
     public string? TrackingNumber { get; private set; }
-    
-    /// <summary>Estimated delivery date</summary>
+
+    // ── Dates ──
     public DateTime? EstimatedDeliveryDate { get; private set; }
-    
-    /// <summary>Actual ship date</summary>
     public DateTime? ShippedDate { get; private set; }
-    
-    /// <summary>Actual delivery date</summary>
     public DateTime? DeliveredDate { get; private set; }
-    
-    /// <summary>Shipping address as JSON</summary>
+
+    // ── İrsaliye (Waybill) — KKTC Legal ──
+    public string? WaybillNumber { get; private set; }
+    public string? DriverName { get; private set; }
+    public string? VehiclePlate { get; private set; }
+    public DateTime? DispatchDateTime { get; private set; }
+
+    // ── Address ──
     public string? ShippingAddress { get; private set; }
-    
     public string? Notes { get; private set; }
 
     // Navigation
@@ -67,20 +65,43 @@ public class Shipment : BaseEntity
         return shipment;
     }
 
+    // ── İrsaliye Assignment ──
+
+    public void SetWaybillInfo(string waybillNumber, string? driverName, string? vehiclePlate, DateTime? dispatchDateTime)
+    {
+        WaybillNumber = waybillNumber;
+        DriverName = driverName;
+        VehiclePlate = vehiclePlate;
+        DispatchDateTime = dispatchDateTime;
+    }
+
+    // ── Status Transitions (with guards) ──
+
     public void Ship(string? trackingNumber = null)
     {
+        if (Status != ShipmentStatus.Pending)
+            throw new InvalidOperationException($"Cannot ship in '{Status}' status. Must be Pending.");
         Status = ShipmentStatus.Shipped;
         ShippedDate = DateTime.UtcNow;
         TrackingNumber = trackingNumber;
     }
 
-    public void MarkInTransit() => Status = ShipmentStatus.InTransit;
+    public void MarkInTransit()
+    {
+        if (Status != ShipmentStatus.Shipped)
+            throw new InvalidOperationException($"Cannot mark in-transit in '{Status}' status. Must be Shipped.");
+        Status = ShipmentStatus.InTransit;
+    }
 
     public void MarkDelivered()
     {
+        if (Status != ShipmentStatus.Shipped && Status != ShipmentStatus.InTransit)
+            throw new InvalidOperationException($"Cannot mark delivered in '{Status}' status.");
         Status = ShipmentStatus.Delivered;
         DeliveredDate = DateTime.UtcNow;
     }
 
     public void MarkFailed() => Status = ShipmentStatus.Failed;
+
+    public void SetNotes(string? notes) => Notes = notes;
 }

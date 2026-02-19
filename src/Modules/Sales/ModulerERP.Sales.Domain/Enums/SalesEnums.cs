@@ -62,3 +62,13 @@ public enum ReturnStatus
     Refunded = 3,
     Rejected = 4
 }
+
+/// <summary>
+/// Credit note status
+/// </summary>
+public enum CreditNoteStatus
+{
+    Draft = 0,
+    Issued = 1,
+    Cancelled = 2
+}

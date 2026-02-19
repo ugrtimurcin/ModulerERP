@@ -5,55 +5,48 @@ namespace ModulerERP.Sales.Domain.Entities;
 
 /// <summary>
 /// Sales quotation with multi-currency and revision support.
-/// TRNC Critical - supports price freezing in different currencies.
+/// KKTC Critical - supports price freezing in different currencies with local TRY equivalents.
 /// </summary>
 public class Quote : BaseEntity
 {
-    /// <summary>Quote number with revision (e.g., 'QT-2026-001-R2')</summary>
     public string QuoteNumber { get; private set; } = string.Empty;
-    
-    /// <summary>Revision number for tracking changes</summary>
     public int RevisionNumber { get; private set; } = 1;
-    
+
     public Guid PartnerId { get; private set; }
     public Guid? OpportunityId { get; private set; }
-    
+
     public QuoteStatus Status { get; private set; } = QuoteStatus.Draft;
-    
-    /// <summary>Quote currency</summary>
+
+    // ── Transaction Currency ──
     public Guid CurrencyId { get; private set; }
-    
-    /// <summary>Frozen exchange rate at quote time</summary>
     public decimal ExchangeRate { get; private set; } = 1;
-    
-    /// <summary>When the quote was sent to customer</summary>
+
+    // ── Local Currency (KKTC: TRY) ──
+    public Guid? LocalCurrencyId { get; private set; }
+    public decimal LocalExchangeRate { get; private set; } = 1;
+    public decimal LocalSubTotal { get; private set; }
+    public decimal LocalTaxAmount { get; private set; }
+    public decimal LocalTotalAmount { get; private set; }
+
+    // ── Dates & Addresses ──
     public DateTime? SentDate { get; private set; }
-    
-    /// <summary>Quote expiration date</summary>
     public DateTime? ValidUntil { get; private set; }
-    
-    /// <summary>Snapshot shipping address as JSON</summary>
     public string? ShippingAddress { get; private set; }
-    
-    /// <summary>Snapshot billing address as JSON</summary>
     public string? BillingAddress { get; private set; }
-    
-    /// <summary>Payment terms (e.g., 'Net 30')</summary>
     public string? PaymentTerms { get; private set; }
-    
     public string? Notes { get; private set; }
-    
-    /// <summary>Subtotal before discounts/taxes</summary>
+
+    // ── Totals ──
     public decimal SubTotal { get; private set; }
-    
-    /// <summary>Total discount amount</summary>
     public decimal DiscountAmount { get; private set; }
-    
-    /// <summary>Total tax amount</summary>
     public decimal TaxAmount { get; private set; }
-    
-    /// <summary>Grand total</summary>
     public decimal TotalAmount { get; private set; }
+
+    // ── Document-level Discount & Withholding Tax (Stopaj) ──
+    public decimal DocumentDiscountRate { get; private set; }
+    public decimal DocumentDiscountAmount { get; private set; }
+    public decimal WithholdingTaxRate { get; private set; }
+    public decimal WithholdingTaxAmount { get; private set; }
 
     // Navigation
     public ICollection<QuoteLine> Lines { get; private set; } = new List<QuoteLine>();
@@ -69,7 +62,9 @@ public class Quote : BaseEntity
         Guid createdByUserId,
         Guid? opportunityId = null,
         DateTime? validUntil = null,
-        string? paymentTerms = null)
+        string? paymentTerms = null,
+        Guid? localCurrencyId = null,
+        decimal localExchangeRate = 1)
     {
         var quote = new Quote
         {
@@ -79,7 +74,9 @@ public class Quote : BaseEntity
             ExchangeRate = exchangeRate,
             OpportunityId = opportunityId,
             ValidUntil = validUntil,
-            PaymentTerms = paymentTerms
+            PaymentTerms = paymentTerms,
+            LocalCurrencyId = localCurrencyId,
+            LocalExchangeRate = localExchangeRate
         };
 
         quote.SetTenant(tenantId);
@@ -87,15 +84,38 @@ public class Quote : BaseEntity
         return quote;
     }
 
+    // ── Status Transitions (with guards) ──
+
     public void Send()
     {
+        if (Status != QuoteStatus.Draft)
+            throw new InvalidOperationException($"Cannot send a quote in '{Status}' status. Must be Draft.");
         Status = QuoteStatus.Sent;
         SentDate = DateTime.UtcNow;
     }
 
-    public void Accept() => Status = QuoteStatus.Accepted;
-    public void Reject() => Status = QuoteStatus.Rejected;
+    public void Accept()
+    {
+        if (Status != QuoteStatus.Sent)
+            throw new InvalidOperationException($"Cannot accept a quote in '{Status}' status. Must be Sent.");
+        Status = QuoteStatus.Accepted;
+    }
+
+    public void Reject()
+    {
+        if (Status != QuoteStatus.Sent)
+            throw new InvalidOperationException($"Cannot reject a quote in '{Status}' status. Must be Sent.");
+        Status = QuoteStatus.Rejected;
+    }
+
     public void Expire() => Status = QuoteStatus.Expired;
+
+    public void MarkConverted()
+    {
+        if (Status != QuoteStatus.Accepted)
+            throw new InvalidOperationException($"Cannot convert a quote in '{Status}' status. Must be Accepted.");
+        Status = QuoteStatus.Converted;
+    }
 
     public void CreateRevision()
     {
@@ -103,12 +123,28 @@ public class Quote : BaseEntity
         Status = QuoteStatus.Draft;
     }
 
-    public void UpdateTotals(decimal subTotal, decimal discountAmount, decimal taxAmount)
+    // ── Totals ──
+
+    public void UpdateTotals(decimal subTotal, decimal discountAmount, decimal taxAmount,
+        decimal docDiscountRate = 0, decimal withholdingTaxRate = 0)
     {
         SubTotal = subTotal;
         DiscountAmount = discountAmount;
         TaxAmount = taxAmount;
-        TotalAmount = subTotal - discountAmount + taxAmount;
+
+        DocumentDiscountRate = docDiscountRate;
+        DocumentDiscountAmount = (subTotal - discountAmount) * (docDiscountRate / 100);
+
+        var netAfterDocDiscount = subTotal - discountAmount - DocumentDiscountAmount;
+        WithholdingTaxRate = withholdingTaxRate;
+        WithholdingTaxAmount = netAfterDocDiscount * (withholdingTaxRate / 100);
+
+        TotalAmount = netAfterDocDiscount + taxAmount - WithholdingTaxAmount;
+
+        // Local currency equivalents
+        LocalSubTotal = SubTotal * LocalExchangeRate;
+        LocalTaxAmount = TaxAmount * LocalExchangeRate;
+        LocalTotalAmount = TotalAmount * LocalExchangeRate;
     }
 
     public void SetAddresses(string? shippingAddress, string? billingAddress)
@@ -116,4 +152,6 @@ public class Quote : BaseEntity
         ShippingAddress = shippingAddress;
         BillingAddress = billingAddress;
     }
+
+    public void SetNotes(string? notes) => Notes = notes;
 }

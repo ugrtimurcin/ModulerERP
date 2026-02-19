@@ -15,6 +15,11 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
 
         builder.Property(x => x.ShippingAddress).HasColumnType("jsonb");
         
+        // İrsaliye fields
+        builder.Property(x => x.WaybillNumber).HasMaxLength(50);
+        builder.Property(x => x.DriverName).HasMaxLength(200);
+        builder.Property(x => x.VehiclePlate).HasMaxLength(20);
+        
         // Relationships
         builder.HasMany(x => x.Lines)
                .WithOne(x => x.Shipment)

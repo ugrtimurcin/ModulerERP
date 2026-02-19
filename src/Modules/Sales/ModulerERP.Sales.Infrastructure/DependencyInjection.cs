@@ -1,13 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ModulerERP.Sales.Infrastructure.Persistence;
-using ModulerERP.SharedKernel.Interfaces;
-
 using ModulerERP.Sales.Application.Interfaces;
-using ModulerERP.Sales.Application.Services;
+using ModulerERP.Sales.Infrastructure.Persistence;
+using ModulerERP.Sales.Infrastructure.Repositories;
 using ModulerERP.Sales.Infrastructure.Services;
-
+using ModulerERP.SharedKernel.Interfaces;
 
 namespace ModulerERP.Sales.Infrastructure;
 
@@ -20,18 +18,22 @@ public static class DependencyInjection
                 configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly(typeof(SalesDbContext).Assembly.FullName)));
 
-        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<SalesDbContext>());
-        services.AddScoped<IQuoteRepository, QuoteRepository>();
-        services.AddScoped<IQuoteService, QuoteService>();
-        services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddScoped<IOrderService, OrderService>();
-        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
-        services.AddScoped<IInvoiceService, InvoiceService>();
-        services.AddScoped<IShipmentRepository, ShipmentRepository>();
-        services.AddScoped<IShipmentService, ShipmentService>();
+        // Unit of Work
+        services.AddScoped<ISalesUnitOfWork>(provider => provider.GetRequiredService<SalesDbContext>());
 
+        // Generic Repository
+        services.AddScoped(typeof(IRepository<>), typeof(SalesRepository<>));
+
+        // MediatR handlers from Application + Infrastructure assemblies
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(ISalesUnitOfWork).Assembly);          // Application (Commands)
+            cfg.RegisterServicesFromAssembly(typeof(SalesDbContext).Assembly);              // Infrastructure (Queries)
+        });
+
+        // Cross-module integration service
         services.AddScoped<ISalesOperationsService, SalesOperationsService>();
-        
+
         return services;
     }
 }

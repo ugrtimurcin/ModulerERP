@@ -1,72 +1,67 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ModulerERP.Sales.Application.DTOs;
-using ModulerERP.Sales.Application.Interfaces;
-using ModulerERP.SharedKernel.Results;
+using MediatR;
+using ModulerERP.Sales.Application.Features.Invoices.Commands;
+using ModulerERP.Sales.Infrastructure.Features.Invoices.Queries;
 
 namespace ModulerERP.Api.Controllers.Sales;
 
-[ApiController]
+[Authorize]
 [Route("api/sales/invoices")]
-public class InvoicesController : ControllerBase
+public class InvoicesController : BaseApiController
 {
-    private readonly IInvoiceService _invoiceService;
-
-    public InvoicesController(IInvoiceService invoiceService)
-    {
-        _invoiceService = invoiceService;
-    }
+    private readonly ISender _sender;
+    public InvoicesController(ISender sender) => _sender = sender;
 
     [HttpGet]
-    public async Task<ActionResult<Result<List<InvoiceDto>>>> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
     {
-        var result = await _invoiceService.GetAllAsync();
-        return Ok(result);
+        var result = await _sender.Send(new GetAllInvoicesQuery(page, pageSize), ct);
+        return Ok(new { success = true, data = result });
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Result<InvoiceDto>>> GetById(Guid id)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
-        var result = await _invoiceService.GetByIdAsync(id);
-        if (!result.IsSuccess) return NotFound(result);
-        return Ok(result);
+        var result = await _sender.Send(new GetInvoiceByIdQuery(id), ct);
+        if (result is null) return NotFound(new { success = false, error = "Invoice not found" });
+        return Ok(new { success = true, data = result });
     }
 
     [HttpPost]
-    public async Task<ActionResult<Result<Guid>>> Create([FromBody] CreateInvoiceDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateInvoiceCommand command, CancellationToken ct)
     {
-        var result = await _invoiceService.CreateAsync(dto);
-        return Ok(result);
+        var result = await _sender.Send(command, ct);
+        return Ok(new { success = true, data = result });
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<Result>> Update(Guid id, [FromBody] UpdateInvoiceDto dto)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        var result = await _invoiceService.UpdateAsync(id, dto);
-        if (!result.IsSuccess) return BadRequest(result);
-        return Ok(result);
+        await _sender.Send(new DeleteInvoiceCommand(id), ct);
+        return Ok(new { success = true, message = "Invoice deleted" });
     }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<Result>> Delete(Guid id)
+    [HttpPost("{id:guid}/issue")]
+    public async Task<IActionResult> Issue(Guid id, CancellationToken ct)
     {
-        var result = await _invoiceService.DeleteAsync(id);
-        if (!result.IsSuccess) return BadRequest(result);
-        return Ok(result);
+        var result = await _sender.Send(new IssueInvoiceCommand(id), ct);
+        return Ok(new { success = true, data = result });
     }
 
-    [HttpPost("{id}/issue")]
-    public async Task<ActionResult<Result>> Issue(Guid id)
+    [HttpPost("{id:guid}/record-payment")]
+    public async Task<IActionResult> RecordPayment(Guid id, [FromBody] decimal amount, CancellationToken ct)
     {
-        var result = await _invoiceService.IssueAsync(id);
-        if (!result.IsSuccess) return BadRequest(result);
-        return Ok(result);
+        var result = await _sender.Send(new RecordInvoicePaymentCommand(id, amount), ct);
+        return Ok(new { success = true, data = result });
     }
 
-    [HttpPost("{id}/cancel")]
-    public async Task<ActionResult<Result>> Cancel(Guid id)
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<IActionResult> Cancel(Guid id, CancellationToken ct)
     {
-        var result = await _invoiceService.CancelAsync(id);
-        if (!result.IsSuccess) return BadRequest(result);
-        return Ok(result);
+        var result = await _sender.Send(new CancelInvoiceCommand(id), ct);
+        return Ok(new { success = true, data = result });
     }
 }

@@ -21,6 +21,7 @@ public class InvoiceLine
     public decimal DiscountAmount { get; private set; }
     public decimal TaxPercent { get; private set; }
     public decimal TaxAmount { get; private set; }
+    public Guid? TaxRuleId { get; private set; }
     public decimal LineTotal { get; private set; }
     
     public string? Notes { get; private set; }
