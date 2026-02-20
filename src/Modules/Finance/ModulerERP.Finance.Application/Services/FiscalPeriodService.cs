@@ -12,11 +12,13 @@ public class FiscalPeriodService : IFiscalPeriodService
 {
     private readonly IRepository<FiscalPeriod> _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
 
-    public FiscalPeriodService(IRepository<FiscalPeriod> repository, IUnitOfWork unitOfWork)
+    public FiscalPeriodService(IRepository<FiscalPeriod> repository, IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<List<FiscalPeriodDto>>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -64,7 +66,7 @@ public class FiscalPeriodService : IFiscalPeriodService
              return Result<FiscalPeriodDto>.Failure($"Period code '{dto.Code}' already exists.");
 
          var period = FiscalPeriod.Create(
-             Guid.Empty,
+             _currentUserService.TenantId,
              dto.Code,
              dto.Name,
              dto.StartDate,
@@ -86,7 +88,7 @@ public class FiscalPeriodService : IFiscalPeriodService
         var period = await _repository.GetByIdAsync(id, cancellationToken);
         if (period == null) return Result<FiscalPeriodDto>.Failure("Period not found");
 
-        if (dto.Status == PeriodStatus.Open) period.Reopen();
+        if (dto.Status == PeriodStatus.Open) period.Reopen("Reopened via API update", true);
         else if (dto.Status == PeriodStatus.Closed) period.Close();
         else if (dto.Status == PeriodStatus.Locked) period.Lock();
 
@@ -113,7 +115,7 @@ public class FiscalPeriodService : IFiscalPeriodService
             var endDate = startDate.AddMonths(1).AddDays(-1);
             
             var period = FiscalPeriod.Create(
-                Guid.Empty,
+                _currentUserService.TenantId,
                 code,
                 startDate.ToString("MMMM yyyy"),
                 startDate,

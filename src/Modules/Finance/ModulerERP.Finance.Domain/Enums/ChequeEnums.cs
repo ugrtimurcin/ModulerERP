@@ -3,7 +3,8 @@ namespace ModulerERP.Finance.Domain.Enums;
 public enum ChequeType
 {
     OwnCheque = 1,
-    CustomerCheque = 2
+    CustomerCheque = 2,
+    Senet = 3
 }
 
 public enum ChequeStatus

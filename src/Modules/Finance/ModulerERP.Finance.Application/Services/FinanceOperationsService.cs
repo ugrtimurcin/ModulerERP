@@ -12,17 +12,20 @@ public class FinanceOperationsService : IFinanceOperationsService
     private readonly IRepository<Account> _accountRepository; // Use Generic Repo for Account
     private readonly IJournalEntryRepository _journalEntryRepository; // Use Specific Repo Interface
     private readonly IUnitOfWork _unitOfWork; // Needed for SaveChanges if repos don't save immediately
+    private readonly ICurrentUserService _currentUserService;
 
     public FinanceOperationsService(
         IRepository<FiscalPeriod> fiscalPeriodRepository,
         IRepository<Account> accountRepository,
         IJournalEntryRepository journalEntryRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService)
     {
         _fiscalPeriodRepository = fiscalPeriodRepository;
         _accountRepository = accountRepository;
         _journalEntryRepository = journalEntryRepository;
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result> CreateReceivableAsync(
@@ -64,7 +67,7 @@ public class FinanceOperationsService : IFinanceOperationsService
                 entryNumber,
                 period.Id,
                 invoiceDate,
-                Guid.Empty, // CreatedBy (System)
+                _currentUserService.UserId, // CreatedBy (System or User)
                 "SalesInvoice",
                 sourceDocumentId,
                 invoiceNumber,
@@ -84,39 +87,19 @@ public class FinanceOperationsService : IFinanceOperationsService
             // For MVP: We will Look up accounts by code or type. 
             // If not found, create them.
             
-            var arAccount = await GetOrCreateAccount(tenantId, "1200", "Accounts Receivable", AccountType.Asset, cancellationToken);
-            var salesAccount = await GetOrCreateAccount(tenantId, "4000", "Sales Revenue", AccountType.Revenue, cancellationToken);
+            var arAccount = await GetAccount(tenantId, "1200", ct: cancellationToken);
+            if (arAccount == null) return Result.Failure("AR Account '1200' not found. Please ensure Chart of Accounts is seeded.");
+
+            var salesAccount = await GetAccount(tenantId, "4000", ct: cancellationToken);
+            if (salesAccount == null) return Result.Failure("Sales Revenue Account '4000' not found. Please ensure Chart of Accounts is seeded.");
             
             // Add AR Line (Debit)
-            je.Lines.Add(JournalEntryLine.CreateDebit(
-                je.Id,
-                arAccount.Id,
-                amount,
-                1, // Line Number
-                description ?? $"Invoice {invoiceNumber}",
-                partnerId, // PartnerId
-                null, // CostCenter
-                null, // Currency
-                null, 
-                null
-            ));
+            je.AddLine(arAccount, amount, 0, description ?? $"Invoice {invoiceNumber}", partnerId);
 
             // Add Sales Line (Credit)
-            je.Lines.Add(JournalEntryLine.CreateCredit(
-                je.Id,
-                salesAccount.Id,
-                amount,
-                2, // Line Number
-                "Sales Revenue",
-                null, // PartnerId
-                null, // CostCenter
-                null, // Currency
-                null,
-                null
-            ));
+            je.AddLine(salesAccount, 0, amount, "Sales Revenue");
             
-            je.UpdateTotals(amount, amount);
-            je.Post(Guid.Empty); // Auto-post for now
+            je.Post(_currentUserService.UserId); // Auto-post for now
 
             await _journalEntryRepository.AddAsync(je, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -129,15 +112,8 @@ public class FinanceOperationsService : IFinanceOperationsService
         }
     }
 
-    private async Task<Account> GetOrCreateAccount(Guid tenantId, string code, string name, AccountType type, CancellationToken ct)
+    private async Task<Account?> GetAccount(Guid tenantId, string code, CancellationToken ct)
     {
-        var acc = await _accountRepository.FirstOrDefaultAsync(a => a.Code == code, ct);
-        if (acc == null)
-        {
-            acc = Account.Create(tenantId, code, name, type, Guid.Empty);
-            await _accountRepository.AddAsync(acc, ct);
-            // Save?
-        }
-        return acc;
+        return await _accountRepository.FirstOrDefaultAsync(a => a.Code == code && a.TenantId == tenantId, ct);
     }
 }

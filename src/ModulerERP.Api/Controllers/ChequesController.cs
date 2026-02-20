@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ModulerERP.Finance.Application.DTOs;
 using ModulerERP.Finance.Application.Interfaces;
+using MediatR;
 
 
 namespace ModulerERP.Api.Controllers;
@@ -8,58 +9,42 @@ namespace ModulerERP.Api.Controllers;
 [ApiController]
 [Route("api/finance/cheques")]
 // [Authorize(Roles = "Finance")] // Uncomment when ready
-public class ChequesController : ControllerBase
+public class ChequesController : BaseApiController
 {
-    private readonly IChequeService _chequeService;
+    private readonly ISender _sender;
 
-    public ChequesController(IChequeService chequeService)
+    public ChequesController(ISender sender)
     {
-        _chequeService = chequeService;
+        _sender = sender;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<List<ChequeDto>>> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _chequeService.GetAllAsync(cancellationToken);
-        if (!result.IsSuccess) return BadRequest(new { success = false, error = result.Error });
-        return Ok(new { success = true, data = result.Value });
+        return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.Cheques.Queries.GetChequesQuery(), cancellationToken));
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ChequeDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _chequeService.GetByIdAsync(id, cancellationToken);
-        if (!result.IsSuccess) return NotFound(new { success = false, error = result.Error });
-        return Ok(new { success = true, data = result.Value });
+        return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.Cheques.Queries.GetChequeByIdQuery(id), cancellationToken));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateChequeDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ChequeDto>> Create([FromBody] CreateChequeDto dto, CancellationToken cancellationToken)
     {
-        // TODO: Get UserId from Claims
-        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001"); 
-        
-        var result = await _chequeService.CreateAsync(dto, userId, cancellationToken);
-        if (!result.IsSuccess) return BadRequest(new { success = false, error = result.Error });
-        return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, new { success = true, data = result.Value });
+        return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.Cheques.Commands.CreateChequeCommand(dto, CurrentUserId), cancellationToken));
     }
     
     [HttpPost("status")]
-    public async Task<IActionResult> UpdateStatus([FromBody] UpdateChequeStatusDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ChequeDto>> UpdateStatus([FromBody] UpdateChequeStatusDto dto, CancellationToken cancellationToken)
     {
-        // TODO: Get UserId from Claims
-        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-        
-        var result = await _chequeService.UpdateStatusAsync(dto, userId, cancellationToken);
-        if (!result.IsSuccess) return BadRequest(new { success = false, error = result.Error });
-        return Ok(new { success = true, data = result.Value });
+        return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.Cheques.Commands.UpdateChequeStatusCommand(dto, CurrentUserId), cancellationToken));
     }
 
     [HttpGet("{id}/history")]
-    public async Task<IActionResult> GetHistory(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<List<ModulerERP.Finance.Domain.Entities.ChequeHistory>>> GetHistory(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _chequeService.GetHistoryAsync(id, cancellationToken);
-        if (!result.IsSuccess) return BadRequest(new { success = false, error = result.Error });
-        return Ok(new { success = true, data = result.Value });
+        return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.Cheques.Queries.GetChequeHistoryQuery(id), cancellationToken));
     }
 }

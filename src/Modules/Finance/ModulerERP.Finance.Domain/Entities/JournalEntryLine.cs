@@ -41,7 +41,7 @@ public class JournalEntryLine
 
     private JournalEntryLine() { } // EF Core
 
-    public static JournalEntryLine CreateDebit(
+    internal static JournalEntryLine CreateDebit(
         Guid journalEntryId,
         Guid accountId,
         decimal amount,
@@ -69,7 +69,7 @@ public class JournalEntryLine
         };
     }
 
-    public static JournalEntryLine CreateCredit(
+    internal static JournalEntryLine CreateCredit(
         Guid journalEntryId,
         Guid accountId,
         decimal amount,

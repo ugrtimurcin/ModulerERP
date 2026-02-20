@@ -51,18 +51,11 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Ord
 
         if (r.Lines is { Count: > 0 })
         {
-            decimal subTotal = 0, discountTotal = 0, taxTotal = 0;
-            int lineNum = 1;
             foreach (var l in r.Lines)
             {
-                var line = OrderLine.Create(order.Id, l.ProductId, l.Description, l.Quantity,
-                    l.UnitOfMeasureId, l.UnitPrice, lineNum++, l.DiscountPercent, l.TaxPercent);
-                order.Lines.Add(line);
-                subTotal += line.LineTotal;
-                discountTotal += line.DiscountAmount;
-                taxTotal += line.TaxAmount;
+                order.AddLine(l.ProductId, l.Description, l.Quantity, l.UnitOfMeasureId, l.UnitPrice, l.DiscountPercent, l.TaxPercent);
             }
-            order.UpdateTotals(subTotal, discountTotal, taxTotal, r.DocumentDiscountRate, r.WithholdingTaxRate);
+            order.RecalculateTotals(r.DocumentDiscountRate, r.WithholdingTaxRate);
         }
 
         await _repo.AddAsync(order, ct);
@@ -98,19 +91,12 @@ public class UpdateOrderCommandHandler : IRequestHandler<UpdateOrderCommand, Ord
 
         if (r.Lines != null)
         {
-            order.Lines.Clear();
-            decimal subTotal = 0, discountTotal = 0, taxTotal = 0;
-            int lineNum = 1;
+            order.Lines.Clear(); // Not fully DDD, but keeps it simple for update for now unless we add detailed clear logic.
             foreach (var l in r.Lines)
             {
-                var line = OrderLine.Create(order.Id, l.ProductId, l.Description, l.Quantity,
-                    l.UnitOfMeasureId, l.UnitPrice, lineNum++, l.DiscountPercent, l.TaxPercent);
-                order.Lines.Add(line);
-                subTotal += line.LineTotal;
-                discountTotal += line.DiscountAmount;
-                taxTotal += line.TaxAmount;
+                 order.AddLine(l.ProductId, l.Description, l.Quantity, l.UnitOfMeasureId, l.UnitPrice, l.DiscountPercent, l.TaxPercent);
             }
-            order.UpdateTotals(subTotal, discountTotal, taxTotal, r.DocumentDiscountRate, r.WithholdingTaxRate);
+            order.RecalculateTotals(r.DocumentDiscountRate, r.WithholdingTaxRate);
         }
 
         await _uow.SaveChangesAsync(ct);

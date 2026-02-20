@@ -126,21 +126,47 @@ public class Order : BaseEntity
 
     // ── Totals ──
 
-    public void UpdateTotals(decimal subTotal, decimal discountAmount, decimal taxAmount,
-        decimal docDiscountRate = 0, decimal withholdingTaxRate = 0)
+    // ── Lines & Totals ──
+    public void AddLine(Guid productId, string description, decimal quantity, Guid uomId, decimal unitPrice, decimal discountPercent = 0, decimal taxPercent = 0)
     {
+        var lineNum = Lines.Count + 1;
+        var line = OrderLine.Create(Id, productId, description, quantity, uomId, unitPrice, lineNum, discountPercent, taxPercent);
+        Lines.Add(line);
+        RecalculateTotals();
+    }
+
+    public void RemoveLine(Guid lineId)
+    {
+        var line = Lines.FirstOrDefault(l => l.Id == lineId);
+        if (line != null)
+        {
+            Lines.Remove(line);
+            RecalculateTotals();
+        }
+    }
+
+    public void RecalculateTotals(decimal docDiscountRate = 0, decimal withholdingTaxRate = 0)
+    {
+        decimal subTotal = 0, discountTotal = 0, taxTotal = 0;
+        foreach (var line in Lines)
+        {
+            subTotal += line.LineTotal;
+            discountTotal += line.DiscountAmount;
+            taxTotal += line.TaxAmount;
+        }
+
         SubTotal = subTotal;
-        DiscountAmount = discountAmount;
-        TaxAmount = taxAmount;
+        DiscountAmount = discountTotal;
+        TaxAmount = taxTotal;
 
         DocumentDiscountRate = docDiscountRate;
-        DocumentDiscountAmount = (subTotal - discountAmount) * (docDiscountRate / 100);
+        DocumentDiscountAmount = (subTotal - discountTotal) * (docDiscountRate / 100);
 
-        var netAfterDocDiscount = subTotal - discountAmount - DocumentDiscountAmount;
+        var netAfterDocDiscount = subTotal - discountTotal - DocumentDiscountAmount;
         WithholdingTaxRate = withholdingTaxRate;
         WithholdingTaxAmount = netAfterDocDiscount * (withholdingTaxRate / 100);
 
-        TotalAmount = netAfterDocDiscount + taxAmount - WithholdingTaxAmount;
+        TotalAmount = netAfterDocDiscount + taxTotal - WithholdingTaxAmount;
 
         // Local currency equivalents
         LocalSubTotal = SubTotal * LocalExchangeRate;

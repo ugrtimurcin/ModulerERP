@@ -72,8 +72,38 @@ public class JournalEntry : BaseEntity
         return entry;
     }
 
+    public void AddLine(Account account, decimal debit, decimal credit, string? description = null, Guid? partnerId = null, Guid? currencyId = null, decimal? exchangeRate = null, decimal? originalAmount = null, Guid? costCenterId = null)
+    {
+        if (Status != JournalStatus.Draft)
+            throw new InvalidOperationException("Can only add lines to draft entries");
+
+        if (account.IsHeader)
+            throw new InvalidOperationException($"Account {account.Code} is a header account and cannot be posted to.");
+
+        if (debit == 0 && credit == 0)
+            throw new InvalidOperationException("Line must have a non-zero debit or credit amount.");
+
+        if (debit > 0 && credit > 0)
+            throw new InvalidOperationException("Line cannot have both debit and credit amounts.");
+
+        var lineNumber = Lines.Count + 1;
+        JournalEntryLine line;
+
+        if (debit > 0)
+            line = JournalEntryLine.CreateDebit(Id, account.Id, debit, lineNumber, description, partnerId, costCenterId, currencyId, originalAmount, exchangeRate);
+        else
+            line = JournalEntryLine.CreateCredit(Id, account.Id, credit, lineNumber, description, partnerId, costCenterId, currencyId, originalAmount, exchangeRate);
+
+        Lines.Add(line);
+        TotalDebit += debit;
+        TotalCredit += credit;
+    }
+
     public void Post(Guid postedByUserId)
     {
+        if (Lines.Count == 0)
+            throw new InvalidOperationException("Cannot post an empty journal entry.");
+
         if (!IsBalanced)
             throw new InvalidOperationException("Journal entry is not balanced");
 
@@ -88,11 +118,5 @@ public class JournalEntry : BaseEntity
             throw new InvalidOperationException("Only posted entries can be voided");
 
         Status = JournalStatus.Voided;
-    }
-
-    public void UpdateTotals(decimal totalDebit, decimal totalCredit)
-    {
-        TotalDebit = totalDebit;
-        TotalCredit = totalCredit;
     }
 }

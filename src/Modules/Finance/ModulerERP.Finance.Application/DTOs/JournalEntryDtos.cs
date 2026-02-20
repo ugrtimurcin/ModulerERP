@@ -27,6 +27,9 @@ public class JournalEntryLineDto
     public string Description { get; set; } = string.Empty;
     public decimal? Debit { get; set; }
     public decimal? Credit { get; set; }
+    public Guid? CurrencyId { get; set; }
+    public decimal? ExchangeRate { get; set; }
+    public decimal? OriginalAmount { get; set; }
 }
 
 public class CreateJournalEntryDto
@@ -44,4 +47,7 @@ public class CreateJournalEntryLineDto
     public decimal Debit { get; set; }
     public decimal Credit { get; set; }
     public Guid? PartnerId { get; set; }
+    public Guid? CurrencyId { get; set; }
+    public decimal? ExchangeRate { get; set; }
+    public decimal? OriginalAmount { get; set; }
 }

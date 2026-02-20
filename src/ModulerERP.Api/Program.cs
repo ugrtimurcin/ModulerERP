@@ -10,6 +10,7 @@ using ModulerERP.Finance.Infrastructure;
 using ModulerERP.HR.Infrastructure;
 using ModulerERP.FixedAssets.Infrastructure;
 using ModulerERP.FixedAssets.Application;
+using ModulerERP.Finance.Application;
 using ModulerERP.Manufacturing.Infrastructure;
 using ModulerERP.Procurement.Infrastructure;
 using ModulerERP.ProjectManagement.Infrastructure;
@@ -55,8 +56,8 @@ builder.Services.AddInventoryInfrastructure(builder.Configuration);
 builder.Services.AddSalesInfrastructure(builder.Configuration);
 
 // Add Finance module services
-// Add Finance module services
 builder.Services.AddFinanceInfrastructure(builder.Configuration);
+builder.Services.AddFinanceApplication();
 
 // Add HR module services
 builder.Services.AddHRInfrastructure(builder.Configuration);

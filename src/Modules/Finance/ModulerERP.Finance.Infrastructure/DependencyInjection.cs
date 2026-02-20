@@ -24,9 +24,7 @@ public static class DependencyInjection
         
         // Register the Shared Interface Implementation
         services.AddScoped<IFinanceOperationsService, FinanceOperationsService>();
-        services.AddScoped<IJournalEntryService, JournalEntryService>();
         services.AddScoped<IAccountService, AccountService>();
-        services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IFiscalPeriodService, FiscalPeriodService>();
         services.AddScoped<ModulerERP.Finance.Application.Services.IExchangeRateService, ExchangeRateService>();
         services.AddScoped<ModulerERP.SharedKernel.Interfaces.IExchangeRateService, ExchangeRateService>();
@@ -39,7 +37,6 @@ public static class DependencyInjection
         services.AddScoped<IRepository<ExchangeRate>, FinanceRepository<ExchangeRate>>();
         services.AddScoped<IRepository<Cheque>, FinanceRepository<Cheque>>();
         services.AddScoped<IRepository<ChequeHistory>, FinanceRepository<ChequeHistory>>();
-        services.AddScoped<IChequeService, ChequeService>();
 
         return services;
     }

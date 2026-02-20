@@ -177,7 +177,7 @@ public class ExchangeRateService : IExchangeRateService, ModulerERP.SharedKernel
 
         // 2. Get Active Currencies
         var currenciesResult = await _currencyLookupService.GetActiveCurrenciesAsync(cancellationToken);
-        if (!currenciesResult.IsSuccess) return Result<int>.Failure(currenciesResult.Error);
+        if (!currenciesResult.IsSuccess) return Result<int>.Failure(currenciesResult.Error ?? "Unknown error");
         
         var currencies = currenciesResult.Value!;
         var currencyMap = currencies.ToDictionary(c => c.Code.ToUpper(), c => c.Id);

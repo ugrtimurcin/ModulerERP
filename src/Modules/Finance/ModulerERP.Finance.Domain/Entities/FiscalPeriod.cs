@@ -64,7 +64,17 @@ public class FiscalPeriod : BaseEntity
 
     public void Close() => Status = PeriodStatus.Closed;
     public void Lock() => Status = PeriodStatus.Locked;
-    public void Reopen() => Status = PeriodStatus.Open;
+    
+    public void Reopen(string reason, bool isAuthorizedAdmin)
+    {
+        if (!isAuthorizedAdmin)
+            throw new UnauthorizedAccessException("Only an authorized Finance Administrator can reopen a fiscal period.");
+            
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("A valid reason must be provided to reopen a fiscal period.", nameof(reason));
+
+        Status = PeriodStatus.Open;
+    }
 
     public bool ContainsDate(DateTime date) =>
         date >= StartDate && date <= EndDate;

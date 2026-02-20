@@ -12,11 +12,13 @@ public class AccountService : IAccountService
 {
     private readonly IRepository<Account> _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
 
-    public AccountService(IRepository<Account> repository, IUnitOfWork unitOfWork)
+    public AccountService(IRepository<Account> repository, IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<List<AccountDto>>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -92,7 +94,7 @@ public class AccountService : IAccountService
         // Correction: AccountService doesn't have TenantId context here. 
         // Ideally should be passed in or injected ICurrentUserService.
         // Setting Guid.Empty for TenantId as placeholder consistent with other MVP services if not using RequestContext.
-        var tenantId = Guid.Empty; // TODO: Inject ITenantService
+        var tenantId = _currentUserService.TenantId;
 
         var account = Account.Create(
             tenantId,
