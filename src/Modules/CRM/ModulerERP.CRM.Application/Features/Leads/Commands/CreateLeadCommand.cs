@@ -11,4 +11,7 @@ public record CreateLeadCommand(
     string? Email = null,
     string? Phone = null,
     string? Source = null,
-    Guid? AssignedUserId = null) : IRequest<LeadDetailDto>;
+    Guid? AssignedUserId = null,
+    Guid? TerritoryId = null,
+    bool IsMarketingConsentGiven = false,
+    string? ConsentSource = null) : IRequest<LeadDetailDto>;

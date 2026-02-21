@@ -27,6 +27,7 @@ public record OpportunityListDto(
     DateTime? ExpectedCloseDate,
     Guid? AssignedUserId,
     string? AssignedUserName,
+    Guid? TerritoryId,
     bool IsActive,
     DateTime CreatedAt);
 
@@ -46,6 +47,9 @@ public record OpportunityDetailDto(
     DateTime? ExpectedCloseDate,
     Guid? AssignedUserId,
     string? AssignedUserName,
+    Guid? TerritoryId,
+    Guid? CompetitorId,
+    Guid? LossReasonId,
     bool IsActive,
     DateTime CreatedAt);
 
@@ -58,7 +62,8 @@ public record CreateOpportunityDto(
     Guid? CurrencyId = null,
     string Stage = "Discovery",
     DateTime? ExpectedCloseDate = null,
-    Guid? AssignedUserId = null);
+    Guid? AssignedUserId = null,
+    Guid? TerritoryId = null);
 
 public record UpdateOpportunityDto(
     string Title,
@@ -70,4 +75,7 @@ public record UpdateOpportunityDto(
     int? Probability = null,
     DateTime? ExpectedCloseDate = null,
     Guid? AssignedUserId = null,
+    Guid? TerritoryId = null,
+    Guid? CompetitorId = null,
+    Guid? LossReasonId = null,
     bool? IsActive = null);

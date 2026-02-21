@@ -25,6 +25,11 @@ public class Contact : BaseEntity
     /// <summary>Contact's office/personal address</summary>
     public Address? Address { get; private set; }
 
+    // KVKK / GDPR Compliance
+    public bool IsMarketingConsentGiven { get; private set; }
+    public DateTime? ConsentDate { get; private set; }
+    public string? ConsentSource { get; private set; }
+
     // Navigation
     public BusinessPartner? Partner { get; private set; }
 
@@ -69,6 +74,14 @@ public class Contact : BaseEntity
         Position = position;
         Email = email;
         Phone = phone;
+    }
+
+    public void SetMarketingConsent(bool isGiven, string? source = null)
+    {
+        IsMarketingConsentGiven = isGiven;
+        ConsentSource = source;
+        if (isGiven) ConsentDate = DateTime.UtcNow;
+        else ConsentDate = null;
     }
 
     public void UpdateAddress(Address? address) => Address = address;

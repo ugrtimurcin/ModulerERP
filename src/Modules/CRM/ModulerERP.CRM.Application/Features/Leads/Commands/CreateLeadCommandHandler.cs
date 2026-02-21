@@ -36,6 +36,9 @@ public class CreateLeadCommandHandler : IRequestHandler<CreateLeadCommand, LeadD
             request.Source,
             request.AssignedUserId);
 
+        if (request.TerritoryId.HasValue) lead.SetTerritory(request.TerritoryId);
+        lead.SetMarketingConsent(request.IsMarketingConsentGiven, request.ConsentSource);
+
         await _leadRepository.AddAsync(lead, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -53,6 +56,11 @@ public class CreateLeadCommandHandler : IRequestHandler<CreateLeadCommand, LeadD
             null,
             lead.ConvertedPartnerId,
             lead.ConvertedAt,
+            lead.TerritoryId,
+            lead.RejectionReasonId,
+            lead.IsMarketingConsentGiven,
+            lead.ConsentDate,
+            lead.ConsentSource,
             lead.IsActive,
             lead.CreatedAt);
     }

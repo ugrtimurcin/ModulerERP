@@ -30,7 +30,17 @@ public class Lead : BaseEntity
     
     public DateTime? ConvertedAt { get; private set; }
 
+    public Guid? TerritoryId { get; private set; }
+    public Guid? RejectionReasonId { get; private set; }
+
+    // KVKK / GDPR Compliance
+    public bool IsMarketingConsentGiven { get; private set; }
+    public DateTime? ConsentDate { get; private set; }
+    public string? ConsentSource { get; private set; }
+
     // Navigation
+    public Territory? Territory { get; private set; }
+    public RejectionReason? RejectionReason { get; private set; }
     public BusinessPartner? ConvertedPartner { get; private set; }
     public ICollection<Activity> Activities { get; private set; } = new List<Activity>();
 
@@ -70,6 +80,16 @@ public class Lead : BaseEntity
         return lead;
     }
 
+    public void SetMarketingConsent(bool isGiven, string? source = null)
+    {
+        IsMarketingConsentGiven = isGiven;
+        ConsentSource = source;
+        if (isGiven) ConsentDate = DateTime.UtcNow;
+        else ConsentDate = null;
+    }
+
+    public void SetTerritory(Guid? territoryId) => TerritoryId = territoryId;
+
     public void UpdateStatus(LeadStatus status) => Status = status;
     
     public void Assign(Guid userId) => AssignedUserId = userId;
@@ -81,5 +101,9 @@ public class Lead : BaseEntity
         Status = LeadStatus.Qualified;
     }
 
-    public void MarkAsJunk() => Status = LeadStatus.Junk;
+    public void MarkAsJunk(Guid? rejectionReasonId)
+    {
+        Status = LeadStatus.Junk;
+        RejectionReasonId = rejectionReasonId;
+    }
 }

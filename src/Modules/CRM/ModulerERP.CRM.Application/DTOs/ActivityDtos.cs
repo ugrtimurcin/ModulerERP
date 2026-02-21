@@ -8,8 +8,9 @@ public record ActivityDto(
     string Subject,
     string? Description,
     DateTime ActivityDate,
-    string EntityType,
-    Guid EntityId,
+    Guid? LeadId,
+    Guid? OpportunityId,
+    Guid? PartnerId,
     bool IsScheduled,
     bool IsCompleted,
     DateTime? CompletedAt,
@@ -21,8 +22,9 @@ public record CreateActivityDto(
     string Subject,
     string? Description,
     DateTime ActivityDate,
-    string EntityType,
-    Guid EntityId,
+    Guid? LeadId = null,
+    Guid? OpportunityId = null,
+    Guid? PartnerId = null,
     bool IsScheduled = false);
 
 public record UpdateActivityDto(

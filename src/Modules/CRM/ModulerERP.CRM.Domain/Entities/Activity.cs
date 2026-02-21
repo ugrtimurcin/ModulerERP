@@ -20,11 +20,9 @@ public class Activity : BaseEntity
     /// <summary>When the activity happened/is scheduled</summary>
     public DateTime ActivityDate { get; private set; }
     
-    /// <summary>Polymorphic entity type: Lead, Opportunity, Partner</summary>
-    public string EntityType { get; private set; } = string.Empty;
-    
-    /// <summary>Related entity ID</summary>
-    public Guid EntityId { get; private set; }
+    public Guid? LeadId { get; private set; }
+    public Guid? OpportunityId { get; private set; }
+    public Guid? PartnerId { get; private set; }
     
     /// <summary>Is this a scheduled future activity?</summary>
     public bool IsScheduled { get; private set; }
@@ -34,21 +32,32 @@ public class Activity : BaseEntity
     
     public DateTime? CompletedAt { get; private set; }
 
+    // Navigation
+    public Lead? Lead { get; private set; }
+    public Opportunity? Opportunity { get; private set; }
+    public BusinessPartner? Partner { get; private set; }
+
     private Activity() { } // EF Core
 
     public static Activity Create(
         Guid tenantId,
         ActivityType type,
         string subject,
-        string entityType,
-        Guid entityId,
         DateTime activityDate,
         Guid createdByUserId,
+        Guid? leadId = null,
+        Guid? opportunityId = null,
+        Guid? partnerId = null,
         string? description = null,
         bool isScheduled = false)
     {
         if (string.IsNullOrWhiteSpace(subject))
             throw new ArgumentException("Subject is required", nameof(subject));
+
+        // Enforce that exactly one parent entity is linked
+        var parentCount = (leadId.HasValue ? 1 : 0) + (opportunityId.HasValue ? 1 : 0) + (partnerId.HasValue ? 1 : 0);
+        if (parentCount != 1)
+            throw new ArgumentException("An activity must be linked to exactly one entity (Lead, Opportunity, or Partner).");
 
         var activity = new Activity
         {
@@ -56,8 +65,9 @@ public class Activity : BaseEntity
             Subject = subject,
             Description = description,
             ActivityDate = activityDate,
-            EntityType = entityType,
-            EntityId = entityId,
+            LeadId = leadId,
+            OpportunityId = opportunityId,
+            PartnerId = partnerId,
             IsScheduled = isScheduled
         };
 

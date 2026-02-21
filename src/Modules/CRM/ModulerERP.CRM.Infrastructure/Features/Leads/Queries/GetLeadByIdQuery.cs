@@ -37,6 +37,11 @@ public class GetLeadByIdQueryHandler : IRequestHandler<GetLeadByIdQuery, LeadDet
             null,
             lead.ConvertedPartnerId,
             lead.ConvertedAt,
+            lead.TerritoryId,
+            lead.RejectionReasonId,
+            lead.IsMarketingConsentGiven,
+            lead.ConsentDate,
+            lead.ConsentSource,
             lead.IsActive,
             lead.CreatedAt);
     }

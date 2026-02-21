@@ -337,6 +337,7 @@
         "leadUpdated": "Lead başarıyla güncellendi",
         "leadDeleted": "Lead başarıyla silindi",
         "convert": "İş Ortağına Dönüştür",
+        "convertConfirmation": "Bu adayı iş ortağına dönüştürmek istediğinizden emin misiniz?",
         "convertedSuccess": "Lead başarıyla dönüştürüldü",
         "firstName": "Ad",
         "lastName": "Soyad",
@@ -381,6 +382,7 @@
         "Lost": "Kaybedildi"
     },
     "activities": {
+        "title": "Aktiviteler",
         "timeline": "Aktiviteler",
         "add": "Aktivite Ekle",
         "newActivity": "Yeni Aktivite",
@@ -506,6 +508,24 @@
         "noVariants": "Varyant bulunamadı",
         "attributes": "Özellikler",
         "createVariant": "Varyant Oluştur"
+    },
+    "crm": {
+        "territory": "Bölge",
+        "territories": "Bölgeler",
+        "competitor": "Rakip",
+        "competitors": "Rakipler",
+        "lossReason": "Kayıp Nedeni",
+        "lossReasons": "Kayıp Nedenleri",
+        "rejectionReason": "Red Nedeni",
+        "rejectionReasons": "Red Nedenleri",
+        "quotes": "Satış Teklifleri",
+        "settings": "CRM Ayarları",
+        "settingsSubtitle": "Sistem değerleri ve yapılandırmasını yönetin",
+        "kvkk": "KVKK & İzinler",
+        "isMarketingConsentGiven": "Pazarlama İzni Verildi",
+        "consentDescription": "Adayın promosyon iletişimleri almayı yasal olarak kabul edip etmediğini gösterir.",
+        "consentSource": "İzin Kaynağı",
+        "consentDate": "İzin Tarihi"
     },
     "quotes": {
         "title": "Satış Teklifleri",

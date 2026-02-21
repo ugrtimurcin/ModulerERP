@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Building2, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
-import { DataTable, Button, Modal, Input, Select, Badge, useToast, useDialog } from '@/components/ui';
+import { DataTable, Button, Modal, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { ActivitiesTimeline } from '@/components/crm/ActivitiesTimeline';
 
@@ -18,23 +19,12 @@ interface Partner {
     createdAt: string;
 }
 
-interface PartnerFormData {
-    code: string;
-    name: string;
-    isCustomer: boolean;
-    isSupplier: boolean;
-    kind: string;
-    email: string;
-    mobilePhone: string;
-    taxOffice?: string;
-    taxNumber?: string;
-    identityNumber?: string;
-}
 
 export function PartnersPage() {
     const { t } = useTranslation();
     const toast = useToast();
     const dialog = useDialog();
+    const navigate = useNavigate();
 
     const [partners, setPartners] = useState<Partner[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -42,26 +32,9 @@ export function PartnersPage() {
     const [total, setTotal] = useState(0);
     const pageSize = 20;
 
-    // Modal state
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
     // Activities Modal state
     const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
     const [selectedPartnerForActivities, setSelectedPartnerForActivities] = useState<Partner | null>(null);
-
-    // Form state
-    const [formData, setFormData] = useState<PartnerFormData>({
-        code: '',
-        name: '',
-        isCustomer: true,
-        isSupplier: false,
-        kind: 'Company',
-        email: '',
-        mobilePhone: '',
-    });
-    const [formErrors, setFormErrors] = useState<Partial<PartnerFormData>>({});
 
     const loadPartners = useCallback(async () => {
         setIsLoading(true);
@@ -78,93 +51,16 @@ export function PartnersPage() {
     }, [loadPartners]);
 
     const openCreateModal = () => {
-        setEditingPartner(null);
-        setFormData({
-            code: '',
-            name: '',
-            isCustomer: true,
-            isSupplier: false,
-            kind: 'Company',
-            email: '',
-            mobilePhone: '',
-            taxOffice: '',
-            taxNumber: '',
-            identityNumber: '',
-        });
-        setFormErrors({});
-        setIsModalOpen(true);
+        navigate('/partners/new');
     };
 
     const openEditModal = (partner: Partner) => {
-        setEditingPartner(partner);
-        setFormData({
-            code: partner.code,
-            name: partner.name,
-            isCustomer: partner.isCustomer,
-            isSupplier: partner.isSupplier,
-            kind: 'Company',
-            email: partner.email || '',
-            mobilePhone: partner.mobilePhone || '',
-            // Populate if available (Note: List DTO might lack these, will need Detail fetch in future)
-            taxOffice: (partner as any).taxOffice || '',
-            taxNumber: (partner as any).taxNumber || '',
-            identityNumber: (partner as any).identityNumber || '',
-        });
-        setFormErrors({});
-        setIsModalOpen(true);
+        navigate(`/partners/${partner.id}`);
     };
 
     const openActivitiesModal = (partner: Partner) => {
         setSelectedPartnerForActivities(partner);
         setIsActivitiesModalOpen(true);
-    };
-
-    const validateForm = (): boolean => {
-        const errors: Partial<PartnerFormData> = {};
-
-        if (!formData.code.trim()) {
-            errors.code = t('common.required');
-        }
-        if (!formData.name.trim()) {
-            errors.name = t('common.required');
-        }
-        if (!formData.isCustomer && !formData.isSupplier) {
-            errors.name = t('partners.mustBeCustomerOrSupplier');
-        }
-
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-
-        setIsSubmitting(true);
-        try {
-            if (editingPartner) {
-                const result = await api.partners.update(editingPartner.id, formData);
-                if (result.success) {
-                    toast.success(t('partners.partnerUpdated'));
-                    setIsModalOpen(false);
-                    loadPartners();
-                } else {
-                    toast.error(t('common.error'), result.error);
-                }
-            } else {
-                const result = await api.partners.create(formData);
-                if (result.success) {
-                    toast.success(t('partners.partnerCreated'));
-                    setIsModalOpen(false);
-                    loadPartners();
-                } else {
-                    toast.error(t('common.error'), result.error);
-                }
-            }
-        } catch (err) {
-            toast.error(t('common.error'), (err as Error).message);
-        } finally {
-            setIsSubmitting(false);
-        }
     };
 
     const handleDelete = async (partner: Partner) => {
@@ -309,107 +205,7 @@ export function PartnersPage() {
                 )}
             </Modal>
 
-            {/* Create/Edit Modal */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editingPartner ? t('partners.editPartner') : t('partners.createPartner')}
-                size="md"
-                footer={
-                    <>
-                        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-                            {t('common.cancel')}
-                        </Button>
-                        <Button onClick={handleSubmit} isLoading={isSubmitting}>
-                            {t('common.save')}
-                        </Button>
-                    </>
-                }
-            >
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label={t('partners.code')}
-                            value={formData.code}
-                            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                            error={formErrors.code}
-                            disabled={!!editingPartner}
-                            required
-                        />
-                        <Select
-                            label={t('partners.kind')}
-                            value={formData.kind}
-                            onChange={(e) => setFormData({ ...formData, kind: e.target.value })}
-                            options={[
-                                { value: 'Company', label: t('partners.company') },
-                                { value: 'Individual', label: t('partners.individual') }
-                            ]}
-                        />
-                    </div>
-                    <Input
-                        label={t('partners.name')}
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        error={formErrors.name}
-                        required
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label={t('partners.taxOffice')}
-                            value={formData.taxOffice}
-                            onChange={(e) => setFormData({ ...formData, taxOffice: e.target.value })}
-                        />
-                        {formData.kind === 'Company' ? (
-                            <Input
-                                label={t('partners.taxNumber')}
-                                value={formData.taxNumber}
-                                onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })}
-                            />
-                        ) : (
-                            <Input
-                                label={t('partners.identityNumber')}
-                                value={formData.identityNumber}
-                                onChange={(e) => setFormData({ ...formData, identityNumber: e.target.value })}
-                            />
-                        )}
-                    </div>
-
-                    <div className="flex gap-6">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={formData.isCustomer}
-                                onChange={(e) => setFormData({ ...formData, isCustomer: e.target.checked })}
-                                className="rounded border-[hsl(var(--border))]"
-                            />
-                            <span>{t('partners.isCustomer')}</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={formData.isSupplier}
-                                onChange={(e) => setFormData({ ...formData, isSupplier: e.target.checked })}
-                                className="rounded border-[hsl(var(--border))]"
-                            />
-                            <span>{t('partners.isSupplier')}</span>
-                        </label>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label={t('partners.email')}
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                        <Input
-                            label={t('partners.mobilePhone')}
-                            value={formData.mobilePhone}
-                            onChange={(e) => setFormData({ ...formData, mobilePhone: e.target.value })}
-                        />
-                    </div>
-                </div>
-            </Modal>
+            {/* Modals have been removed and replaced with BusinessPartnerDetail.tsx navigation routes */}
         </div>
     );
 }

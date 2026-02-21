@@ -431,6 +431,7 @@
     "leadUpdated": "Lead updated successfully",
     "leadDeleted": "Lead deleted successfully",
     "convert": "Convert to Partner",
+    "convertConfirmation": "Are you sure you want to convert this lead to a business partner?",
     "convertedSuccess": "Lead converted successfully",
     "firstName": "First Name",
     "lastName": "Last Name",
@@ -475,6 +476,7 @@
     "Lost": "Lost"
   },
   "activities": {
+    "title": "Activities",
     "timeline": "Activities",
     "add": "Add Activity",
     "newActivity": "New Activity",
@@ -611,6 +613,24 @@
       "deleteConfirm": "Are you sure you want to delete {{name}}?",
       "website": "Website"
     }
+  },
+  "crm": {
+    "territory": "Territory",
+    "territories": "Territories",
+    "competitor": "Competitor",
+    "competitors": "Competitors",
+    "lossReason": "Loss Reason",
+    "lossReasons": "Loss Reasons",
+    "rejectionReason": "Rejection Reason",
+    "rejectionReasons": "Rejection Reasons",
+    "quotes": "Sales Quotes",
+    "settings": "CRM Settings",
+    "settingsSubtitle": "Manage administrative lookup values and configuration",
+    "kvkk": "KVKK & Consent",
+    "isMarketingConsentGiven": "Marketing Consent Given",
+    "consentDescription": "Indicates if the lead has legally agreed to receive promotional communications.",
+    "consentSource": "Consent Source",
+    "consentDate": "Consent Date"
   },
   "quotes": {
     "title": "Sales Quotes",

@@ -24,7 +24,16 @@ public class UpdateLeadCommandHandler : IRequestHandler<UpdateLeadCommand, LeadD
             ?? throw new KeyNotFoundException($"Lead with Id '{request.Id}' not found.");
 
         if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<LeadStatus>(request.Status, out var status))
-            lead.UpdateStatus(status);
+        {
+            if (status == LeadStatus.Junk)
+                lead.MarkAsJunk(request.RejectionReasonId);
+            else
+                lead.UpdateStatus(status);
+        }
+
+        if (request.TerritoryId.HasValue) lead.SetTerritory(request.TerritoryId);
+        if (request.IsMarketingConsentGiven.HasValue) 
+            lead.SetMarketingConsent(request.IsMarketingConsentGiven.Value, request.ConsentSource);
 
         if (request.AssignedUserId.HasValue)
             lead.Assign(request.AssignedUserId.Value);
@@ -51,6 +60,11 @@ public class UpdateLeadCommandHandler : IRequestHandler<UpdateLeadCommand, LeadD
             null,
             lead.ConvertedPartnerId,
             lead.ConvertedAt,
+            lead.TerritoryId,
+            lead.RejectionReasonId,
+            lead.IsMarketingConsentGiven,
+            lead.ConsentDate,
+            lead.ConsentSource,
             lead.IsActive,
             lead.CreatedAt);
     }

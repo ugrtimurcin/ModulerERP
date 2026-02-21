@@ -77,13 +77,16 @@ export function ActivitiesTimeline({ entityId, entityType }: ActivitiesTimelineP
 
         setIsSubmitting(true);
         try {
-            const result = await api.activities.create({
+            const payload: any = {
                 ...formData,
                 type: parseInt(formData.type),
-                entityId,
-                entityType,
                 activityDate: new Date(formData.activityDate).toISOString()
-            });
+            };
+            if (entityType === 'Lead') payload.leadId = entityId;
+            else if (entityType === 'Opportunity') payload.opportunityId = entityId;
+            else if (entityType === 'BusinessPartner') payload.partnerId = entityId;
+
+            const result = await api.activities.create(payload);
 
             if (result.success) {
                 toast.success(t('activities.created'));

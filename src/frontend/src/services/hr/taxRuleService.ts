@@ -28,12 +28,12 @@ const BASE_URL = '/hr/tax-rules';
 export const taxRuleService = {
     getAll: async () => {
         const response = await request<TaxRule[]>(BASE_URL);
-        return response || [];
+        return response.success && response.data ? response.data : [];
     },
 
     getById: async (id: string) => {
         const response = await request<TaxRule>(`${BASE_URL}/${id}`);
-        return response;
+        return response.data;
     },
 
     create: async (dto: CreateTaxRuleDto) => {

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Target, Phone, Mail, Building2, ArrowRight, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
-import { DataTable, Button, Modal, Input, Badge, useToast, useDialog, Select } from '@/components/ui';
+import { DataTable, Button, Modal, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { ActivitiesTimeline } from '@/components/crm/ActivitiesTimeline';
 
@@ -22,21 +23,11 @@ interface Lead {
     createdAt: string;
 }
 
-interface LeadFormData {
-    title: string;
-    firstName: string;
-    lastName: string;
-    company: string;
-    email: string;
-    phone: string;
-    status: string;
-    source: string;
-}
-
 export function LeadsPage() {
     const { t } = useTranslation();
     const toast = useToast();
     const dialog = useDialog();
+    const navigate = useNavigate();
 
     const [leads, setLeads] = useState<Lead[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -44,27 +35,9 @@ export function LeadsPage() {
     const [total, setTotal] = useState(0);
     const pageSize = 20;
 
-    // Modal state
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingLead, setEditingLead] = useState<Lead | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
     // Activities Modal state
     const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
     const [selectedLeadForActivities, setSelectedLeadForActivities] = useState<Lead | null>(null);
-
-    // Form state
-    const [formData, setFormData] = useState<LeadFormData>({
-        title: '',
-        firstName: '',
-        lastName: '',
-        company: '',
-        email: '',
-        phone: '',
-        status: 'New',
-        source: '',
-    });
-    const [formErrors, setFormErrors] = useState<Partial<LeadFormData>>({});
 
     const loadLeads = useCallback(async () => {
         setIsLoading(true);
@@ -81,85 +54,16 @@ export function LeadsPage() {
     }, [loadLeads]);
 
     const openCreateModal = () => {
-        setEditingLead(null);
-        setFormData({
-            title: '',
-            firstName: '',
-            lastName: '',
-            company: '',
-            email: '',
-            phone: '',
-            status: 'New',
-            source: '',
-        });
-        setFormErrors({});
-        setIsModalOpen(true);
+        navigate('/leads/new');
     };
 
     const openEditModal = (lead: Lead) => {
-        setEditingLead(lead);
-        setFormData({
-            title: lead.title || '',
-            firstName: lead.firstName,
-            lastName: lead.lastName,
-            company: lead.company || '',
-            email: lead.email || '',
-            phone: lead.phone || '',
-            status: lead.status,
-            source: lead.source || '',
-        });
-        setFormErrors({});
-        setIsModalOpen(true);
+        navigate(`/leads/${lead.id}`);
     };
 
     const openActivitiesModal = (lead: Lead) => {
         setSelectedLeadForActivities(lead);
         setIsActivitiesModalOpen(true);
-    };
-
-    const validateForm = (): boolean => {
-        const errors: Partial<LeadFormData> = {};
-
-        if (!formData.firstName.trim()) {
-            errors.firstName = t('common.required');
-        }
-        if (!formData.lastName.trim()) {
-            errors.lastName = t('common.required');
-        }
-
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-
-        setIsSubmitting(true);
-        try {
-            if (editingLead) {
-                const result = await api.leads.update(editingLead.id, formData);
-                if (result.success) {
-                    toast.success(t('leads.leadUpdated'));
-                    setIsModalOpen(false);
-                    loadLeads();
-                } else {
-                    toast.error(t('common.error'), result.error);
-                }
-            } else {
-                const result = await api.leads.create(formData);
-                if (result.success) {
-                    toast.success(t('leads.leadCreated'));
-                    setIsModalOpen(false);
-                    loadLeads();
-                } else {
-                    toast.error(t('common.error'), result.error);
-                }
-            }
-        } catch (err) {
-            toast.error(t('common.error'), (err as Error).message);
-        } finally {
-            setIsSubmitting(false);
-        }
     };
 
     const handleDelete = async (lead: Lead) => {
@@ -349,93 +253,7 @@ export function LeadsPage() {
                 )}
             </Modal>
 
-            {/* Create/Edit Modal */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editingLead ? t('leads.editLead') : t('leads.createLead')}
-                size="md"
-                footer={
-                    <>
-                        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-                            {t('common.cancel')}
-                        </Button>
-                        <Button onClick={handleSubmit} isLoading={isSubmitting}>
-                            {t('common.save')}
-                        </Button>
-                    </>
-                }
-            >
-                <div className="space-y-4">
-                    <div className="flex gap-4">
-                        <div className="w-1/4">
-                            <Input
-                                label={t('common.title')}
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                placeholder={t('leads.titlePlaceholder')}
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <Input
-                                label={t('leads.firstName')}
-                                value={formData.firstName}
-                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                error={formErrors.firstName}
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label={t('leads.lastName')}
-                            value={formData.lastName}
-                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                            error={formErrors.lastName}
-                            required
-                        />
-                    </div>
-                    <Input
-                        label={t('leads.company')}
-                        value={formData.company}
-                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label={t('leads.email')}
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                        <Input
-                            label={t('leads.phone')}
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Select
-                            label={t('leads.status')}
-                            value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            options={[
-                                { value: 'New', label: t('leads.New') },
-                                { value: 'Contacted', label: t('leads.Contacted') },
-                                { value: 'Qualified', label: t('leads.Qualified') },
-                                { value: 'Junk', label: t('leads.Junk') },
-                            ]}
-                            disabled={formData.status === 'Converted'}
-                        />
-                        <Input
-                            label={t('leads.source')}
-                            value={formData.source}
-                            onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                            placeholder="e.g. Website, LinkedIn"
-                        />
-                    </div>
-                </div>
-            </Modal>
+            {/* Create/Edit Modal Removed in favor of Dedicated LeadDetail Page Navigation */}
         </div>
     );
 }

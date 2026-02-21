@@ -10,7 +10,7 @@ namespace ModulerERP.CRM.Application.Features.Activities.Commands;
 // ── Create ──
 public record CreateActivityCommand(
     ActivityType Type, string Subject, string? Description,
-    DateTime ActivityDate, string EntityType, Guid EntityId,
+    DateTime ActivityDate, Guid? LeadId = null, Guid? OpportunityId = null, Guid? PartnerId = null,
     bool IsScheduled = false) : IRequest<ActivityDto>;
 
 public class CreateActivityCommandHandler : IRequestHandler<CreateActivityCommand, ActivityDto>
@@ -25,14 +25,14 @@ public class CreateActivityCommandHandler : IRequestHandler<CreateActivityComman
     public async Task<ActivityDto> Handle(CreateActivityCommand r, CancellationToken ct)
     {
         var activity = Activity.Create(
-            _currentUser.TenantId, r.Type, r.Subject, r.EntityType, r.EntityId,
-            r.ActivityDate, _currentUser.UserId, r.Description, r.IsScheduled);
+            _currentUser.TenantId, r.Type, r.Subject, r.ActivityDate, _currentUser.UserId,
+            r.LeadId, r.OpportunityId, r.PartnerId, r.Description, r.IsScheduled);
 
         await _repo.AddAsync(activity, ct);
         await _uow.SaveChangesAsync(ct);
 
         return new ActivityDto(activity.Id, activity.Type, activity.Subject, activity.Description,
-            activity.ActivityDate, activity.EntityType, activity.EntityId,
+            activity.ActivityDate, activity.LeadId, activity.OpportunityId, activity.PartnerId,
             activity.IsScheduled, activity.IsCompleted, activity.CompletedAt,
             activity.CreatedAt, activity.CreatedBy);
     }
@@ -66,7 +66,7 @@ public class UpdateActivityCommandHandler : IRequestHandler<UpdateActivityComman
         await _uow.SaveChangesAsync(ct);
 
         return new ActivityDto(activity.Id, activity.Type, activity.Subject, activity.Description,
-            activity.ActivityDate, activity.EntityType, activity.EntityId,
+            activity.ActivityDate, activity.LeadId, activity.OpportunityId, activity.PartnerId,
             activity.IsScheduled, activity.IsCompleted, activity.CompletedAt,
             activity.CreatedAt, activity.CreatedBy);
     }

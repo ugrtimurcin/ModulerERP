@@ -37,12 +37,12 @@ const BASE_URL = '/hr/social-security-rules';
 export const socialSecurityRuleService = {
     getAll: async () => {
         const response = await request<SocialSecurityRule[]>(BASE_URL);
-        return response || [];
+        return response.success && response.data ? response.data : [];
     },
 
     getById: async (id: string) => {
         const response = await request<SocialSecurityRule>(`${BASE_URL}/${id}`);
-        return response;
+        return response.data;
     },
 
     create: async (dto: CreateSocialSecurityRuleDto) => {

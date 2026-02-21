@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, TrendingUp, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
-import { DataTable, Button, Modal, Input, Badge, useToast, useDialog, Select } from '@/components/ui';
+import { DataTable, Button, Badge, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 
 interface Opportunity {
@@ -21,68 +22,17 @@ interface Opportunity {
     createdAt: string;
 }
 
-interface Partner {
-    id: string;
-    name: string;
-}
-
-interface Currency {
-    id: string;
-    code: string;
-    name: string;
-}
-
-interface User {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-}
-
-interface OpportunityFormData {
-    title: string;
-    partnerId: string;
-    leadId: string;
-    currencyId: string;
-    estimatedValue: number;
-    stage: string;
-    probability: number;
-    expectedCloseDate: string;
-    assignedUserId: string;
-}
-
 export function OpportunitiesPage() {
     const { t } = useTranslation();
     const toast = useToast();
     const dialog = useDialog();
+    const navigate = useNavigate();
 
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-    const [partners, setPartners] = useState<Partner[]>([]);
-    const [currencies, setCurrencies] = useState<Currency[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const pageSize = 20;
-
-    // Modal state
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Form state
-    const [formData, setFormData] = useState<OpportunityFormData>({
-        title: '',
-        partnerId: '',
-        leadId: '',
-        currencyId: '',
-        estimatedValue: 0,
-        stage: 'Discovery',
-        probability: 10,
-        expectedCloseDate: '',
-        assignedUserId: '',
-    });
-    const [formErrors, setFormErrors] = useState<Partial<OpportunityFormData>>({});
 
     const loadOpportunities = useCallback(async () => {
         setIsLoading(true);
@@ -94,114 +44,16 @@ export function OpportunitiesPage() {
         setIsLoading(false);
     }, [page]);
 
-    const loadDropdowns = async () => {
-        const [pResult, cResult, uResult] = await Promise.all([
-            api.partners.getAll(1, 1000),
-            api.getActiveCurrencies(),
-            api.users.getAll(1, 1000)
-        ]);
-
-        if (pResult.success && pResult.data) {
-            setPartners(pResult.data.data.map((p: any) => ({ id: p.id, name: p.name })));
-        }
-        if (cResult.success && cResult.data) {
-            setCurrencies(cResult.data);
-        }
-        if (uResult.success && uResult.data) {
-            setUsers(uResult.data.data.map((u: any) => ({
-                id: u.id,
-                firstName: u.firstName,
-                lastName: u.lastName,
-                email: u.email
-            })));
-        }
-    };
-
     useEffect(() => {
         loadOpportunities();
-        loadDropdowns();
     }, [loadOpportunities]);
 
     const openCreateModal = () => {
-        setEditingOpportunity(null);
-        setFormData({
-            title: '',
-            partnerId: '',
-            leadId: '',
-            // Default to TRY or first available currency
-            currencyId: currencies.find(c => c.code === 'TRY')?.id || currencies[0]?.id || '',
-            estimatedValue: 0,
-            stage: 'Discovery',
-            probability: 10,
-            expectedCloseDate: '',
-            assignedUserId: '',
-        });
-        setFormErrors({});
-        setIsModalOpen(true);
+        navigate('/opportunities/new');
     };
 
     const openEditModal = (opp: Opportunity) => {
-        setEditingOpportunity(opp);
-        setFormData({
-            title: opp.title,
-            partnerId: opp.partnerId || '',
-            leadId: '',
-            currencyId: currencies.find(c => c.code === opp.currencyCode)?.id || '',
-            estimatedValue: opp.estimatedValue,
-            stage: opp.stage,
-            probability: opp.probability,
-            expectedCloseDate: opp.expectedCloseDate ? opp.expectedCloseDate.split('T')[0] : '',
-            assignedUserId: opp.assignedUserId || '',
-        });
-        setFormErrors({});
-        setIsModalOpen(true);
-    };
-
-    const validateForm = (): boolean => {
-        const errors: Partial<OpportunityFormData> = {};
-
-        if (!formData.title.trim()) {
-            errors.title = t('common.required');
-        }
-
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-
-        setIsSubmitting(true);
-        try {
-            const payload: any = { ...formData };
-            if (!payload.partnerId) delete payload.partnerId;
-            if (!payload.leadId) delete payload.leadId;
-            if (!payload.expectedCloseDate) delete payload.expectedCloseDate;
-
-            if (editingOpportunity) {
-                const result = await api.opportunities.update(editingOpportunity.id, payload);
-                if (result.success) {
-                    toast.success(t('opportunities.opportunityUpdated'));
-                    setIsModalOpen(false);
-                    loadOpportunities();
-                } else {
-                    toast.error(t('common.error'), result.error);
-                }
-            } else {
-                const result = await api.opportunities.create(payload);
-                if (result.success) {
-                    toast.success(t('opportunities.opportunityCreated'));
-                    setIsModalOpen(false);
-                    loadOpportunities();
-                } else {
-                    toast.error(t('common.error'), result.error);
-                }
-            }
-        } catch (err) {
-            toast.error(t('common.error'), (err as Error).message);
-        } finally {
-            setIsSubmitting(false);
-        }
+        navigate(`/opportunities/${opp.id}`);
     };
 
     const handleDelete = async (opp: Opportunity) => {
@@ -220,19 +72,6 @@ export function OpportunitiesPage() {
                 toast.error(t('common.error'), result.error);
             }
         }
-    };
-
-    const handleStageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const stage = e.target.value;
-        let probability = formData.probability;
-        switch (stage) {
-            case 'Discovery': probability = 10; break;
-            case 'Proposal': probability = 30; break;
-            case 'Negotiation': probability = 60; break;
-            case 'Won': probability = 100; break;
-            case 'Lost': probability = 0; break;
-        }
-        setFormData({ ...formData, stage, probability });
     };
 
     const getStageBadge = (stage: string) => {
@@ -351,102 +190,6 @@ export function OpportunitiesPage() {
                 )}
             />
 
-            {/* Modal */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editingOpportunity ? t('opportunities.editOpportunity') : t('opportunities.createOpportunity')}
-                size="md"
-                footer={
-                    <>
-                        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-                            {t('common.cancel')}
-                        </Button>
-                        <Button onClick={handleSubmit} isLoading={isSubmitting}>
-                            {t('common.save')}
-                        </Button>
-                    </>
-                }
-            >
-                <div className="space-y-4">
-                    <Input
-                        label={t('opportunities.title_field')}
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        error={formErrors.title}
-                        required
-                    />
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">{t('opportunities.partner')}</label>
-                        <select
-                            className="w-full h-10 px-3 py-2 rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
-                            value={formData.partnerId}
-                            onChange={(e) => setFormData({ ...formData, partnerId: e.target.value })}
-                        >
-                            <option value="">{t('common.select')}</option>
-                            {partners.map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Select
-                                label={t('opportunities.currency')}
-                                value={formData.currencyId}
-                                onChange={(e) => setFormData({ ...formData, currencyId: e.target.value })}
-                                options={currencies.map(c => ({ value: c.id, label: `${c.code} (${c.name})` }))}
-                            />
-                        </div>
-                        <Input
-                            label={t('opportunities.value')}
-                            type="number"
-                            value={formData.estimatedValue}
-                            onChange={(e) => setFormData({ ...formData, estimatedValue: parseFloat(e.target.value) })}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Select
-                            label={t('opportunities.assignedUser')}
-                            value={formData.assignedUserId}
-                            onChange={(e) => setFormData({ ...formData, assignedUserId: e.target.value })}
-                            options={users.map(u => ({ value: u.id, label: `${u.firstName} ${u.lastName}` }))}
-                        />
-                        <Input
-                            label={t('opportunities.expectedCloseDate')}
-                            type="date"
-                            value={formData.expectedCloseDate}
-                            onChange={(e) => setFormData({ ...formData, expectedCloseDate: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Select
-                            label={t('opportunities.stage')}
-                            value={formData.stage}
-                            onChange={handleStageChange}
-                            options={[
-                                { value: 'Discovery', label: t('opportunities.Discovery') },
-                                { value: 'Proposal', label: t('opportunities.Proposal') },
-                                { value: 'Negotiation', label: t('opportunities.Negotiation') },
-                                { value: 'Won', label: t('opportunities.Won') },
-                                { value: 'Lost', label: t('opportunities.Lost') },
-                            ]}
-                        />
-                        <Input
-                            label={t('opportunities.probability')}
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={formData.probability}
-                            onChange={(e) => setFormData({ ...formData, probability: parseInt(e.target.value) })}
-                        />
-                    </div>
-                </div>
-            </Modal >
         </div >
     );
 }

@@ -57,6 +57,7 @@ const navItems: NavItem[] = [
             { labelKey: 'nav.opportunities', href: '/opportunities' },
             { labelKey: 'nav.tags', href: '/tags' },
             { labelKey: 'nav.tickets', href: '/tickets' },
+            { labelKey: 'nav.settings', href: '/crm/settings' },
         ],
     },
     {

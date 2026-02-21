@@ -38,12 +38,6 @@ public class BusinessPartner : BaseEntity
     /// <summary>Default trading currency (Critical for TRNC contracts)</summary>
     public Guid? DefaultCurrencyId { get; private set; }
     
-    /// <summary>Net days for due date calculation</summary>
-    public int PaymentTermDays { get; private set; } = 30;
-    
-    /// <summary>Max allowed debt in DefaultCurrency</summary>
-    public decimal CreditLimit { get; private set; }
-    
     /// <summary>Base discount % applied to invoice totals</summary>
     public decimal DefaultDiscountRate { get; private set; }
     
@@ -61,12 +55,14 @@ public class BusinessPartner : BaseEntity
     /// <summary>Goods delivery address (may differ from billing)</summary>
     public Address? ShippingAddress { get; private set; }
 
+    public Guid? TerritoryId { get; private set; }
+
     // Navigation
+    public Territory? Territory { get; private set; }
     public BusinessPartnerGroup? Group { get; private set; }
     public BusinessPartner? ParentPartner { get; private set; }
     public ICollection<BusinessPartner> ChildPartners { get; private set; } = new List<BusinessPartner>();
     public ICollection<Contact> Contacts { get; private set; } = new List<Contact>();
-    public ICollection<PartnerBalance> Balances { get; private set; } = new List<PartnerBalance>();
 
     private BusinessPartner() { } // EF Core
 
@@ -119,11 +115,9 @@ public class BusinessPartner : BaseEntity
         IdentityNumber = identityNumber;
     }
 
-    public void UpdateFinancialInfo(Guid? defaultCurrencyId, int paymentTermDays, decimal creditLimit, decimal defaultDiscountRate)
+    public void UpdateFinancialInfo(Guid? defaultCurrencyId, decimal defaultDiscountRate)
     {
         DefaultCurrencyId = defaultCurrencyId;
-        PaymentTermDays = paymentTermDays;
-        CreditLimit = creditLimit;
         DefaultDiscountRate = defaultDiscountRate;
     }
 
@@ -142,4 +136,5 @@ public class BusinessPartner : BaseEntity
 
     public void SetGroup(Guid? groupId) => GroupId = groupId;
     public void SetParentPartner(Guid? parentPartnerId) => ParentPartnerId = parentPartnerId;
+    public void SetTerritory(Guid? territoryId) => TerritoryId = territoryId;
 }

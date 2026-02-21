@@ -31,11 +31,14 @@ public class CRMDbContext : DbContext, ICRMUnitOfWork
 
     // Sales & Commission entities
     public DbSet<SaleAgent> SaleAgents => Set<SaleAgent>();
-    public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
 
     // Partner management
     public DbSet<BusinessPartnerGroup> BusinessPartnerGroups => Set<BusinessPartnerGroup>();
-    public DbSet<PartnerBalance> PartnerBalances => Set<PartnerBalance>();
+
+    // Lookups & Dimensions
+    public DbSet<Territory> Territories => Set<Territory>();
+    public DbSet<Competitor> Competitors => Set<Competitor>();
+    public DbSet<RejectionReason> RejectionReasons => Set<RejectionReason>();
 
     // Shared Audit Log (mapped to system_core schema)
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -71,9 +74,11 @@ public class CRMDbContext : DbContext, ICRMUnitOfWork
         modelBuilder.Entity<Tag>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
         modelBuilder.Entity<EntityTag>().HasQueryFilter(e => e.TenantId == _tenantId);
         modelBuilder.Entity<SaleAgent>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
-        modelBuilder.Entity<CommissionRule>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
         modelBuilder.Entity<BusinessPartnerGroup>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
-        modelBuilder.Entity<PartnerBalance>().HasQueryFilter(e => e.TenantId == _tenantId);
+        
+        modelBuilder.Entity<Territory>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<Competitor>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<RejectionReason>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CRMDbContext).Assembly);
     }

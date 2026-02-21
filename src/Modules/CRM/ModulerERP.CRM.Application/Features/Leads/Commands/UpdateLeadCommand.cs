@@ -14,4 +14,8 @@ public record UpdateLeadCommand(
     string? Source = null,
     string? Status = null,
     Guid? AssignedUserId = null,
+    Guid? TerritoryId = null,
+    Guid? RejectionReasonId = null,
+    bool? IsMarketingConsentGiven = null,
+    string? ConsentSource = null,
     bool? IsActive = null) : IRequest<LeadDetailDto>;

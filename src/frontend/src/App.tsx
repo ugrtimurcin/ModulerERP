@@ -10,11 +10,15 @@ import { RolesPage } from '@/pages/RolesPage';
 import { CurrenciesPage } from '@/pages/CurrenciesPage';
 import { LanguagesPage } from '@/pages/LanguagesPage';
 import { PartnersPage } from '@/pages/PartnersPage';
+import { BusinessPartnerDetail } from '@/pages/crm/BusinessPartnerDetail';
 import { ContactsPage } from '@/pages/ContactsPage';
 import { LeadsPage } from '@/pages/LeadsPage';
+import { LeadDetail } from '@/pages/crm/LeadDetail';
 import { OpportunitiesPage } from '@/pages/OpportunitiesPage';
+import { OpportunityDetail } from '@/pages/crm/OpportunityDetail';
 import { TagsPage } from '@/pages/TagsPage';
 import { TicketsPage } from '@/pages/TicketsPage';
+import { CrmSettingsPage } from '@/pages/crm/settings/CrmSettingsPage';
 import { ProductCategoriesPage } from '@/pages/inventory/ProductCategoriesPage';
 import { WarehousesPage } from '@/pages/inventory/WarehousesPage';
 import { UnitOfMeasuresPage } from '@/pages/inventory/UnitOfMeasuresPage';
@@ -102,11 +106,18 @@ function App() {
 
           {/* CRM */}
           <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/partners/new" element={<BusinessPartnerDetail mode="create" />} />
+          <Route path="/partners/:id" element={<BusinessPartnerDetail mode="edit" />} />
           <Route path="/contacts" element={<ContactsPage />} />
           <Route path="/leads" element={<LeadsPage />} />
+          <Route path="/leads/new" element={<LeadDetail mode="create" />} />
+          <Route path="/leads/:id" element={<LeadDetail mode="edit" />} />
           <Route path="/opportunities" element={<OpportunitiesPage />} />
+          <Route path="/opportunities/new" element={<OpportunityDetail mode="create" />} />
+          <Route path="/opportunities/:id" element={<OpportunityDetail mode="edit" />} />
           <Route path="/tags" element={<TagsPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
+          <Route path="/crm/settings" element={<CrmSettingsPage />} />
           <Route path="/inventory/categories" element={<ProductCategoriesPage />} />
           <Route path="/inventory/warehouses" element={<WarehousesPage />} />
           <Route path="/inventory/uom" element={<UnitOfMeasuresPage />} />

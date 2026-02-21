@@ -15,11 +15,11 @@ public class ActivitiesController : BaseApiController
 
     [HttpGet]
     public async Task<IActionResult> GetAll(
-        [FromQuery] string? entityType = null, [FromQuery] Guid? entityId = null,
+        [FromQuery] Guid? leadId = null, [FromQuery] Guid? opportunityId = null, [FromQuery] Guid? partnerId = null,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
-        var result = await _sender.Send(new GetActivitiesQuery(entityType, entityId, page, pageSize), ct);
+        var result = await _sender.Send(new GetActivitiesQuery(leadId, opportunityId, partnerId, page, pageSize), ct);
         return Ok(new { success = true, data = result });
     }
 

@@ -52,6 +52,8 @@ public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, PagedResult<L
                 l.Source,
                 l.AssignedUserId,
                 null,
+                l.IsMarketingConsentGiven,
+                l.TerritoryId,
                 l.IsActive,
                 l.CreatedAt))
             .ToListAsync(cancellationToken);

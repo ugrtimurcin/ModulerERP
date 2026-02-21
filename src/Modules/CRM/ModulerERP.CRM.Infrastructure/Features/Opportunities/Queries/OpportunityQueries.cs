@@ -44,7 +44,7 @@ public class GetOpportunitiesQueryHandler : IRequestHandler<GetOpportunitiesQuer
                 o.Lead != null ? (o.Lead.FirstName + " " + o.Lead.LastName) : null,
                 o.EstimatedValue.Amount, o.EstimatedValue.CurrencyCode,
                 o.Stage.ToString(), o.Probability, o.WeightedValue,
-                o.ExpectedCloseDate, o.AssignedUserId, null, o.IsActive, o.CreatedAt))
+                o.ExpectedCloseDate, o.AssignedUserId, null, o.TerritoryId, o.IsActive, o.CreatedAt))
             .ToListAsync(ct);
 
         return new PagedResult<OpportunityListDto>(data, request.Page, request.PageSize, totalCount, totalPages);
@@ -73,6 +73,6 @@ public class GetOpportunityByIdQueryHandler : IRequestHandler<GetOpportunityById
             o.PartnerId, o.Partner?.Name,
             o.EstimatedValue.Amount, o.CurrencyId, o.EstimatedValue.CurrencyCode,
             o.Stage.ToString(), o.Probability, o.WeightedValue,
-            o.ExpectedCloseDate, o.AssignedUserId, null, o.IsActive, o.CreatedAt);
+            o.ExpectedCloseDate, o.AssignedUserId, null, o.TerritoryId, o.CompetitorId, o.LossReasonId, o.IsActive, o.CreatedAt);
     }
 }

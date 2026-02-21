@@ -33,7 +33,6 @@ public static class DependencyInjection
         services.AddScoped<IRepository<Tag>, CRMRepository<Tag>>();
         // EntityTag and PartnerBalance don't inherit BaseEntity — use DbSet directly
         services.AddScoped<IRepository<SaleAgent>, CRMRepository<SaleAgent>>();
-        services.AddScoped<IRepository<CommissionRule>, CRMRepository<CommissionRule>>();
         services.AddScoped<IRepository<BusinessPartnerGroup>, CRMRepository<BusinessPartnerGroup>>();
 
 

@@ -12,7 +12,7 @@ namespace ModulerERP.CRM.Application.Features.Partners.Commands;
 // ── Create ──
 public record CreatePartnerCommand(
     string Code, string Name, bool IsCustomer, bool IsSupplier, string Kind,
-    Guid? GroupId = null, Guid? DefaultCurrencyId = null,
+    Guid? GroupId = null, Guid? TerritoryId = null, Guid? DefaultCurrencyId = null,
     string? TaxOffice = null, string? TaxNumber = null, string? IdentityNumber = null,
     string? Email = null, string? MobilePhone = null,
     AddressDto? BillingAddress = null, AddressDto? ShippingAddress = null) : IRequest<BusinessPartnerDetailDto>;
@@ -53,17 +53,18 @@ public class CreatePartnerCommandHandler : IRequestHandler<CreatePartnerCommand,
             partner.UpdateBillingAddress(new Address(r.BillingAddress.Street ?? "", r.BillingAddress.District ?? "", r.BillingAddress.City ?? "", r.BillingAddress.ZipCode ?? "", r.BillingAddress.Country ?? "", r.BillingAddress.Block ?? "", r.BillingAddress.Parcel ?? ""));
         if (r.ShippingAddress != null)
             partner.UpdateShippingAddress(new Address(r.ShippingAddress.Street ?? "", r.ShippingAddress.District ?? "", r.ShippingAddress.City ?? "", r.ShippingAddress.ZipCode ?? "", r.ShippingAddress.Country ?? "", r.ShippingAddress.Block ?? "", r.ShippingAddress.Parcel ?? ""));
+        if (r.TerritoryId.HasValue) 
+            partner.SetTerritory(r.TerritoryId);
 
         await _repo.AddAsync(partner, ct);
         await _uow.SaveChangesAsync(ct);
 
         return MapToDetail(partner);
     }
-
     internal static BusinessPartnerDetailDto MapToDetail(BusinessPartner p) =>
         new(p.Id, p.Code, p.Name, p.IsCustomer, p.IsSupplier, p.Kind.ToString(),
-            p.TaxOffice, p.TaxNumber, p.IdentityNumber, p.GroupId, p.DefaultCurrencyId,
-            p.PaymentTermDays, p.CreditLimit, p.DefaultDiscountRate,
+            p.TaxOffice, p.TaxNumber, p.IdentityNumber, p.GroupId, p.TerritoryId, p.DefaultCurrencyId,
+            p.DefaultDiscountRate,
             p.Website, p.Email, p.MobilePhone, p.Landline, p.Fax, p.WhatsappNumber,
             p.BillingAddress != null ? new AddressDto(p.BillingAddress.Street, p.BillingAddress.District, p.BillingAddress.City, p.BillingAddress.ZipCode, p.BillingAddress.Country, p.BillingAddress.Block, p.BillingAddress.Parcel) : null,
             p.ShippingAddress != null ? new AddressDto(p.ShippingAddress.Street, p.ShippingAddress.District, p.ShippingAddress.City, p.ShippingAddress.ZipCode, p.ShippingAddress.Country, p.ShippingAddress.Block, p.ShippingAddress.Parcel) : null,
@@ -73,11 +74,11 @@ public class CreatePartnerCommandHandler : IRequestHandler<CreatePartnerCommand,
 // ── Update ──
 public record UpdatePartnerCommand(
     Guid Id, string Name, bool IsCustomer, bool IsSupplier, string Kind,
-    Guid? GroupId = null, Guid? DefaultCurrencyId = null,
+    Guid? GroupId = null, Guid? TerritoryId = null, Guid? DefaultCurrencyId = null,
     string? TaxOffice = null, string? TaxNumber = null, string? IdentityNumber = null,
     string? Email = null, string? MobilePhone = null, string? Landline = null,
     string? Fax = null, string? WhatsappNumber = null, string? Website = null,
-    int PaymentTermDays = 30, decimal CreditLimit = 0, decimal DefaultDiscountRate = 0,
+    decimal DefaultDiscountRate = 0,
     AddressDto? BillingAddress = null, AddressDto? ShippingAddress = null,
     bool? IsActive = null) : IRequest<BusinessPartnerDetailDto>;
 
@@ -97,7 +98,7 @@ public class UpdatePartnerCommandHandler : IRequestHandler<UpdatePartnerCommand,
         var kind = Enum.Parse<PartnerKind>(r.Kind);
         partner.UpdateBasicInfo(r.Name, kind, r.IsCustomer, r.IsSupplier);
         partner.UpdateTaxInfo(r.TaxOffice, r.TaxNumber, r.IdentityNumber);
-        partner.UpdateFinancialInfo(r.DefaultCurrencyId, r.PaymentTermDays, r.CreditLimit, r.DefaultDiscountRate);
+        partner.UpdateFinancialInfo(r.DefaultCurrencyId, r.DefaultDiscountRate);
         partner.UpdateContactInfo(r.Website, r.Email, r.MobilePhone, r.Landline, r.Fax, r.WhatsappNumber);
 
         if (r.BillingAddress != null)
@@ -106,6 +107,7 @@ public class UpdatePartnerCommandHandler : IRequestHandler<UpdatePartnerCommand,
             partner.UpdateShippingAddress(new Address(r.ShippingAddress.Street ?? "", r.ShippingAddress.District ?? "", r.ShippingAddress.City ?? "", r.ShippingAddress.ZipCode ?? "", r.ShippingAddress.Country ?? "", r.ShippingAddress.Block ?? "", r.ShippingAddress.Parcel ?? ""));
 
         if (r.GroupId.HasValue) partner.SetGroup(r.GroupId);
+        if (r.TerritoryId.HasValue) partner.SetTerritory(r.TerritoryId);
         if (r.IsActive.HasValue) { if (r.IsActive.Value) partner.Activate(); else partner.Deactivate(); }
 
         await _uow.SaveChangesAsync(ct);

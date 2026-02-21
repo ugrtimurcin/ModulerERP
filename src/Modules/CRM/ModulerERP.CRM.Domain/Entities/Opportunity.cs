@@ -31,7 +31,14 @@ public class Opportunity : BaseEntity
     /// <summary>Responsible sales rep</summary>
     public Guid? AssignedUserId { get; private set; }
 
+    public Guid? TerritoryId { get; private set; }
+    public Guid? CompetitorId { get; private set; }
+    public Guid? LossReasonId { get; private set; }
+
     // Navigation
+    public Territory? Territory { get; private set; }
+    public Competitor? Competitor { get; private set; }
+    public RejectionReason? LossReason { get; private set; }
     public Lead? Lead { get; private set; }
     public BusinessPartner? Partner { get; private set; }
     public ICollection<Activity> Activities { get; private set; } = new List<Activity>();
@@ -102,7 +109,13 @@ public class Opportunity : BaseEntity
     }
 
     public void Assign(Guid userId) => AssignedUserId = userId;
+    public void SetTerritory(Guid? territoryId) => TerritoryId = territoryId;
     
     public void MarkAsWon() => UpdateStage(OpportunityStage.Won);
-    public void MarkAsLost() => UpdateStage(OpportunityStage.Lost);
+    public void MarkAsLost(Guid? lossReasonId = null, Guid? competitorId = null)
+    {
+        UpdateStage(OpportunityStage.Lost);
+        LossReasonId = lossReasonId;
+        CompetitorId = competitorId;
+    }
 }

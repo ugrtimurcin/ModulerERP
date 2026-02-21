@@ -17,7 +17,8 @@ public record CreateOpportunityCommand(
     Guid? CurrencyId = null,
     string Stage = "Discovery",
     DateTime? ExpectedCloseDate = null,
-    Guid? AssignedUserId = null) : IRequest<OpportunityDetailDto>;
+    Guid? AssignedUserId = null,
+    Guid? TerritoryId = null) : IRequest<OpportunityDetailDto>;
 
 public class CreateOpportunityCommandValidator : AbstractValidator<CreateOpportunityCommand>
 {
@@ -49,13 +50,15 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
             _currentUser.UserId, request.LeadId, request.PartnerId, request.CurrencyId,
             request.AssignedUserId, request.ExpectedCloseDate);
 
+        if (request.TerritoryId.HasValue) opp.SetTerritory(request.TerritoryId);
+
         await _repo.AddAsync(opp, ct);
         await _uow.SaveChangesAsync(ct);
 
         return new OpportunityDetailDto(opp.Id, opp.Title, opp.LeadId, null, opp.PartnerId, null,
             opp.EstimatedValue.Amount, opp.CurrencyId, opp.EstimatedValue.CurrencyCode,
             opp.Stage.ToString(), opp.Probability, opp.WeightedValue,
-            opp.ExpectedCloseDate, opp.AssignedUserId, null, opp.IsActive, opp.CreatedAt);
+            opp.ExpectedCloseDate, opp.AssignedUserId, null, opp.TerritoryId, null, null, opp.IsActive, opp.CreatedAt);
     }
 }
 
@@ -71,6 +74,9 @@ public record UpdateOpportunityCommand(
     int? Probability = null,
     DateTime? ExpectedCloseDate = null,
     Guid? AssignedUserId = null,
+    Guid? TerritoryId = null,
+    Guid? CompetitorId = null,
+    Guid? LossReasonId = null,
     bool? IsActive = null) : IRequest<OpportunityDetailDto>;
 
 public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunityCommand, OpportunityDetailDto>
@@ -90,12 +96,20 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
             ?? throw new KeyNotFoundException($"Opportunity '{request.Id}' not found.");
 
         if (!string.IsNullOrEmpty(request.Stage) && Enum.TryParse<Domain.Enums.OpportunityStage>(request.Stage, out var stage))
-            opp.UpdateStage(stage);
+        {
+            if (stage == Domain.Enums.OpportunityStage.Lost)
+                opp.MarkAsLost(request.LossReasonId, request.CompetitorId);
+            else if (stage == Domain.Enums.OpportunityStage.Won)
+                opp.MarkAsWon();
+            else
+                opp.UpdateStage(stage);
+        }
 
         if (request.Probability.HasValue) opp.SetProbability(request.Probability.Value);
         opp.UpdateValue(request.EstimatedValue, request.CurrencyCode, request.CurrencyId);
 
         if (request.AssignedUserId.HasValue) opp.Assign(request.AssignedUserId.Value);
+        if (request.TerritoryId.HasValue) opp.SetTerritory(request.TerritoryId);
         if (request.IsActive.HasValue) { if (request.IsActive.Value) opp.Activate(); else opp.Deactivate(); }
 
         await _uow.SaveChangesAsync(ct);
@@ -103,7 +117,7 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
         return new OpportunityDetailDto(opp.Id, opp.Title, opp.LeadId, null, opp.PartnerId, null,
             opp.EstimatedValue.Amount, opp.CurrencyId, opp.EstimatedValue.CurrencyCode,
             opp.Stage.ToString(), opp.Probability, opp.WeightedValue,
-            opp.ExpectedCloseDate, opp.AssignedUserId, null, opp.IsActive, opp.CreatedAt);
+            opp.ExpectedCloseDate, opp.AssignedUserId, null, opp.TerritoryId, opp.CompetitorId, opp.LossReasonId, opp.IsActive, opp.CreatedAt);
     }
 }
 

@@ -49,8 +49,8 @@ public class GetPartnerByIdQueryHandler : IRequestHandler<GetPartnerByIdQuery, B
 
         return new BusinessPartnerDetailDto(
             p.Id, p.Code, p.Name, p.IsCustomer, p.IsSupplier, p.Kind.ToString(),
-            p.TaxOffice, p.TaxNumber, p.IdentityNumber, p.GroupId, p.DefaultCurrencyId,
-            p.PaymentTermDays, p.CreditLimit, p.DefaultDiscountRate,
+            p.TaxOffice, p.TaxNumber, p.IdentityNumber, p.GroupId, p.TerritoryId, p.DefaultCurrencyId,
+            p.DefaultDiscountRate,
             p.Website, p.Email, p.MobilePhone, p.Landline, p.Fax, p.WhatsappNumber,
             p.BillingAddress != null ? new AddressDto(p.BillingAddress.Street, p.BillingAddress.District, p.BillingAddress.City, p.BillingAddress.ZipCode, p.BillingAddress.Country, p.BillingAddress.Block, p.BillingAddress.Parcel) : null,
             p.ShippingAddress != null ? new AddressDto(p.ShippingAddress.Street, p.ShippingAddress.District, p.ShippingAddress.City, p.ShippingAddress.ZipCode, p.ShippingAddress.Country, p.ShippingAddress.Block, p.ShippingAddress.Parcel) : null,

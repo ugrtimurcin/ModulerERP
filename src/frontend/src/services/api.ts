@@ -1,5 +1,14 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5056/api';
 
+import { leadsService } from './crm/leads.service';
+import { partnersService } from './crm/partners.service';
+import { opportunitiesService } from './crm/opportunities.service';
+import { contactsService } from './crm/contacts.service';
+import { activitiesService } from './crm/activities.service';
+import { ticketsService } from './crm/tickets.service';
+import { tagsService, saleAgentsService, partnerGroupsService, territoriesService, competitorsService, lossReasonsService, rejectionReasonsService } from './crm/auxiliary.service';
+
+
 export interface ApiResponse<T> {
     success: boolean;
     data?: T;
@@ -169,228 +178,20 @@ export const api = {
         delete: (id: string) => request<any>(`/roles/${id}`, { method: 'DELETE' }),
     },
 
-    // Partners (CRM)
-    partners: {
-        getAll: (page = 1, pageSize = 20, isCustomer?: boolean, isSupplier?: boolean) => {
-            let url = `/crm/partners?page=${page}&pageSize=${pageSize}`;
-            if (isCustomer !== undefined) url += `&isCustomer=${isCustomer}`;
-            if (isSupplier !== undefined) url += `&isSupplier=${isSupplier}`;
-            return request<PagedResult<{
-                id: string;
-                code: string;
-                name: string;
-                isCustomer: boolean;
-                isSupplier: boolean;
-                email: string | null;
-                mobilePhone: string | null;
-                isActive: boolean;
-                createdAt: string;
-            }>>(url);
-        },
-        getById: (id: string) => request<any>(`/crm/partners/${id}`),
-        create: (data: any) =>
-            request<any>('/crm/partners', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) =>
-            request<any>(`/crm/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/partners/${id}`, { method: 'DELETE' }),
-    },
-
-    // Contacts (CRM)
-    contacts: {
-        getAll: (page = 1, pageSize = 20, partnerId?: string) => {
-            let url = `/crm/contacts?page=${page}&pageSize=${pageSize}`;
-            if (partnerId) url += `&partnerId=${partnerId}`;
-            return request<PagedResult<{
-                id: string;
-                partnerId: string;
-                firstName: string;
-                lastName: string;
-                fullName: string;
-                position: string | null;
-                email: string | null;
-                phone: string | null;
-                isPrimary: boolean;
-                isActive: boolean;
-                createdAt: string;
-            }>>(url);
-        },
-        create: (data: any) => request<any>('/crm/contacts', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) => request<any>(`/crm/contacts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/contacts/${id}`, { method: 'DELETE' }),
-
-    },
-
-    // Leads (CRM)
-    leads: {
-        getAll: (page = 1, pageSize = 20, status?: string) => {
-            let url = `/crm/leads?page=${page}&pageSize=${pageSize}`;
-            if (status) url += `&status=${status}`;
-            return request<PagedResult<{
-                id: string;
-                title: string | null;
-                firstName: string;
-                lastName: string;
-                fullName: string;
-                company: string | null;
-                email: string | null;
-                phone: string | null;
-                status: string;
-                source: string | null;
-                assignedUserId: string | null;
-                isActive: boolean;
-                createdAt: string;
-            }>>(url);
-        },
-        create: (data: any) => request<any>('/crm/leads', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) => request<any>(`/crm/leads/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/leads/${id}`, { method: 'DELETE' }),
-        convert: (id: string) => request<any>(`/crm/leads/${id}/convert`, { method: 'POST' }),
-    },
-
-    // Opportunities (CRM)
-    opportunities: {
-        getAll: (page = 1, pageSize = 20, stage?: string) => {
-            let url = `/crm/opportunities?page=${page}&pageSize=${pageSize}`;
-            if (stage) url += `&stage=${stage}`;
-            return request<PagedResult<{
-                id: string;
-                title: string;
-                partnerId: string | null;
-                partnerName: string | null;
-                estimatedValue: number;
-                currencyCode: string;
-                stage: string;
-                probability: number;
-                weightedValue: number;
-                expectedCloseDate: string | null;
-                assignedUserId: string | null;
-                isActive: boolean;
-                createdAt: string;
-            }>>(url);
-        },
-        create: (data: any) => request<any>('/crm/opportunities', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) => request<any>(`/crm/opportunities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/opportunities/${id}`, { method: 'DELETE' }),
-        updateStage: (id: string, stage: string) => request<any>(`/crm/opportunities/${id}/stage`, { method: 'PATCH', body: JSON.stringify(stage) }),
-    },
-
-    // Activities (CRM)
-    activities: {
-        getAll: (page = 1, pageSize = 20, entityId?: string, entityType?: string) => {
-            let url = `/crm/activities?page=${page}&pageSize=${pageSize}`;
-            if (entityId) url += `&entityId=${entityId}`;
-            if (entityType) url += `&entityType=${entityType}`;
-            return request<PagedResult<{
-                id: string;
-                type: number;
-                subject: string;
-                description: string | null;
-                activityDate: string;
-                entityType: string;
-                entityId: string;
-                isScheduled: boolean;
-                isCompleted: boolean;
-                completedAt: string | null;
-                createdAt: string;
-            }>>(url);
-        },
-        create: (data: any) => request<any>('/crm/activities', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) => request<any>(`/crm/activities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/activities/${id}`, { method: 'DELETE' }),
-        complete: (id: string) => request<any>(`/crm/activities/${id}/complete`, { method: 'POST' }),
-    },
-
-    // Tags (CRM)
-    tags: {
-        getAll: (entityType?: string) => {
-            let url = '/crm/tags';
-            if (entityType) url += `?entityType=${entityType}`;
-            return request<{
-                id: string;
-                name: string;
-                colorCode: string;
-                entityType: string | null;
-            }[]>(url);
-        },
-        create: (data: { name: string; colorCode?: string; entityType?: string }) =>
-            request<any>('/crm/tags', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: { name: string; colorCode: string; entityType?: string }) =>
-            request<any>(`/crm/tags/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/tags/${id}`, { method: 'DELETE' }),
-    },
-
-
-
-    // Support Tickets (CRM)
-    tickets: {
-        getAll: (page = 1, pageSize = 20, status?: number, priority?: number) => {
-            let url = `/crm/tickets?page=${page}&pageSize=${pageSize}`;
-            if (status !== undefined) url += `&status=${status}`;
-            if (priority !== undefined) url += `&priority=${priority}`;
-            return request<PagedResult<{
-                id: string;
-                title: string;
-                priority: number;
-                priorityName: string;
-                status: number;
-                statusName: string;
-                partnerId: string | null;
-                partnerName: string | null;
-                assignedUserId: string | null;
-                createdAt: string;
-            }>>(url);
-        },
-        getById: (id: string) => request<{
-            id: string;
-            title: string;
-            description: string;
-            priority: number;
-            priorityName: string;
-            status: number;
-            statusName: string;
-            partnerId: string | null;
-            partnerName: string | null;
-            assignedUserId: string | null;
-            resolution: string | null;
-            resolvedAt: string | null;
-            closedAt: string | null;
-            createdAt: string;
-        }>(`/crm/tickets/${id}`),
-        create: (data: { title: string; description: string; priority?: number; partnerId?: string; assignedUserId?: string }) =>
-            request<any>('/crm/tickets', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: { title: string; description: string; priority: number; assignedUserId?: string }) =>
-            request<any>(`/crm/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/tickets/${id}`, { method: 'DELETE' }),
-        // Lifecycle actions
-        resolve: (id: string, resolution: string) =>
-            request<any>(`/crm/tickets/${id}/resolve`, { method: 'POST', body: JSON.stringify({ resolution }) }),
-        close: (id: string) => request<any>(`/crm/tickets/${id}/close`, { method: 'POST' }),
-        reopen: (id: string) => request<any>(`/crm/tickets/${id}/reopen`, { method: 'POST' }),
-        // Messages (nested)
-        getMessages: (id: string, includeInternal = true) =>
-            request<any[]>(`/crm/tickets/${id}/messages?includeInternal=${includeInternal}`),
-        addMessage: (id: string, data: { message: string; isInternal?: boolean }) =>
-            request<any>(`/crm/tickets/${id}/messages`, { method: 'POST', body: JSON.stringify(data) }),
-    },
-
-    // Sale Agents (CRM)
-    saleAgents: {
-        create: (data: any) => request<any>('/crm/sale-agents', { method: 'POST', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/sale-agents/${id}`, { method: 'DELETE' }),
-    },
-
-    // Commission Rules (CRM)
-    commissionRules: {
-        create: (data: any) => request<any>('/crm/commission-rules', { method: 'POST', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/commission-rules/${id}`, { method: 'DELETE' }),
-    },
-
-    // Partner Groups (CRM)
-    partnerGroups: {
-        create: (data: any) => request<any>('/crm/partner-groups', { method: 'POST', body: JSON.stringify(data) }),
-        update: (id: string, data: any) => request<any>(`/crm/partner-groups/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-        delete: (id: string) => request<any>(`/crm/partner-groups/${id}`, { method: 'DELETE' }),
-    },
+    // CRM Module Services
+    leads: leadsService,
+    partners: partnersService,
+    opportunities: opportunitiesService,
+    contacts: contactsService,
+    activities: activitiesService,
+    tickets: ticketsService,
+    tags: tagsService,
+    saleAgents: saleAgentsService,
+    partnerGroups: partnerGroupsService,
+    territories: territoriesService,
+    competitors: competitorsService,
+    lossReasons: lossReasonsService,
+    rejectionReasons: rejectionReasonsService,
 
     // Inventory - Product Categories
     productCategories: {

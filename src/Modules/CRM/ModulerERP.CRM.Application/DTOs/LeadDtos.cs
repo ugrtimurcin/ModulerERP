@@ -14,6 +14,8 @@ public record LeadListDto(
     string? Source,
     Guid? AssignedUserId,
     string? AssignedUserName,
+    bool IsMarketingConsentGiven,
+    Guid? TerritoryId,
     bool IsActive,
     DateTime CreatedAt);
 
@@ -31,6 +33,11 @@ public record LeadDetailDto(
     string? AssignedUserName,
     Guid? ConvertedPartnerId,
     DateTime? ConvertedAt,
+    Guid? TerritoryId,
+    Guid? RejectionReasonId,
+    bool IsMarketingConsentGiven,
+    DateTime? ConsentDate,
+    string? ConsentSource,
     bool IsActive,
     DateTime CreatedAt);
 
@@ -42,7 +49,10 @@ public record CreateLeadDto(
     string? Email = null,
     string? Phone = null,
     string? Source = null,
-    Guid? AssignedUserId = null);
+    Guid? AssignedUserId = null,
+    Guid? TerritoryId = null,
+    bool IsMarketingConsentGiven = false,
+    string? ConsentSource = null);
 
 public record UpdateLeadDto(
     string FirstName,
@@ -54,4 +64,8 @@ public record UpdateLeadDto(
     string? Source = null,
     string? Status = null,
     Guid? AssignedUserId = null,
+    Guid? TerritoryId = null,
+    Guid? RejectionReasonId = null,
+    bool? IsMarketingConsentGiven = null,
+    string? ConsentSource = null,
     bool? IsActive = null);
