@@ -6,7 +6,7 @@ public record LeaveRequestDto(
     Guid Id,
     Guid EmployeeId,
     string EmployeeName,
-    LeaveType Type,
+    string LeavePolicyId,
     DateTime StartDate,
     DateTime EndDate,
     int DaysCount,
@@ -18,7 +18,7 @@ public record LeaveRequestDto(
 
 public record CreateLeaveRequestDto(
     Guid EmployeeId,
-    LeaveType Type,
+    Guid LeavePolicyId,
     DateTime StartDate,
     DateTime EndDate,
     int DaysCount,

@@ -42,7 +42,7 @@ public class LeaveRequestsController : BaseApiController
         {
             var command = new CreateLeaveRequestCommand(
                 dto.EmployeeId,
-                dto.Type,
+                dto.LeavePolicyId,
                 dto.StartDate,
                 dto.EndDate,
                 dto.DaysCount,

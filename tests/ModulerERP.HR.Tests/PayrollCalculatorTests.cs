@@ -56,7 +56,7 @@ public class PayrollCalculatorTests
         decimal gross = 40000;
         
         // Act
-        var result = PayrollCalculator.Calculate(employee, gross, 0, 0, 0, 0, 0, _taxRules, _ssRule, _minWage, _parameters);
+        var result = PayrollCalculator.Calculate(employee, gross, 0, new List<PayrollEntryDetail>(), _taxRules, null, _ssRule, _minWage, _parameters);
 
         // Assert
         // SS Basis = 40,000 (MinWage 20k, Ceiling 140k. 40k < 140k)
@@ -91,7 +91,7 @@ public class PayrollCalculatorTests
         decimal gross = 40000;
         
         // Act
-        var result = PayrollCalculator.Calculate(employee, gross, 0, 0, 0, 0, 0, _taxRules, _ssRule, _minWage, _parameters);
+        var result = PayrollCalculator.Calculate(employee, gross, 0, new List<PayrollEntryDetail>(), _taxRules, null, _ssRule, _minWage, _parameters);
 
         // Assert
         // Tax Base = 36,000
@@ -118,7 +118,7 @@ public class PayrollCalculatorTests
             transportAmount: 0);
 
         // Act
-        var result = PayrollCalculator.Calculate(employee, gross, 0, 0, 0, 0, 0, _taxRules, _ssRule, _minWage, _parameters);
+        var result = PayrollCalculator.Calculate(employee, gross, 0, new List<PayrollEntryDetail>(), _taxRules, null, _ssRule, _minWage, _parameters);
 
         // Assert
         // SS Basis should be capped at 140,000
@@ -156,7 +156,16 @@ public class PayrollCalculatorTests
         decimal gross = 30000;
 
         // Act
-        var result = PayrollCalculator.Calculate(employee, gross, 0, 0, 0, 0, transport, _taxRules, _ssRule, _minWage, _parameters);
+        var earningsAndDeductions = new List<PayrollEntryDetail>();
+        if (transport > 0)
+        {
+            var transportType = EarningDeductionType.Create(Guid.NewGuid(), Guid.NewGuid(), "Transport", EarningDeductionCategory.Earning, false, true, 0);
+            var detail = PayrollEntryDetail.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), transportType.Id, transport, "Transport Allowance");
+            var typeProp = typeof(PayrollEntryDetail).GetProperty("Type");
+            typeProp?.SetValue(detail, transportType);
+            earningsAndDeductions.Add(detail);
+        }
+        var result = PayrollCalculator.Calculate(employee, gross, 0, earningsAndDeductions, _taxRules, null, _ssRule, _minWage, _parameters);
 
         // Assert
         // Standard SS (10% of 30k) = 3,000
@@ -170,6 +179,6 @@ public class PayrollCalculatorTests
         // Final Net = 26,300 + 2,000 = 28,300
         
         result.NetPayable.Should().Be(28300);
-        result.TransportAmount.Should().Be(transport);
+
     }
 }

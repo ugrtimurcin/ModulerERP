@@ -53,8 +53,8 @@ public class GetPayrollSummaryQueryHandler : IRequestHandler<GetPayrollSummaryQu
              .GroupBy(e => e.PayrollId)
              .Select(g => new 
              {
-                 Gross = g.Sum(e => e.BaseSalary + e.OvertimePay + e.CommissionPay + e.Bonus + e.TransportationAllowance),
-                 Deductions = g.Sum(e => e.SocialSecurityEmployee + e.ProvidentFundEmployee + e.UnemploymentInsuranceEmployee + e.IncomeTax + e.AdvanceDeduction),
+                 Gross = g.Sum(e => e.BaseSalary + e.TotalTaxableEarnings + e.TotalSgkExemptEarnings),
+                 Deductions = g.Sum(e => e.SocialSecurityEmployee + e.ProvidentFundEmployee + e.IncomeTax + e.StampTax + e.PersonalAllowanceDeduction),
                  Net = g.Sum(e => e.NetPayable)
              })
              .FirstOrDefaultAsync(cancellationToken);

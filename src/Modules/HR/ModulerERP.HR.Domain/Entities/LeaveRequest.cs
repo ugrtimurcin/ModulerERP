@@ -6,7 +6,7 @@ namespace ModulerERP.HR.Domain.Entities;
 public class LeaveRequest : BaseEntity
 {
     public Guid EmployeeId { get; private set; }
-    public LeaveType Type { get; private set; }
+    public Guid LeavePolicyId { get; private set; }
     public DateTime StartDate { get; private set; }
     public DateTime EndDate { get; private set; }
     public int DaysCount { get; private set; }
@@ -15,15 +15,16 @@ public class LeaveRequest : BaseEntity
     public Guid? ApprovedByUserId { get; private set; }
 
     public Employee? Employee { get; private set; }
+    public LeavePolicy? LeavePolicy { get; private set; }
 
     private LeaveRequest() { }
 
-    public static LeaveRequest Create(Guid tenantId, Guid createdBy, Guid employeeId, LeaveType type, DateTime start, DateTime end, int days, string? reason)
+    public static LeaveRequest Create(Guid tenantId, Guid createdBy, Guid employeeId, Guid leavePolicyId, DateTime start, DateTime end, int days, string? reason)
     {
         var req = new LeaveRequest
         {
             EmployeeId = employeeId,
-            Type = type,
+            LeavePolicyId = leavePolicyId,
             StartDate = start,
             EndDate = end,
             DaysCount = days,
@@ -35,13 +36,7 @@ public class LeaveRequest : BaseEntity
     }
 }
 
-public enum LeaveType
-{
-    Annual = 1,
-    Sick = 2,
-    Unpaid = 3,
-    Maternity = 4
-}
+
 
 public enum LeaveStatus
 {

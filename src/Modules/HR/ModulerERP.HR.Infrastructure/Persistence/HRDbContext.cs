@@ -36,8 +36,20 @@ public class HRDbContext : DbContext, IHRUnitOfWork
     public DbSet<PayrollParameter> PayrollParameters => Set<PayrollParameter>();
     public DbSet<TaxRule> TaxRules => Set<TaxRule>();
 
+    public DbSet<HrSetting> HrSettings => Set<HrSetting>();
+    public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
+    public DbSet<EarningDeductionType> EarningDeductionTypes => Set<EarningDeductionType>();
+    public DbSet<SgkRiskProfile> SgkRiskProfiles => Set<SgkRiskProfile>();
+    public DbSet<EmployeeCumulative> EmployeeCumulatives => Set<EmployeeCumulative>();
+    public DbSet<LeaveAllocation> LeaveAllocations => Set<LeaveAllocation>();
+    public DbSet<PayrollEntryDetail> PayrollEntryDetails => Set<PayrollEntryDetail>();
+
     // Shared Audit Log (mapped to system_core schema)
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    // EF Core caches the model. For global query filters to work dynamically,
+    // the filter expression must close over a field/property that changes per-request.
+    private Guid _tenantId => _currentUserService.TenantId;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,21 +65,29 @@ public class HRDbContext : DbContext, IHRUnitOfWork
             entity.Property(e => e.NewValues).HasColumnType("jsonb");
         });
 
-        modelBuilder.Entity<Employee>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Department>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<AttendanceLog>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<DailyAttendance>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<LeaveRequest>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PublicHoliday>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<CommissionRule>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PeriodCommission>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<AdvanceRequest>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Payroll>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PayrollEntry>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<WorkShift>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<SalaryHistory>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<MinimumWage>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PayrollParameter>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Employee>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<Department>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<AttendanceLog>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<DailyAttendance>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<LeaveRequest>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<PublicHoliday>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<CommissionRule>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<PeriodCommission>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<AdvanceRequest>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<Payroll>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<PayrollEntry>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<WorkShift>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<SalaryHistory>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<MinimumWage>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<PayrollParameter>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        
+        modelBuilder.Entity<HrSetting>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<LeavePolicy>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<EarningDeductionType>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<SgkRiskProfile>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<EmployeeCumulative>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<LeaveAllocation>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
+        modelBuilder.Entity<PayrollEntryDetail>().HasQueryFilter(e => !e.IsDeleted && e.TenantId == _tenantId);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HRDbContext).Assembly);
     }
@@ -84,9 +104,6 @@ public class HRDbContext : DbContext, IHRUnitOfWork
         {
             if (entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
                 continue;
-
-            Console.WriteLine($"[HRDbContext] processing entry: {entry.Entity.GetType().Name}, State: {entry.State}, TenantId: {tenantId}");
-
 
             // Handle TenantId and Audit fields
             if (entry.State == EntityState.Added)
@@ -169,7 +186,7 @@ public class HRDbContext : DbContext, IHRUnitOfWork
         }
 
         var result = await base.SaveChangesAsync(cancellationToken);
-        Console.WriteLine($"[HRDbContext] SaveChangesAsync completed. Records affected: {result}");
+
 
         if (auditEntries.Count > 0)
         {

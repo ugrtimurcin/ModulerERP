@@ -29,6 +29,7 @@ public class Employee : BaseEntity
     // Legal & KKTC Specifics
     public CitizenshipType Citizenship { get; private set; } = CitizenshipType.TRNC; // Default to TRNC
     public SocialSecurityType SocialSecurityType { get; private set; } = SocialSecurityType.Standard;
+    public Guid? SgkRiskProfileId { get; private set; } // Specific risk profile if different from Dept
     public MaritalStatus MaritalStatus { get; private set; } = MaritalStatus.Single;
     public bool IsSpouseWorking { get; private set; }
     public int ChildCount { get; private set; }
@@ -36,6 +37,10 @@ public class Employee : BaseEntity
 
     public string? WorkPermitNumber { get; private set; }
     public DateTime? WorkPermitExpDate { get; private set; }
+    
+    public string? PassportNumber { get; private set; }
+    public DateTime? PassportExpDate { get; private set; }
+    public DateTime? HealthReportExpDate { get; private set; } // Portör/Sağlık raporu
     
     // Redundant but helpful basics usually present in Employee tables if User doesn't exist yet
     public string FirstName { get; private set; } = string.Empty;
@@ -47,6 +52,7 @@ public class Employee : BaseEntity
     // Navigation
     public Department? Department { get; private set; }
     public Employee? Supervisor { get; private set; }
+    public SgkRiskProfile? SgkRiskProfile { get; private set; }
     
     // Collections
     public ICollection<SalaryHistory> SalaryHistory { get; private set; } = new List<SalaryHistory>();
@@ -115,8 +121,12 @@ public class Employee : BaseEntity
     public void UpdateLegalDetails(
         CitizenshipType citizenship, 
         SocialSecurityType socialSecurityType,
+        Guid? sgkRiskProfileId,
         string? workPermitNumber, 
         DateTime? workPermitExpDate, 
+        string? passportNumber,
+        DateTime? passportExpDate,
+        DateTime? healthReportExpDate,
         string? bankName, 
         string? iban,
         MaritalStatus maritalStatus,
@@ -126,8 +136,12 @@ public class Employee : BaseEntity
     {
         Citizenship = citizenship;
         SocialSecurityType = socialSecurityType;
+        SgkRiskProfileId = sgkRiskProfileId;
         WorkPermitNumber = workPermitNumber;
         WorkPermitExpDate = workPermitExpDate;
+        PassportNumber = passportNumber;
+        PassportExpDate = passportExpDate;
+        HealthReportExpDate = healthReportExpDate;
         BankName = bankName;
         Iban = iban;
         MaritalStatus = maritalStatus;

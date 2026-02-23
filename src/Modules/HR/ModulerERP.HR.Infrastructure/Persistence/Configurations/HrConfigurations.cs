@@ -58,17 +58,24 @@ public class PayrollEntryConfiguration : IEntityTypeConfiguration<PayrollEntry>
         builder.HasOne<Employee>().WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Restrict);
         
         builder.Property(e => e.BaseSalary).HasPrecision(18, 2);
-        builder.Property(e => e.OvertimePay).HasPrecision(18, 2);
-        builder.Property(e => e.CommissionPay).HasPrecision(18, 2);
-        builder.Property(e => e.AdvanceDeduction).HasPrecision(18, 2);
-            builder.Property(e => e.IncomeTax).HasColumnType("decimal(18,2)");
-            builder.Property(e => e.SocialSecurityEmployee).HasColumnType("decimal(18,2)");
-            builder.Property(e => e.ProvidentFundEmployee).HasColumnType("decimal(18,2)");
-            builder.Property(e => e.SocialSecurityEmployer).HasColumnType("decimal(18,2)");
-            builder.Property(e => e.ProvidentFundEmployer).HasColumnType("decimal(18,2)");
-            builder.Property(e => e.UnemploymentInsuranceEmployer).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.CumulativeTaxBaseBeforeThisPayroll).HasPrecision(18, 2);
+        builder.Property(e => e.TotalTaxableEarnings).HasPrecision(18, 2);
+        builder.Property(e => e.TotalSgkExemptEarnings).HasPrecision(18, 2);
+        builder.Property(e => e.PersonalAllowanceDeduction).HasPrecision(18, 2);
+        builder.Property(e => e.StampTax).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.IncomeTax).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.SocialSecurityEmployee).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.ProvidentFundEmployee).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.SocialSecurityEmployer).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.ProvidentFundEmployer).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.UnemploymentInsuranceEmployer).HasColumnType("decimal(18,2)");
         builder.Property(e => e.NetPayable).HasPrecision(18, 2);
         builder.Property(e => e.ExchangeRate).HasPrecision(18, 4);
+
+        builder.HasMany(e => e.Details)
+               .WithOne(d => d.PayrollEntry)
+               .HasForeignKey(d => d.PayrollEntryId)
+               .OnDelete(DeleteBehavior.Cascade);
     }
 }
 public class WorkShiftConfiguration : IEntityTypeConfiguration<WorkShift>

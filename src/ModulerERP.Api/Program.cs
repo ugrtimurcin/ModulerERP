@@ -144,6 +144,36 @@ if (app.Environment.IsDevelopment())
             {
                  Console.WriteLine("Seeding skipped: Root Tenant already exists.");
             }
+
+            // --- SEED HR MODULE ---
+            var hrContext = scope.ServiceProvider.GetRequiredService<ModulerERP.HR.Infrastructure.Persistence.HRDbContext>();
+            if (!await hrContext.LeavePolicies.IgnoreQueryFilters().AnyAsync())
+            {
+                hrContext.LeavePolicies.AddRange(ModulerERP.HR.Infrastructure.Persistence.Seeding.HRSeeder.GetLeavePolicies());
+                await hrContext.SaveChangesAsync();
+                Console.WriteLine("Seeded HR Leave Policies.");
+            }
+
+            if (!await hrContext.EarningDeductionTypes.IgnoreQueryFilters().AnyAsync())
+            {
+                hrContext.EarningDeductionTypes.AddRange(ModulerERP.HR.Infrastructure.Persistence.Seeding.HRSeeder.GetEarningDeductionTypes());
+                await hrContext.SaveChangesAsync();
+                Console.WriteLine("Seeded HR Earning/Deduction Types.");
+            }
+
+            if (!await hrContext.SgkRiskProfiles.IgnoreQueryFilters().AnyAsync())
+            {
+                hrContext.SgkRiskProfiles.AddRange(ModulerERP.HR.Infrastructure.Persistence.Seeding.HRSeeder.GetSgkRiskProfiles());
+                await hrContext.SaveChangesAsync();
+                Console.WriteLine("Seeded HR SGK Risk Profiles.");
+            }
+
+            if (!await hrContext.HrSettings.IgnoreQueryFilters().AnyAsync())
+            {
+                hrContext.HrSettings.AddRange(ModulerERP.HR.Infrastructure.Persistence.Seeding.HRSeeder.GetHrSettings());
+                await hrContext.SaveChangesAsync();
+                Console.WriteLine("Seeded HR Settings.");
+            }
         }
     }
 }

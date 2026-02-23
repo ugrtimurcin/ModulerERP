@@ -33,7 +33,7 @@ public class GetLeaveRequestByIdQueryHandler : IRequestHandler<GetLeaveRequestBy
             l.Id,
             l.EmployeeId,
             $"{l.Employee.FirstName} {l.Employee.LastName}",
-            l.Type,
+            l.LeavePolicyId.ToString(),
             l.StartDate,
             l.EndDate,
             l.DaysCount,

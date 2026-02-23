@@ -36,11 +36,11 @@ public class GetPayrollEntriesQueryHandler : IRequestHandler<GetPayrollEntriesQu
             e.EmployeeId,
             $"{e.Employee.FirstName} {e.Employee.LastName}",
             e.BaseSalary,
-            e.OvertimePay,
-            e.CommissionPay,
-            e.Bonus,
-            e.TransportationAllowance,
-            e.AdvanceDeduction,
+            0, // e.OvertimePay
+            0, // e.CommissionPay
+            0, // e.Bonus
+            0, // e.TransportationAllowance
+            0, // e.AdvanceDeduction
             e.SocialSecurityEmployee,
             e.ProvidentFundEmployee,
             e.IncomeTax,

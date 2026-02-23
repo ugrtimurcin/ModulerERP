@@ -14,17 +14,20 @@ public class LeaveRequestCommandHandlers :
     IRequestHandler<CancelLeaveRequestCommand>
 {
     private readonly IRepository<LeaveRequest> _leaveRepository;
+    private readonly IRepository<LeaveAllocation> _leaveAllocationRepository;
     private readonly IRepository<Employee> _employeeRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
     public LeaveRequestCommandHandlers(
         IRepository<LeaveRequest> leaveRepository,
+        IRepository<LeaveAllocation> leaveAllocationRepository,
         IRepository<Employee> employeeRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
         _leaveRepository = leaveRepository;
+        _leaveAllocationRepository = leaveAllocationRepository;
         _employeeRepository = employeeRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
@@ -40,7 +43,7 @@ public class LeaveRequestCommandHandlers :
             _currentUserService.TenantId,
             _currentUserService.UserId,
             request.EmployeeId,
-            request.Type,
+            request.LeavePolicyId, // Changed from Type
             request.StartDate,
             request.EndDate,
             request.DaysCount,
@@ -54,7 +57,7 @@ public class LeaveRequestCommandHandlers :
             leaveRequest.Id,
             leaveRequest.EmployeeId,
             $"{emp.FirstName} {emp.LastName}",
-            leaveRequest.Type,
+            leaveRequest.LeavePolicyId.ToString(), // Generic string representation
             leaveRequest.StartDate,
             leaveRequest.EndDate,
             leaveRequest.DaysCount,
@@ -74,7 +77,22 @@ public class LeaveRequestCommandHandlers :
         if (leaveRequest.Status != LeaveStatus.Pending)
             throw new InvalidOperationException("Only pending requests can be approved.");
 
-        // Reflection approach (as in previous code)
+        // Fetch LeaveBalance Allocation for this specific policy & employee year
+        var allocations = await _leaveAllocationRepository.FindAsync(
+            a => a.EmployeeId == leaveRequest.EmployeeId && a.LeavePolicyId == leaveRequest.LeavePolicyId && a.Year == DateTime.UtcNow.Year,
+            cancellationToken);
+            
+        var allocation = allocations.FirstOrDefault();
+        
+        if (allocation == null)
+            throw new InvalidOperationException("Employee does not have an active leave allocation for this policy. Balance might be 0, or allocation wasn't granted yet.");
+
+        if (allocation.DaysRemaining < leaveRequest.DaysCount)
+            throw new InvalidOperationException($"Insufficient leave balance. You are requesting {leaveRequest.DaysCount} days but only have {allocation.DaysRemaining} left for this policy.");
+
+        // Deduct from Balance
+        allocation.UseDays(leaveRequest.DaysCount);
+
         var statusProp = typeof(LeaveRequest).GetProperty("Status");
         statusProp?.SetValue(leaveRequest, LeaveStatus.Approved);
 
@@ -111,7 +129,23 @@ public class LeaveRequestCommandHandlers :
         if (leaveRequest.Status == LeaveStatus.Rejected)
             throw new InvalidOperationException("Cannot cancel a rejected request.");
 
-        // Placeholder for Cancel logic as per previous implementation
+        // Placeholder for Cancel logic: if status was approved, restore days to balance
+        if (leaveRequest.Status == LeaveStatus.Approved)
+        {
+             var allocations = await _leaveAllocationRepository.FindAsync(
+                 a => a.EmployeeId == leaveRequest.EmployeeId && a.LeavePolicyId == leaveRequest.LeavePolicyId && a.Year == DateTime.UtcNow.Year,
+                 cancellationToken);
+             
+             var allocation = allocations.FirstOrDefault();
+             if (allocation != null)
+             {
+                 allocation.RestoreDays(leaveRequest.DaysCount);
+             }
+        }
+        
+        var statusProp = typeof(LeaveRequest).GetProperty("Status");
+        statusProp?.SetValue(leaveRequest, LeaveStatus.Rejected);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

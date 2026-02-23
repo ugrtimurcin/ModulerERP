@@ -76,34 +76,14 @@ public class DailyAttendance : BaseEntity
         }
     }
 
-    public void CalculateBreakdown(bool isHoliday, bool isWeekend)
+    // Refactoring: The actual generation of Overtime 1.2x, 1.5x, 2.0x is dependent on
+    // Collective Agreements and KKTC Law. Thus, this entity only records total worked hours.
+    // The translation of hours -> overtime is handled by an Application Domain Service.
+    public void SetCalculatedBreakdown(int normal, int overtime1x, int overtime2x)
     {
-        if (TotalWorkedMins <= 0) return;
-
-        // KKTC Rules (Simplified):
-        // Weekdays: 8 hours (480 mins) normal, rest is Overtime 1x (1.1x rate usually, or 1.25x)
-        // Weekends/Holidays: All hours are Overtime 2x (or specific rate)
-
-        PreClearBreakdown();
-
-        if (isHoliday || isWeekend)
-        {
-            Overtime2xMins = TotalWorkedMins;
-        }
-        else
-        {
-            const int StandardDayMins = 480; // 8 hours
-            
-            if (TotalWorkedMins > StandardDayMins)
-            {
-                NormalMins = StandardDayMins;
-                Overtime1xMins = TotalWorkedMins - StandardDayMins;
-            }
-            else
-            {
-                NormalMins = TotalWorkedMins;
-            }
-        }
+        NormalMins = normal;
+        Overtime1xMins = overtime1x;
+        Overtime2xMins = overtime2x;
     }
 
     private void PreClearBreakdown()

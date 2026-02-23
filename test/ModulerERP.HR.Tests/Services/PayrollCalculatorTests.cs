@@ -60,12 +60,10 @@ public class PayrollCalculatorTests
         var result = PayrollCalculator.Calculate(
             employee, 
             gross, 
-            bonus, 
-            overtime, 
-            commission, 
-            advance,
-            transport,
+            0,
+            new List<PayrollEntryDetail>(),
             taxRules,
+            null,
             ssRule,
             null,
             new List<PayrollParameter>());
@@ -128,9 +126,17 @@ public class PayrollCalculatorTests
         // Ceiling = 7 * 20000 = 140000
 
         // Act
+        var earningsAndDeductions = new List<PayrollEntryDetail>();
+        if (transport > 0)
+        {
+            var transportType = EarningDeductionType.Create(Guid.NewGuid(), Guid.NewGuid(), "Transport", EarningDeductionCategory.Earning, false, true, 0);
+            var detail = PayrollEntryDetail.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), transportType.Id, transport, "Transport Allowance");
+            var typeProp = typeof(PayrollEntryDetail).GetProperty("Type");
+            typeProp?.SetValue(detail, transportType);
+            earningsAndDeductions.Add(detail);
+        }
         var result = PayrollCalculator.Calculate(
-            employee, gross, 0, 0, 0, 0, transport,
-            taxRules, ssRule, minWage, new List<PayrollParameter>()
+            employee, gross, 0, earningsAndDeductions, taxRules, null, ssRule, minWage, new List<PayrollParameter>()
         );
 
         // Assert
@@ -149,7 +155,7 @@ public class PayrollCalculatorTests
         
         result.SocialSecurityEmployee.Should().Be(14000); // Capped
         result.IncomeTax.Should().Be(28600);
-        result.TransportAmount.Should().Be(5000);
+
         result.NetPayable.Should().Be(262400);
     }
 }

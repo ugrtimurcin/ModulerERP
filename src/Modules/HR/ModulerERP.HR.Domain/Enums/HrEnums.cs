@@ -42,3 +42,9 @@ public enum AdvanceRequestStatus
     Deducted = 4,
     Rejected = 5
 }
+
+public enum EarningDeductionCategory
+{
+    Earning = 1,
+    Deduction = 2
+}

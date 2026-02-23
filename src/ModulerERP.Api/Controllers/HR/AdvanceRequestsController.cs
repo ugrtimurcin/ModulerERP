@@ -36,7 +36,7 @@ public class AdvanceRequestsController : BaseApiController
     [HttpPost]
     public async Task<IActionResult> CreateAdvanceRequest([FromBody] CreateAdvanceRequestDto dto, CancellationToken ct)
     {
-        var command = new CreateAdvanceRequestCommand(dto.EmployeeId, dto.Amount, dto.Description);
+        var command = new CreateAdvanceRequestCommand(dto.EmployeeId, dto.Amount, dto.Description ?? string.Empty);
         var request = await _sender.Send(command, ct);
         return CreatedAtAction(nameof(GetAdvanceRequests), null, request);
     }

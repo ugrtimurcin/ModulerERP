@@ -34,8 +34,12 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         emp.UpdateLegalDetails(
             dto.Citizenship, 
             dto.SocialSecurityType, 
+            null, // SgkRiskProfileId not in DTO yet
             dto.WorkPermitNumber, 
             dto.WorkPermitExpiryDate, 
+            null, // PassportNumber not in DTO yet
+            null, // PassportExpDate not in DTO yet
+            null, // HealthReportExpDate not in DTO yet
             dto.BankName, 
             dto.Iban,
             dto.MaritalStatus,

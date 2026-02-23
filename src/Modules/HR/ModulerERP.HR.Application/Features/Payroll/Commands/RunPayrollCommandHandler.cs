@@ -16,11 +16,10 @@ public class RunPayrollCommandHandler : IRequestHandler<RunPayrollCommand, Payro
     private readonly IRepository<TaxRule> _taxRuleRepository;
     private readonly IRepository<SocialSecurityRule> _socialSecurityRuleRepository;
     private readonly IRepository<DailyAttendance> _dailyAttendanceRepository;
-    private readonly IRepository<PeriodCommission> _commissionRepository;
-    private readonly IRepository<AdvanceRequest> _advanceRepository;
-    private readonly IRepository<Bonus> _bonusRepository;
-    private readonly IRepository<MinimumWage> _minimumWageRepository; // Added
-    private readonly IRepository<PayrollParameter> _payrollParameterRepository; // Added
+    private readonly IRepository<MinimumWage> _minimumWageRepository;
+    private readonly IRepository<PayrollParameter> _payrollParameterRepository;
+    private readonly IRepository<EmployeeCumulative> _employeeCumulativeRepository;
+    private readonly IRepository<EarningDeductionType> _earningDeductionTypeRepository;
     private readonly IHRUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
@@ -31,11 +30,10 @@ public class RunPayrollCommandHandler : IRequestHandler<RunPayrollCommand, Payro
         IRepository<TaxRule> taxRuleRepository,
         IRepository<SocialSecurityRule> socialSecurityRuleRepository,
         IRepository<DailyAttendance> dailyAttendanceRepository,
-        IRepository<PeriodCommission> commissionRepository,
-        IRepository<AdvanceRequest> advanceRepository,
-        IRepository<Bonus> bonusRepository,
-        IRepository<MinimumWage> minimumWageRepository, // Added
-        IRepository<PayrollParameter> payrollParameterRepository, // Added
+        IRepository<MinimumWage> minimumWageRepository,
+        IRepository<PayrollParameter> payrollParameterRepository,
+        IRepository<EmployeeCumulative> employeeCumulativeRepository,
+        IRepository<EarningDeductionType> earningDeductionTypeRepository,
         IHRUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
@@ -45,11 +43,10 @@ public class RunPayrollCommandHandler : IRequestHandler<RunPayrollCommand, Payro
         _taxRuleRepository = taxRuleRepository;
         _socialSecurityRuleRepository = socialSecurityRuleRepository;
         _dailyAttendanceRepository = dailyAttendanceRepository;
-        _commissionRepository = commissionRepository;
-        _advanceRepository = advanceRepository;
-        _bonusRepository = bonusRepository;
         _minimumWageRepository = minimumWageRepository;
         _payrollParameterRepository = payrollParameterRepository;
+        _employeeCumulativeRepository = employeeCumulativeRepository;
+        _earningDeductionTypeRepository = earningDeductionTypeRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
@@ -110,47 +107,28 @@ public class RunPayrollCommandHandler : IRequestHandler<RunPayrollCommand, Payro
         // Create entries for each employee
         foreach (var emp in employees)
         {
-            // 1. Fetch Overtime
-            var attendances = await _dailyAttendanceRepository.FindAsync(
-                a => a.EmployeeId == emp.Id && a.Date >= periodDate && a.Date <= periodEnd, 
-                cancellationToken);
+            // 1. Fetch YTD Cumulative Ledger
+            var ledgerList = await _employeeCumulativeRepository.FindAsync(c => c.EmployeeId == emp.Id && c.Year == dto.Year, cancellationToken);
+            var ledger = ledgerList.FirstOrDefault();
             
-            var ot1Mins = attendances.Sum(a => a.Overtime1xMins);
-            var ot2Mins = attendances.Sum(a => a.Overtime2xMins);
-            
-            // Standard Rate: Salary / 240 hours
-            var hourlyRate = emp.CurrentSalary / 240m; 
-            var ot1Pay = (ot1Mins / 60m) * hourlyRate * 1.5m; // Weekday Overtime (1.5x)
-            var ot2Pay = (ot2Mins / 60m) * hourlyRate * 2.0m; // Weekend/Holiday Overtime (2.0x)
-            var overtimePay = ot1Pay + ot2Pay;
-
-            // 2. Fetch Commissions
-            var commissions = await _commissionRepository.FindAsync(
-                c => c.EmployeeId == emp.Id && c.Period == period, // Use Period string matching Commission Period
-                cancellationToken);
-            var commissionPay = commissions.Sum(c => c.FinalAmount);
-
-            // 3. Fetch Advances
-            // Approved, Paid, Not Deducted, and due inside this period (or overdue?)
-            var advances = await _advanceRepository.FindAsync(
-                a => a.EmployeeId == emp.Id 
-                     && a.IsPaid 
-                     && !a.IsDeducted 
-                     && (a.RepaymentDate == null || (a.RepaymentDate >= periodDate && a.RepaymentDate <= periodEnd)), 
-                cancellationToken);
-            var advanceDeduction = advances.Sum(a => a.Amount);
-
-            // 4. Fetch Bonuses
-            var bonuses = await _bonusRepository.FindAsync(
-                b => b.EmployeeId == emp.Id && b.Period == period && !b.IsProcessed,
-                cancellationToken);
-            var bonusPay = bonuses.Sum(b => b.Amount);
-            
-            // Mark bonuses as processed
-            foreach(var b in bonuses)
+            // If it doesn't exist, create it (new employee at month start, etc.)
+            var ytdTaxBase = 0m;
+            if (ledger == null)
             {
-                b.MarkAsProcessed();
+                ledger = EmployeeCumulative.Create(tenantId, _currentUserService.UserId, emp.Id, dto.Year);
+                await _employeeCumulativeRepository.AddAsync(ledger, cancellationToken);
             }
+            else
+            {
+                ytdTaxBase = ledger.YtdTaxBase;
+            }
+
+            // 2. Fetch specific Risk Profile if exists
+            var riskProfile = emp.SgkRiskProfile ?? emp.Department?.SgkRiskProfile;
+
+            // 3. Build dynamic earnings and deductions (Usually read from Timesheets/Advances mapped to EarningDeductionType)
+            // For now, simulate an empty list due to refactoring. A "Payroll Generation Pipeline" module handles filling this.
+            var earningsAndDeductions = new List<PayrollEntryDetail>();
 
             // Find appropriate SS rule
             var ssRule = ssRules.FirstOrDefault(r => r.CitizenshipType == emp.Citizenship && r.SocialSecurityType == emp.SocialSecurityType) 
@@ -159,31 +137,37 @@ public class RunPayrollCommandHandler : IRequestHandler<RunPayrollCommand, Payro
             var calc = PayrollCalculator.Calculate(
                 emp, 
                 emp.CurrentSalary, 
-                bonusPay, 
-                overtimePay, 
-                commissionPay, 
-                advanceDeduction,
-                emp.TransportAmount,
+                ytdTaxBase,
+                earningsAndDeductions,
                 taxRules,
+                riskProfile,
                 ssRule,
                 minWage,
                 parameters);
+
+            // Update Ledger with new tax base
+            // In TRNC: Current taxable before deductions minus personal allowance
+            var monthlyTaxBase = (calc.TotalTaxableEarnings + emp.CurrentSalary) - (calc.SocialSecurityEmployee + calc.ProvidentFundEmployee + calc.UnemploymentInsuranceEmployee) - calc.PersonalAllowanceDeduction;
+            if (monthlyTaxBase > 0)
+            {
+                ledger.AddMonthlyTaxBase(monthlyTaxBase);
+            }
 
             var entry = PayrollEntry.Create(
                 tenantId,
                 _currentUserService.UserId,
                 payroll.Id,
                 emp.Id,
-                emp.CurrentSalary, // Fixed: Pass Base Salary, not Total Gross
-                overtimePay, 
-                commissionPay, 
-                bonusPay, 
-                emp.TransportAmount,
+                emp.CurrentSalary, 
+                calc.CumulativeTaxBaseBeforeThisPayroll,
+                calc.TotalTaxableEarnings,
+                calc.TotalSgkExemptEarnings,
                 calc.SocialSecurityEmployee,
                 calc.ProvidentFundEmployee,
                 calc.UnemploymentInsuranceEmployee,
+                calc.PersonalAllowanceDeduction,
                 calc.IncomeTax,
-                calc.AdvanceDeduction,
+                calc.StampTax,
                 calc.SocialSecurityEmployer,
                 calc.ProvidentFundEmployer,
                 calc.UnemploymentInsuranceEmployer,
@@ -192,12 +176,6 @@ public class RunPayrollCommandHandler : IRequestHandler<RunPayrollCommand, Payro
             );
 
             await _payrollEntryRepository.AddAsync(entry, cancellationToken);
-            
-            // Mark advances as deducted (Tracked entities will update on SaveChanges)
-            foreach(var adv in advances) 
-            { 
-                adv.MarkAsDeducted(); 
-            }
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

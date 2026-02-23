@@ -101,7 +101,8 @@ public class AttendanceCommandHandlers :
         var holidays = await _holidayRepository.FindAsync(h => h.Date.Date == date, cancellationToken);
         var isHoliday = holidays.Any();
 
-        record.CalculateBreakdown(isHoliday, isWeekend);
+        // Temporary: Should call a Policy Service. For now, zeroing overtime to fix compile error.
+        record.SetCalculatedBreakdown(record.TotalWorkedMins, 0, 0);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

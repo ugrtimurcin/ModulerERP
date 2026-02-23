@@ -6,7 +6,7 @@ namespace ModulerERP.HR.Application.Features.LeaveRequests.Commands;
 
 public record CreateLeaveRequestCommand(
     Guid EmployeeId,
-    LeaveType Type,
+    Guid LeavePolicyId,
     DateTime StartDate,
     DateTime EndDate,
     int DaysCount,

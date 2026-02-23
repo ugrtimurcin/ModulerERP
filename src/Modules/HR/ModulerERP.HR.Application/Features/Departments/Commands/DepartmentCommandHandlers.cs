@@ -53,7 +53,7 @@ public class DepartmentCommandHandlers :
         var dept = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (dept == null) throw new KeyNotFoundException($"Department {request.Id} not found.");
 
-        dept.Update(request.Name, request.Description, request.ManagerId);
+        dept.Update(request.Name, request.Description, request.ManagerId, null, null);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
