@@ -25,6 +25,14 @@ export const EmploymentStatus = {
 } as const;
 export type EmploymentStatus = typeof EmploymentStatus[keyof typeof EmploymentStatus];
 
+export const MaritalStatus = {
+    Single: 0,
+    Married: 1,
+    Divorced: 2,
+    Widowed: 3
+} as const;
+export type MaritalStatus = typeof MaritalStatus[keyof typeof MaritalStatus];
+
 export interface Department {
     id: string;
     name: string;
@@ -40,8 +48,12 @@ export interface Employee {
     identityNumber: string;
     citizenship: CitizenshipType;
     socialSecurityType: SocialSecurityType;
+    sgkRiskProfileId?: string | null;
     workPermitNumber?: string;
     workPermitExpiryDate?: string; // Date string
+    passportNumber?: string;
+    passportExpDate?: string;
+    healthReportExpDate?: string;
     jobTitle: string;
     departmentId: string;
     departmentName: string;
@@ -54,6 +66,10 @@ export interface Employee {
     status: EmploymentStatus;
     createdAt: string;
     qrToken?: string;
+    maritalStatus: MaritalStatus;
+    isSpouseWorking: boolean;
+    childCount: number;
+    isPensioner: boolean;
 }
 
 export interface CreateEmployeeDto {
@@ -63,8 +79,12 @@ export interface CreateEmployeeDto {
     identityNumber: string;
     citizenship: CitizenshipType;
     socialSecurityType: SocialSecurityType;
+    sgkRiskProfileId?: string | null;
     workPermitNumber?: string;
     workPermitExpiryDate?: string | Date;
+    passportNumber?: string;
+    passportExpDate?: string | Date;
+    healthReportExpDate?: string | Date;
     jobTitle: string;
     departmentId: string;
     supervisorId?: string | null; // Allow null for clear selection
@@ -73,6 +93,10 @@ export interface CreateEmployeeDto {
     bankName?: string;
     iban?: string;
     userId?: string;
+    maritalStatus: MaritalStatus;
+    isSpouseWorking: boolean;
+    childCount: number;
+    isPensioner: boolean;
 }
 
 export interface UpdateEmployeeDto {
@@ -81,8 +105,12 @@ export interface UpdateEmployeeDto {
     email: string;
     citizenship: CitizenshipType;
     socialSecurityType: SocialSecurityType;
+    sgkRiskProfileId?: string | null;
     workPermitNumber?: string;
     workPermitExpiryDate?: string | Date;
+    passportNumber?: string;
+    passportExpDate?: string | Date;
+    healthReportExpDate?: string | Date;
     jobTitle: string;
     departmentId: string;
     supervisorId?: string | null;
@@ -91,4 +119,8 @@ export interface UpdateEmployeeDto {
     bankName?: string;
     iban?: string;
     status: EmploymentStatus;
+    maritalStatus: MaritalStatus;
+    isSpouseWorking: boolean;
+    childCount: number;
+    isPensioner: boolean;
 }

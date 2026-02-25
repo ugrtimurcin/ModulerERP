@@ -56,12 +56,12 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         emp.UpdateLegalDetails(
             dto.Citizenship, 
             dto.SocialSecurityType, 
-            null, // SgkRiskProfileId not in DTO yet
+            dto.SgkRiskProfileId,
             dto.WorkPermitNumber, 
             dto.WorkPermitExpiryDate, 
-            null, // PassportNumber not in DTO yet
-            null, // PassportExpDate not in DTO yet
-            null, // HealthReportExpDate not in DTO yet
+            dto.PassportNumber,
+            dto.PassportExpDate,
+            dto.HealthReportExpDate,
             dto.BankName,
             dto.Iban,
             dto.MaritalStatus,
@@ -83,8 +83,12 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             emp.IdentityNumber,
             emp.Citizenship,
             emp.SocialSecurityType,
+            emp.SgkRiskProfileId,
             emp.WorkPermitNumber,
             emp.WorkPermitExpDate,
+            emp.PassportNumber,
+            emp.PassportExpDate,
+            emp.HealthReportExpDate,
             emp.JobTitle,
             emp.DepartmentId,
             dept.Name,

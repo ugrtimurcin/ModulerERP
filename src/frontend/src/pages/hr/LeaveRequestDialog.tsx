@@ -11,7 +11,7 @@ import { employeeService } from '@/services/hr/employeeService';
 
 const schema = z.object({
     employeeId: z.string().min(1, 'Required'),
-    leaveType: z.number(),
+    leavePolicyId: z.string().min(1, 'Required'),
     startDate: z.string().min(1, 'Required'),
     endDate: z.string().min(1, 'Required'),
     reason: z.string().optional(),
@@ -31,11 +31,12 @@ export function LeaveRequestDialog({ open, onClose }: Props) {
     const { t } = useTranslation();
     const toast = useToast();
     const [employees, setEmployees] = useState<{ id: string, firstName: string, lastName: string }[]>([]);
+    const [leavePolicies, setLeavePolicies] = useState<{ id: string, name: string }[]>([]);
 
     const { register, control, handleSubmit, watch, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            leaveType: 0 // Annual
+            leavePolicyId: ''
         }
     });
 
@@ -57,20 +58,31 @@ export function LeaveRequestDialog({ open, onClose }: Props) {
     useEffect(() => {
         if (open) {
             reset();
-            loadEmployees();
+            loadData();
         }
     }, [open, reset]);
 
-    const loadEmployees = async () => {
+    const loadData = async () => {
         try {
-            const data = await employeeService.getLookup();
-            // Handle potentially empty or case-mismatched data
-            const cleanData = (Array.isArray(data) ? data : []).map((e: any) => ({
+            const [empRes, lpRes] = await Promise.all([
+                employeeService.getLookup(),
+                api.get('/hr/leave-policies')
+            ]);
+
+            const cleanEmp = (Array.isArray(empRes) ? empRes : []).map((e: any) => ({
                 id: e.id || e.Id,
                 firstName: e.firstName || e.FirstName,
                 lastName: e.lastName || e.LastName
             }));
-            setEmployees(cleanData);
+            setEmployees(cleanEmp);
+
+            const policies = (lpRes as any).data || lpRes; // Handle axios vs custom api wrapper
+            const cleanLp = (Array.isArray(policies) ? policies : policies.items || []).map((p: any) => ({
+                id: p.id || p.Id,
+                name: p.name || p.Name
+            }));
+            setLeavePolicies(cleanLp);
+
         } catch (error) {
             console.error(error);
             toast.error(t('common.error'));
@@ -93,14 +105,10 @@ export function LeaveRequestDialog({ open, onClose }: Props) {
 
     if (!open) return null;
 
-    const leaveTypeOptions = [
-        { value: "0", label: t('hr.leaveTypes.annual') },
-        { value: "1", label: t('hr.leaveTypes.sick') },
-        { value: "2", label: t('hr.leaveTypes.unpaid') },
-        { value: "3", label: t('hr.leaveTypes.maternity') },
-        { value: "4", label: t('hr.leaveTypes.paternity') },
-        { value: "5", label: t('hr.leaveTypes.bereavement') },
-    ];
+    const leavePolicyOptions = leavePolicies.map(p => ({
+        value: p.id,
+        label: p.name
+    }));
 
     const employeeOptions = employees.map(e => ({
         value: e.id,
@@ -136,10 +144,10 @@ export function LeaveRequestDialog({ open, onClose }: Props) {
                     />
 
                     <Select
-                        label={t('hr.leaveType')}
-                        options={leaveTypeOptions}
-                        {...register('leaveType', { valueAsNumber: true })}
-                        error={errors.leaveType?.message}
+                        label={t('hr.leavePolicy', 'Leave Policy')}
+                        options={leavePolicyOptions}
+                        {...register('leavePolicyId')}
+                        error={errors.leavePolicyId?.message}
                     />
 
                     <div className="grid grid-cols-2 gap-4">
