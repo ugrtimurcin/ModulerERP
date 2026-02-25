@@ -11,11 +11,26 @@ public class JournalEntryLine
     
     public int LineNumber { get; private set; }
     
-    /// <summary>Debit amount (0 if credit)</summary>
-    public decimal Debit { get; private set; }
+    /// <summary>Base Currency Debit amount (e.g., TRY)</summary>
+    public decimal BaseDebit { get; private set; }
     
-    /// <summary>Credit amount (0 if debit)</summary>
-    public decimal Credit { get; private set; }
+    /// <summary>Base Currency Credit amount (e.g., TRY)</summary>
+    public decimal BaseCredit { get; private set; }
+    
+    /// <summary>Transaction Currency Debit amount (e.g., GBP)</summary>
+    public decimal TransactionDebit { get; private set; }
+    
+    /// <summary>Transaction Currency Credit amount (e.g., GBP)</summary>
+    public decimal TransactionCredit { get; private set; }
+
+    /// <summary>Base Currency of the Tenant</summary>
+    public Guid BaseCurrencyId { get; private set; }
+    
+    /// <summary>Original currency used in transaction</summary>
+    public Guid TransactionCurrencyId { get; private set; }
+    
+    /// <summary>Exchange rate used at posting time</summary>
+    public decimal ExchangeRate { get; private set; }
     
     /// <summary>Optional partner reference</summary>
     public Guid? PartnerId { get; private set; }
@@ -25,15 +40,6 @@ public class JournalEntryLine
     
     /// <summary>Line description</summary>
     public string? Description { get; private set; }
-    
-    /// <summary>Original currency (for multi-currency transactions)</summary>
-    public Guid? CurrencyId { get; private set; }
-    
-    /// <summary>Amount in original currency</summary>
-    public decimal? OriginalAmount { get; private set; }
-    
-    /// <summary>Exchange rate used</summary>
-    public decimal? ExchangeRate { get; private set; }
 
     // Navigation
     public JournalEntry? JournalEntry { get; private set; }
@@ -44,56 +50,62 @@ public class JournalEntryLine
     internal static JournalEntryLine CreateDebit(
         Guid journalEntryId,
         Guid accountId,
-        decimal amount,
+        decimal baseAmount,
+        decimal txAmount,
+        Guid baseCurrencyId,
+        Guid txCurrencyId,
+        decimal exchangeRate,
         int lineNumber,
         string? description = null,
         Guid? partnerId = null,
-        Guid? costCenterId = null,
-        Guid? currencyId = null,
-        decimal? originalAmount = null,
-        decimal? exchangeRate = null)
+        Guid? costCenterId = null)
     {
         return new JournalEntryLine
         {
             JournalEntryId = journalEntryId,
             AccountId = accountId,
             LineNumber = lineNumber,
-            Debit = amount,
-            Credit = 0,
+            BaseDebit = baseAmount,
+            BaseCredit = 0,
+            TransactionDebit = txAmount,
+            TransactionCredit = 0,
+            BaseCurrencyId = baseCurrencyId,
+            TransactionCurrencyId = txCurrencyId,
+            ExchangeRate = exchangeRate,
             Description = description,
             PartnerId = partnerId,
-            CostCenterId = costCenterId,
-            CurrencyId = currencyId,
-            OriginalAmount = originalAmount,
-            ExchangeRate = exchangeRate
+            CostCenterId = costCenterId
         };
     }
 
     internal static JournalEntryLine CreateCredit(
         Guid journalEntryId,
         Guid accountId,
-        decimal amount,
+        decimal baseAmount,
+        decimal txAmount,
+        Guid baseCurrencyId,
+        Guid txCurrencyId,
+        decimal exchangeRate,
         int lineNumber,
         string? description = null,
         Guid? partnerId = null,
-        Guid? costCenterId = null,
-        Guid? currencyId = null,
-        decimal? originalAmount = null,
-        decimal? exchangeRate = null)
+        Guid? costCenterId = null)
     {
         return new JournalEntryLine
         {
             JournalEntryId = journalEntryId,
             AccountId = accountId,
             LineNumber = lineNumber,
-            Debit = 0,
-            Credit = amount,
+            BaseDebit = 0,
+            BaseCredit = baseAmount,
+            TransactionDebit = 0,
+            TransactionCredit = txAmount,
+            BaseCurrencyId = baseCurrencyId,
+            TransactionCurrencyId = txCurrencyId,
+            ExchangeRate = exchangeRate,
             Description = description,
             PartnerId = partnerId,
-            CostCenterId = costCenterId,
-            CurrencyId = currencyId,
-            OriginalAmount = originalAmount,
-            ExchangeRate = exchangeRate
+            CostCenterId = costCenterId
         };
     }
 }

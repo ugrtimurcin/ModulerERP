@@ -24,9 +24,6 @@ public static class DependencyInjection
         
         // Register the Shared Interface Implementation
         services.AddScoped<IFinanceOperationsService, FinanceOperationsService>();
-        services.AddScoped<IAccountService, AccountService>();
-        services.AddScoped<IFiscalPeriodService, FiscalPeriodService>();
-        services.AddScoped<ModulerERP.Finance.Application.Services.IExchangeRateService, ExchangeRateService>();
         services.AddScoped<ModulerERP.SharedKernel.Interfaces.IExchangeRateService, ExchangeRateService>();
         services.AddHttpClient<ModulerERP.Finance.Application.Interfaces.IExchangeRateProvider, ModulerERP.Finance.Infrastructure.Services.KktcRateProvider>();
         

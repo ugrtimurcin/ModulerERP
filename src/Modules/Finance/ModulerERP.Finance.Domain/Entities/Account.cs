@@ -27,6 +27,15 @@ public class Account : BaseEntity
     
     /// <summary>Associated currency for bank accounts</summary>
     public Guid? CurrencyId { get; private set; }
+
+    /// <summary>Strictly enforces that a CostCenter must be provided during posting.</summary>
+    public bool RequiresCostCenter { get; private set; }
+
+    /// <summary>Strictly enforces that a PartnerId must be provided during posting.</summary>
+    public bool RequiresPartner { get; private set; }
+
+    /// <summary>TRNC specific: Indicates if this expense account is tax-deductible (KKEG check).</summary>
+    public bool IsTaxDeductible { get; private set; }
     
     /// <summary>Current balance (cached)</summary>
     public decimal Balance { get; private set; }
@@ -48,7 +57,10 @@ public class Account : BaseEntity
         Guid? parentAccountId = null,
         bool isHeader = false,
         bool isBankAccount = false,
-        Guid? currencyId = null)
+        Guid? currencyId = null,
+        bool requiresCostCenter = false,
+        bool requiresPartner = false,
+        bool isTaxDeductible = true)
     {
         var account = new Account
         {
@@ -59,7 +71,10 @@ public class Account : BaseEntity
             ParentAccountId = parentAccountId,
             IsHeader = isHeader,
             IsBankAccount = isBankAccount,
-            CurrencyId = currencyId
+            CurrencyId = currencyId,
+            RequiresCostCenter = requiresCostCenter,
+            RequiresPartner = requiresPartner,
+            IsTaxDeductible = isTaxDeductible
         };
 
         account.SetTenant(tenantId);

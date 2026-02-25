@@ -94,10 +94,10 @@ public class FinanceOperationsService : IFinanceOperationsService
             if (salesAccount == null) return Result.Failure("Sales Revenue Account '4000' not found. Please ensure Chart of Accounts is seeded.");
             
             // Add AR Line (Debit)
-            je.AddLine(arAccount, amount, 0, description ?? $"Invoice {invoiceNumber}", partnerId);
+            je.AddLine(arAccount, amount, 0, amount, 0, Guid.Empty, Guid.Empty, 1m, description ?? $"Invoice {invoiceNumber}", partnerId);
 
             // Add Sales Line (Credit)
-            je.AddLine(salesAccount, 0, amount, "Sales Revenue");
+            je.AddLine(salesAccount, 0, amount, 0, amount, Guid.Empty, Guid.Empty, 1m, "Sales Revenue");
             
             je.Post(_currentUserService.UserId); // Auto-post for now
 

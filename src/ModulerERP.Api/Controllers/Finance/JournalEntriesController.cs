@@ -3,30 +3,31 @@ using ModulerERP.Finance.Application.DTOs;
 using ModulerERP.Finance.Application.Interfaces;
 using MediatR;
 
-namespace ModulerERP.Api.Controllers;
+namespace ModulerERP.Api.Controllers.Finance;
 
-public class FinanceController : BaseApiController
+[Route("api/finance/journal-entries")]
+public class JournalEntriesController : BaseApiController
 {
     private readonly ISender _sender;
 
-    public FinanceController(ISender sender)
+    public JournalEntriesController(ISender sender)
     {
         _sender = sender;
     }
 
-    [HttpGet("journal-entries")]
+    [HttpGet]
     public async Task<ActionResult<List<JournalEntryDto>>> GetAll(CancellationToken cancellationToken)
     {
         return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.JournalEntries.Queries.GetJournalEntriesQuery(), cancellationToken));
     }
 
-    [HttpGet("journal-entries/{id}")]
+    [HttpGet("{id}")]
     public async Task<ActionResult<JournalEntryDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
         return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.JournalEntries.Queries.GetJournalEntryByIdQuery(id), cancellationToken));
     }
 
-    [HttpPost("journal-entries")]
+    [HttpPost]
     public async Task<ActionResult<JournalEntryDto>> Create(CreateJournalEntryDto dto, CancellationToken cancellationToken)
     {
         return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.JournalEntries.Commands.CreateJournalEntryCommand(dto, CurrentUserId), cancellationToken));

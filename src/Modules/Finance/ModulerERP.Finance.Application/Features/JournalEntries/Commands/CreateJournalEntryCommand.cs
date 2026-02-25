@@ -41,8 +41,8 @@ public class CreateJournalEntryCommandHandler : IRequestHandler<CreateJournalEnt
         var createdByUserId = request.CreatedByUserId;
 
         // 1. Validation: Balanced?
-        var totalDebit = dto.Lines.Sum(l => l.Debit);
-        var totalCredit = dto.Lines.Sum(l => l.Credit);
+        var totalDebit = dto.Lines.Sum(l => l.BaseDebit);
+        var totalCredit = dto.Lines.Sum(l => l.BaseCredit);
 
         if (totalDebit != totalCredit)
             return Result<JournalEntryDto>.Failure($"Entry is unbalanced. Debit: {totalDebit}, Credit: {totalCredit}");
@@ -81,10 +81,10 @@ public class CreateJournalEntryCommandHandler : IRequestHandler<CreateJournalEnt
             var account = await _accountRepository.GetByIdAsync(l.AccountId, cancellationToken);
             if (account == null) return Result<JournalEntryDto>.Failure($"Account {l.AccountId} not found.");
 
-            if (l.Debit > 0)
-                je.AddLine(account, l.Debit, 0, l.Description, l.PartnerId, l.CurrencyId, l.ExchangeRate, l.OriginalAmount);
+            if (l.BaseDebit > 0 || l.TransactionDebit > 0)
+                je.AddLine(account, l.BaseDebit, 0, l.TransactionDebit, 0, l.BaseCurrencyId, l.TransactionCurrencyId, l.ExchangeRate, l.Description, l.PartnerId, null);
             else
-                je.AddLine(account, 0, l.Credit, l.Description, l.PartnerId, l.CurrencyId, l.ExchangeRate, l.OriginalAmount);
+                je.AddLine(account, 0, l.BaseCredit, 0, l.TransactionCredit, l.BaseCurrencyId, l.TransactionCurrencyId, l.ExchangeRate, l.Description, l.PartnerId, null);
         }
 
         je.Post(createdByUserId);
@@ -104,8 +104,10 @@ public class CreateJournalEntryCommandHandler : IRequestHandler<CreateJournalEnt
             Description = entity.Description ?? string.Empty,
             EntryDate = entity.EntryDate,
             Status = entity.Status.ToString(),
-            TotalDebit = entity.TotalDebit,
-            TotalCredit = entity.TotalCredit,
+            TotalBaseDebit = entity.TotalBaseDebit,
+            TotalBaseCredit = entity.TotalBaseCredit,
+            TotalTransactionDebit = entity.TotalTransactionDebit,
+            TotalTransactionCredit = entity.TotalTransactionCredit,
             SourceType = entity.SourceType,
             SourceNumber = entity.SourceNumber,
             Lines = entity.Lines.Select(l => new JournalEntryLineDto
@@ -114,11 +116,13 @@ public class CreateJournalEntryCommandHandler : IRequestHandler<CreateJournalEnt
                 AccountCode = l.Account?.Code ?? "N/A",
                 AccountName = l.Account?.Name ?? "Unknown",
                 Description = l.Description ?? string.Empty,
-                Debit = l.Debit,
-                Credit = l.Credit,
-                CurrencyId = l.CurrencyId,
-                ExchangeRate = l.ExchangeRate,
-                OriginalAmount = l.OriginalAmount
+                BaseDebit = l.BaseDebit,
+                BaseCredit = l.BaseCredit,
+                TransactionDebit = l.TransactionDebit,
+                TransactionCredit = l.TransactionCredit,
+                BaseCurrencyId = l.BaseCurrencyId,
+                TransactionCurrencyId = l.TransactionCurrencyId,
+                ExchangeRate = l.ExchangeRate
             }).OrderBy(l => l.Id).ToList()
         };
 

@@ -32,8 +32,10 @@ public class GetJournalEntriesQueryHandler : IRequestHandler<GetJournalEntriesQu
             Description = e.Description ?? string.Empty,
             EntryDate = e.EntryDate,
             Status = e.Status.ToString(),
-            TotalDebit = e.TotalDebit,
-            TotalCredit = e.TotalCredit,
+            TotalBaseDebit = e.TotalBaseDebit,
+            TotalBaseCredit = e.TotalBaseCredit,
+            TotalTransactionDebit = e.TotalTransactionDebit,
+            TotalTransactionCredit = e.TotalTransactionCredit,
             SourceType = e.SourceType,
             SourceNumber = e.SourceNumber
         }).ToList();
@@ -67,8 +69,10 @@ public class GetJournalEntryByIdQueryHandler : IRequestHandler<GetJournalEntryBy
             Description = entity.Description ?? string.Empty,
             EntryDate = entity.EntryDate,
             Status = entity.Status.ToString(),
-            TotalDebit = entity.TotalDebit,
-            TotalCredit = entity.TotalCredit,
+            TotalBaseDebit = entity.TotalBaseDebit,
+            TotalBaseCredit = entity.TotalBaseCredit,
+            TotalTransactionDebit = entity.TotalTransactionDebit,
+            TotalTransactionCredit = entity.TotalTransactionCredit,
             SourceType = entity.SourceType,
             SourceNumber = entity.SourceNumber,
             Lines = entity.Lines.Select(l => new JournalEntryLineDto
@@ -77,8 +81,13 @@ public class GetJournalEntryByIdQueryHandler : IRequestHandler<GetJournalEntryBy
                 AccountCode = l.Account?.Code ?? "N/A",
                 AccountName = l.Account?.Name ?? "Unknown",
                 Description = l.Description ?? string.Empty,
-                Debit = l.Debit,
-                Credit = l.Credit
+                BaseDebit = l.BaseDebit,
+                BaseCredit = l.BaseCredit,
+                TransactionDebit = l.TransactionDebit,
+                TransactionCredit = l.TransactionCredit,
+                BaseCurrencyId = l.BaseCurrencyId,
+                TransactionCurrencyId = l.TransactionCurrencyId,
+                ExchangeRate = l.ExchangeRate
             }).OrderBy(l => l.Id).ToList()
         };
 

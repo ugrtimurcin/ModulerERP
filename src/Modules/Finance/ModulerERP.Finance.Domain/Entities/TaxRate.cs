@@ -1,4 +1,5 @@
 using ModulerERP.SharedKernel.Entities;
+using ModulerERP.Finance.Domain.Enums;
 
 namespace ModulerERP.Finance.Domain.Entities;
 
@@ -10,6 +11,9 @@ public class TaxRate : BaseEntity
     public string Code { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     
+    /// <summary>Type of tax (e.g., KDV, Stopaj)</summary>
+    public TaxType Type { get; private set; }
+
     /// <summary>Tax percentage rate</summary>
     public decimal Rate { get; private set; }
     
@@ -28,6 +32,7 @@ public class TaxRate : BaseEntity
         Guid tenantId,
         string code,
         string name,
+        TaxType type,
         decimal rate,
         Guid createdByUserId,
         Guid? taxAccountId = null)
@@ -36,6 +41,7 @@ public class TaxRate : BaseEntity
         {
             Code = code,
             Name = name,
+            Type = type,
             Rate = rate,
             TaxAccountId = taxAccountId
         };

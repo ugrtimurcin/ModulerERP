@@ -3,8 +3,9 @@ using ModulerERP.Finance.Application.DTOs;
 using ModulerERP.Finance.Application.Interfaces;
 using MediatR;
 
-namespace ModulerERP.Api.Controllers;
+namespace ModulerERP.Api.Controllers.Finance;
 
+[Route("api/finance/payments")]
 public class PaymentsController : BaseApiController
 {
     private readonly ISender _sender;

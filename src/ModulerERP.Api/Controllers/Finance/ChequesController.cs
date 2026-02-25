@@ -4,7 +4,7 @@ using ModulerERP.Finance.Application.Interfaces;
 using MediatR;
 
 
-namespace ModulerERP.Api.Controllers;
+namespace ModulerERP.Api.Controllers.Finance;
 
 [ApiController]
 [Route("api/finance/cheques")]

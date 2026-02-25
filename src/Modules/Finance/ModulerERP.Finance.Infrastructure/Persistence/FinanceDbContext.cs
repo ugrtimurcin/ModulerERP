@@ -30,9 +30,14 @@ public class FinanceDbContext : DbContext, IUnitOfWork, IFinanceUnitOfWork
     public DbSet<CostCenter> CostCenters { get; set; }
     public DbSet<ExchangeRate> ExchangeRates { get; set; }
     public DbSet<TaxRate> TaxRates { get; set; }
+    public DbSet<TaxProfile> TaxProfiles { get; set; }
+    public DbSet<TaxProfileLine> TaxProfileLines { get; set; }
+    public DbSet<PostingProfile> PostingProfiles { get; set; }
+    public DbSet<PostingProfileLine> PostingProfileLines { get; set; }
     public DbSet<Cheque> Cheques { get; set; }
     public DbSet<ChequeHistory> ChequeHistories { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<LedgerSuspenseRecord> LedgerSuspenseRecords { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

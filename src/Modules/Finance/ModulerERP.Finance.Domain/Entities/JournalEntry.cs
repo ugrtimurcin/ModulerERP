@@ -28,11 +28,20 @@ public class JournalEntry : BaseEntity
     
     public string? Description { get; private set; }
     
-    /// <summary>Total debit amount</summary>
-    public decimal TotalDebit { get; private set; }
+    /// <summary>Total debit amount in Base Currency</summary>
+    public decimal TotalBaseDebit { get; private set; }
     
-    /// <summary>Total credit amount</summary>
-    public decimal TotalCredit { get; private set; }
+    /// <summary>Total credit amount in Base Currency</summary>
+    public decimal TotalBaseCredit { get; private set; }
+
+    /// <summary>Total debit amount in Transaction Currency</summary>
+    public decimal TotalTransactionDebit { get; private set; }
+    
+    /// <summary>Total credit amount in Transaction Currency</summary>
+    public decimal TotalTransactionCredit { get; private set; }
+    
+    /// <summary>If this entry reverses another, its ID is stored here.</summary>
+    public Guid? ReversesJournalEntryId { get; private set; }
     
     public DateTime? PostedDate { get; private set; }
     public Guid? PostedByUserId { get; private set; }
@@ -41,7 +50,7 @@ public class JournalEntry : BaseEntity
     public FiscalPeriod? FiscalPeriod { get; private set; }
     public ICollection<JournalEntryLine> Lines { get; private set; } = new List<JournalEntryLine>();
 
-    public bool IsBalanced => TotalDebit == TotalCredit;
+    public bool IsBalanced => TotalBaseDebit == TotalBaseCredit;
 
     private JournalEntry() { } // EF Core
 
@@ -72,7 +81,14 @@ public class JournalEntry : BaseEntity
         return entry;
     }
 
-    public void AddLine(Account account, decimal debit, decimal credit, string? description = null, Guid? partnerId = null, Guid? currencyId = null, decimal? exchangeRate = null, decimal? originalAmount = null, Guid? costCenterId = null)
+    public void SetReversal(Guid originalEntryId)
+    {
+        if (Lines.Count > 0)
+            throw new InvalidOperationException("Can only set reversal ID before lines are added.");
+        ReversesJournalEntryId = originalEntryId;
+    }
+
+    public void AddLine(Account account, decimal baseDebit, decimal baseCredit, decimal txDebit, decimal txCredit, Guid baseCurrencyId, Guid txCurrencyId, decimal exchangeRate, string? description = null, Guid? partnerId = null, Guid? costCenterId = null)
     {
         if (Status != JournalStatus.Draft)
             throw new InvalidOperationException("Can only add lines to draft entries");
@@ -80,23 +96,25 @@ public class JournalEntry : BaseEntity
         if (account.IsHeader)
             throw new InvalidOperationException($"Account {account.Code} is a header account and cannot be posted to.");
 
-        if (debit == 0 && credit == 0)
-            throw new InvalidOperationException("Line must have a non-zero debit or credit amount.");
+        if (baseDebit == 0 && baseCredit == 0 && txDebit == 0 && txCredit == 0)
+            throw new InvalidOperationException("Line must have a non-zero base or tx debit/credit amount.");
 
-        if (debit > 0 && credit > 0)
-            throw new InvalidOperationException("Line cannot have both debit and credit amounts.");
+        if (baseDebit > 0 && baseCredit > 0)
+            throw new InvalidOperationException("Line cannot have both debit and credit amounts in base currency.");
 
         var lineNumber = Lines.Count + 1;
         JournalEntryLine line;
 
-        if (debit > 0)
-            line = JournalEntryLine.CreateDebit(Id, account.Id, debit, lineNumber, description, partnerId, costCenterId, currencyId, originalAmount, exchangeRate);
+        if (baseDebit > 0 || txDebit > 0)
+            line = JournalEntryLine.CreateDebit(Id, account.Id, baseDebit, txDebit, baseCurrencyId, txCurrencyId, exchangeRate, lineNumber, description, partnerId, costCenterId);
         else
-            line = JournalEntryLine.CreateCredit(Id, account.Id, credit, lineNumber, description, partnerId, costCenterId, currencyId, originalAmount, exchangeRate);
+            line = JournalEntryLine.CreateCredit(Id, account.Id, baseCredit, txCredit, baseCurrencyId, txCurrencyId, exchangeRate, lineNumber, description, partnerId, costCenterId);
 
         Lines.Add(line);
-        TotalDebit += debit;
-        TotalCredit += credit;
+        TotalBaseDebit += baseDebit;
+        TotalBaseCredit += baseCredit;
+        TotalTransactionDebit += txDebit;
+        TotalTransactionCredit += txCredit;
     }
 
     public void Post(Guid postedByUserId)

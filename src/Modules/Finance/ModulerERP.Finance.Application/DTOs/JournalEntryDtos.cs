@@ -12,8 +12,10 @@ public class JournalEntryDto
     public string Status { get; set; } = string.Empty;
     public string? SourceType { get; set; }
     public string? SourceNumber { get; set; }
-    public decimal TotalDebit { get; set; }
-    public decimal TotalCredit { get; set; }
+    public decimal TotalBaseDebit { get; set; }
+    public decimal TotalBaseCredit { get; set; }
+    public decimal TotalTransactionDebit { get; set; }
+    public decimal TotalTransactionCredit { get; set; }
     
     public List<JournalEntryLineDto> Lines { get; set; } = new();
 }
@@ -25,11 +27,13 @@ public class JournalEntryLineDto
     public string AccountCode { get; set; } = string.Empty;
     public string AccountName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public decimal? Debit { get; set; }
-    public decimal? Credit { get; set; }
-    public Guid? CurrencyId { get; set; }
-    public decimal? ExchangeRate { get; set; }
-    public decimal? OriginalAmount { get; set; }
+    public decimal BaseDebit { get; set; }
+    public decimal BaseCredit { get; set; }
+    public decimal TransactionDebit { get; set; }
+    public decimal TransactionCredit { get; set; }
+    public Guid BaseCurrencyId { get; set; }
+    public Guid TransactionCurrencyId { get; set; }
+    public decimal ExchangeRate { get; set; }
 }
 
 public class CreateJournalEntryDto
@@ -44,10 +48,12 @@ public class CreateJournalEntryLineDto
 {
     public Guid AccountId { get; set; }
     public string Description { get; set; } = string.Empty;
-    public decimal Debit { get; set; }
-    public decimal Credit { get; set; }
+    public decimal BaseDebit { get; set; }
+    public decimal BaseCredit { get; set; }
+    public decimal TransactionDebit { get; set; }
+    public decimal TransactionCredit { get; set; }
     public Guid? PartnerId { get; set; }
-    public Guid? CurrencyId { get; set; }
-    public decimal? ExchangeRate { get; set; }
-    public decimal? OriginalAmount { get; set; }
+    public Guid BaseCurrencyId { get; set; }
+    public Guid TransactionCurrencyId { get; set; }
+    public decimal ExchangeRate { get; set; }
 }
