@@ -33,4 +33,10 @@ public class JournalEntriesController : BaseApiController
         return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.JournalEntries.Commands.CreateJournalEntryCommand(dto, CurrentUserId), cancellationToken));
     }
 
+    [HttpPost("{id}/reverse")]
+    public async Task<ActionResult<JournalEntryDto>> Reverse(Guid id, CancellationToken cancellationToken)
+    {
+        return HandleResult(await _sender.Send(new ModulerERP.Finance.Application.Features.JournalEntries.Commands.ReverseJournalEntryCommand(id, CurrentUserId), cancellationToken));
+    }
+
 }

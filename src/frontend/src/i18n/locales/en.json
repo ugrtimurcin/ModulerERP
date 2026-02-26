@@ -786,6 +786,26 @@
         "Locked": "Locked"
       }
     },
+    "postingProfiles": {
+      "title": "Posting Profiles",
+      "subtitle": "Map business events to general ledger accounts",
+      "create": "Create Profile",
+      "edit": "Edit Profile",
+      "transactionType": "Transaction Type",
+      "category": "Category",
+      "isDefault": "Is Default"
+    },
+    "taxProfiles": {
+      "title": "Advanced Tax Profiles",
+      "subtitle": "Manage KDV, Stopaj, and complex tax combinations",
+      "create": "Create Tax Profile",
+      "edit": "Edit Tax Profile"
+    },
+    "suspenseQueue": {
+      "title": "Suspense Queue",
+      "subtitle": "Review and correct failed ledger postings",
+      "retry": "Retry Post"
+    },
     "journalEntries": {
       "title": "Journal Entries",
       "subtitle": "Manage general ledger entries",
@@ -793,10 +813,17 @@
       "entryDate": "Entry Date",
       "referenceNumber": "Reference Number",
       "description": "Description",
+      "void": "Void / Reverse",
+      "reverses": "Reverses",
+      "reversedBy": "Reversed By",
       "lines": "Journal Lines",
       "addLine": "Add Line",
       "account": "Account",
       "lineDesc": "Line Ref / Desc",
+      "txDebit": "Tx Debit",
+      "txCredit": "Tx Credit",
+      "baseDebit": "Base Debit",
+      "baseCredit": "Base Credit",
       "debit": "Debit",
       "credit": "Credit",
       "selectAccount": "Select Account",

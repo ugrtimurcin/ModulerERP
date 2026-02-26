@@ -38,6 +38,8 @@ import PaymentsPage from './pages/finance/PaymentsPage';
 import FiscalPeriodsPage from './pages/finance/FiscalPeriodsPage';
 import ExchangeRatesPage from './pages/finance/ExchangeRatesPage';
 import { ChequesPage } from '@/pages/finance/ChequesPage';
+import PostingProfilesPage from './pages/finance/PostingProfilesPage';
+import AdvancedTaxProfilesPage from './pages/finance/AdvancedTaxProfilesPage';
 import { EmployeesPage } from '@/pages/hr/EmployeesPage';
 import { DepartmentsPage } from '@/pages/hr/DepartmentsPage';
 import { AttendancePage } from '@/pages/hr/AttendancePage';
@@ -154,6 +156,8 @@ function App() {
           <Route path="/finance/rates" element={<ExchangeRatesPage />} />
           <Route path="/finance/fiscal-periods" element={<FiscalPeriodsPage />} />
           <Route path="/finance/cheques" element={<ChequesPage />} />
+          <Route path="/finance/posting-profiles" element={<PostingProfilesPage />} />
+          <Route path="/finance/tax-profiles" element={<AdvancedTaxProfilesPage />} />
           <Route path="/finance/*" element={<PlaceholderPage titleKey="nav.finance" />} />
 
           {/* HR */}

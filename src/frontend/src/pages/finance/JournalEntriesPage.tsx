@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Plus, Undo2 } from 'lucide-react';
 import { api } from '../../services/api';
-import { DataTable, Button, useToast } from '@/components/ui';
+import { DataTable, Button, useToast, useDialog } from '@/components/ui';
 import type { Column } from '@/components/ui';
 import { CreateJournalEntryDialog } from './components/CreateJournalEntryDialog';
 
@@ -20,6 +20,7 @@ interface JournalEntryDto {
 const JournalEntriesPage: React.FC = () => {
     const { t } = useTranslation();
     const toast = useToast();
+    const dialog = useDialog();
     const [entries, setEntries] = useState<JournalEntryDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -39,6 +40,32 @@ const JournalEntriesPage: React.FC = () => {
             }
         } catch (error) {
             toast.error(t('common.error'), "Failed to load journal entries");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleReverse = async (id: string) => {
+        const confirmed = await dialog.danger({
+            title: t('finance.journalEntries.void', 'Void / Reverse'),
+            message: "Are you sure you want to reverse this journal entry? This will create a permanent offsetting entry.",
+            confirmText: "Reverse Entry",
+            cancelText: t('common.cancel')
+        });
+
+        if (!confirmed) return;
+
+        setLoading(true);
+        try {
+            const res = await api.finance.journalEntries.reverse(id);
+            if (res.success) {
+                toast.success(t('common.success'), "Entry reversed successfully");
+                loadData();
+            } else {
+                toast.error(t('common.error'), res.error || "Failed to reverse entry");
+            }
+        } catch (error) {
+            toast.error(t('common.error'), "Failed to reverse entry");
         } finally {
             setLoading(false);
         }
@@ -66,11 +93,18 @@ const JournalEntriesPage: React.FC = () => {
             key: 'id',
             header: t('common.actions'),
             align: 'right',
-            width: '100px',
-            render: () => (
-                <Button variant="ghost" size="sm">
-                    <Eye className="w-4 h-4" />
-                </Button>
+            width: '120px',
+            render: (row) => (
+                <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="sm" title={t('common.view')}>
+                        <Eye className="w-4 h-4" />
+                    </Button>
+                    {row.status !== 'Reversed' && row.status !== 'Void' && (
+                        <Button variant="ghost" size="sm" onClick={() => handleReverse(row.id)} title={t('finance.journalEntries.void', 'Reverse')}>
+                            <Undo2 className="w-4 h-4 text-orange-500" />
+                        </Button>
+                    )}
+                </div>
             )
         }
     ];

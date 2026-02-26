@@ -105,6 +105,8 @@ const navItems: NavItem[] = [
             { labelKey: 'nav.payments', href: '/finance/payments' },
             { labelKey: 'nav.exchangeRates', href: '/finance/rates' },
             { labelKey: 'nav.cheques', href: '/finance/cheques' },
+            { labelKey: 'finance.postingProfiles.title', href: '/finance/posting-profiles' },
+            { labelKey: 'finance.taxProfiles.title', href: '/finance/tax-profiles' },
         ],
     },
     {

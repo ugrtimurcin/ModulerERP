@@ -695,6 +695,26 @@
       "reopen": "Yeniden Aç",
       "statusUpdated": "Durum güncellendi"
     },
+    "postingProfiles": {
+      "title": "Kayıt Profilleri",
+      "subtitle": "İşlem türlerini genel muhasebe hesaplarına eşleyin",
+      "create": "Profil Oluştur",
+      "edit": "Profili Düzenle",
+      "transactionType": "İşlem Tipi",
+      "category": "Kategori",
+      "isDefault": "Varsayılan"
+    },
+    "taxProfiles": {
+      "title": "Gelişmiş Vergi Profilleri",
+      "subtitle": "KDV, Stopaj ve karmaşık vergi kombinasyonlarını yönetin",
+      "create": "Vergi Profili Oluştur",
+      "edit": "Vergi Profili Düzenle"
+    },
+    "suspenseQueue": {
+      "title": "Askıda Kalan Kayıtlar",
+      "subtitle": "Başarısız yevmiye kayıtlarını inceleyin ve düzeltin",
+      "retry": "Tekrar Dene"
+    },
     "journalEntries": {
       "title": "Yevmiye Kayıtları",
       "subtitle": "Genel defter kayıtlarını yönetin",
@@ -702,10 +722,17 @@
       "entryDate": "Kayıt Tarihi",
       "referenceNumber": "Referans No",
       "description": "Açıklama",
+      "void": "İptal Et / Ters Kayıt",
+      "reverses": "Ters Kaydı: ",
+      "reversedBy": "İptal Eden: ",
       "lines": "Kayıt Satırları",
       "addLine": "Satır Ekle",
       "account": "Hesap",
       "lineDesc": "Satır Açıklaması",
+      "txDebit": "İşlem Borç",
+      "txCredit": "İşlem Alacak",
+      "baseDebit": "Baz Borç",
+      "baseCredit": "Baz Alacak",
       "debit": "Borç",
       "credit": "Alacak",
       "selectAccount": "Hesap Seçiniz",

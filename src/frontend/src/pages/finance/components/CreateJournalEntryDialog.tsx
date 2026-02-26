@@ -13,8 +13,13 @@ interface CreateJournalEntryDialogProps {
 interface JournalEntryLineDto {
     accountId: string;
     description: string;
-    debit: number;
-    credit: number;
+    txDebit: number;
+    txCredit: number;
+    baseDebit: number;
+    baseCredit: number;
+    baseCurrencyId: string;
+    transactionCurrencyId: string;
+    exchangeRate: number;
     partnerId?: string;
 }
 
@@ -37,6 +42,8 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
 
     // Metadata
     const [accounts, setAccounts] = useState<any[]>([]);
+    const [currencies, setCurrencies] = useState<any[]>([]);
+    const [baseCurrencyId, setBaseCurrencyId] = useState<string>('');
 
     useEffect(() => {
         if (isOpen) {
@@ -47,8 +54,17 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
 
     const loadMetadata = async () => {
         try {
-            const accRes = await api.finance.accounts.getAll();
+            const [accRes, currRes] = await Promise.all([
+                api.finance.accounts.getAll(),
+                api.getActiveCurrencies()
+            ]);
+
             if (accRes.success && accRes.data) setAccounts(accRes.data);
+            if (currRes.success && currRes.data) {
+                setCurrencies(currRes.data);
+                const tryCurrency = currRes.data.find(c => c.code === 'TRY') || currRes.data[0];
+                if (tryCurrency) setBaseCurrencyId(tryCurrency.id);
+            }
         } catch (error) {
             console.error(error);
             toast.error(t('common.error'), t('common.loadFailed'));
@@ -60,13 +76,13 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
         setDescription('');
         setReferenceNumber('');
         setLines([
-            { accountId: '', description: '', debit: 0, credit: 0 },
-            { accountId: '', description: '', debit: 0, credit: 0 }
+            { accountId: '', description: '', txDebit: 0, txCredit: 0, baseDebit: 0, baseCredit: 0, baseCurrencyId: baseCurrencyId, transactionCurrencyId: baseCurrencyId, exchangeRate: 1 },
+            { accountId: '', description: '', txDebit: 0, txCredit: 0, baseDebit: 0, baseCredit: 0, baseCurrencyId: baseCurrencyId, transactionCurrencyId: baseCurrencyId, exchangeRate: 1 }
         ]);
     };
 
     const handleAddLine = () => {
-        setLines([...lines, { accountId: '', description: '', debit: 0, credit: 0 }]);
+        setLines([...lines, { accountId: '', description: '', txDebit: 0, txCredit: 0, baseDebit: 0, baseCredit: 0, baseCurrencyId: baseCurrencyId, transactionCurrencyId: baseCurrencyId, exchangeRate: 1 }]);
     };
 
     const handleRemoveLine = (index: number) => {
@@ -86,8 +102,8 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
     };
 
     const calculateTotals = () => {
-        const totalDebit = lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
-        const totalCredit = lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+        const totalDebit = lines.reduce((sum, line) => sum + (Number(line.baseDebit) || 0), 0);
+        const totalCredit = lines.reduce((sum, line) => sum + (Number(line.baseCredit) || 0), 0);
         return { totalDebit, totalCredit, difference: totalDebit - totalCredit };
     };
 
@@ -104,7 +120,7 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
             return;
         }
 
-        const validLines = lines.filter(l => l.accountId && (l.debit > 0 || l.credit > 0));
+        const validLines = lines.filter(l => l.accountId && (l.baseDebit > 0 || l.baseCredit > 0 || l.txDebit > 0 || l.txCredit > 0));
         if (validLines.length < 2) {
             toast.error(t('common.error'), t('finance.journalEntries.minLines'));
             return;
@@ -119,8 +135,13 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
                 lines: validLines.map(l => ({
                     accountId: l.accountId,
                     description: l.description || description,
-                    debit: Number(l.debit),
-                    credit: Number(l.credit),
+                    txDebit: Number(l.txDebit),
+                    txCredit: Number(l.txCredit),
+                    baseDebit: Number(l.baseDebit),
+                    baseCredit: Number(l.baseCredit),
+                    baseCurrencyId: l.baseCurrencyId || baseCurrencyId,
+                    transactionCurrencyId: l.transactionCurrencyId || baseCurrencyId,
+                    exchangeRate: Number(l.exchangeRate) || 1,
                     partnerId: l.partnerId || null
                 }))
             };
@@ -202,10 +223,12 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-100">
                                 <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-1/3">{t('finance.journalEntries.account')}</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t('finance.journalEntries.lineDesc')}</th>
-                                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-24">{t('finance.journalEntries.debit')}</th>
-                                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-24">{t('finance.journalEntries.credit')}</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-48">{t('finance.journalEntries.account')}</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-32">Tx CCY & Rate</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-20">{t('finance.journalEntries.txDebit')}</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-20">{t('finance.journalEntries.txCredit')}</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-800 bg-gray-200 uppercase w-20">{t('finance.journalEntries.baseDebit')}</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-800 bg-gray-200 uppercase w-20">{t('finance.journalEntries.baseCredit')}</th>
                                     <th className="px-3 py-2 w-10"></th>
                                 </tr>
                             </thead>
@@ -227,23 +250,46 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
                                             </select>
                                         </td>
                                         <td className="px-2 py-2">
-                                            <input
-                                                type="text"
-                                                className="w-full text-sm border-gray-300 rounded-md"
-                                                value={line.description}
-                                                onChange={(e) => updateLine(index, 'description', e.target.value)}
-                                                placeholder={description}
-                                            />
+                                            <div className="flex flex-col gap-1">
+                                                <select
+                                                    className="w-full text-xs border-gray-300 rounded-md"
+                                                    value={line.transactionCurrencyId || ''}
+                                                    onChange={(e) => updateLine(index, 'transactionCurrencyId', e.target.value)}
+                                                >
+                                                    {currencies.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.code}</option>
+                                                    ))}
+                                                </select>
+                                                <input
+                                                    type="number"
+                                                    step="0.0001"
+                                                    className="w-full text-xs text-right border-gray-300 rounded-md"
+                                                    value={line.exchangeRate || 1}
+                                                    onChange={(e) => {
+                                                        const rate = parseFloat(e.target.value) || 1;
+                                                        updateLine(index, 'exchangeRate', rate);
+                                                        // Auto-calculate Base amounts if Tx amounts exist
+                                                        if (line.txDebit > 0) updateLine(index, 'baseDebit', Number((line.txDebit * rate).toFixed(2)));
+                                                        if (line.txCredit > 0) updateLine(index, 'baseCredit', Number((line.txCredit * rate).toFixed(2)));
+                                                    }}
+                                                    placeholder="Rate"
+                                                />
+                                            </div>
                                         </td>
                                         <td className="px-2 py-2">
                                             <input
                                                 type="number"
                                                 step="0.01"
-                                                className="w-full text-sm text-right border-gray-300 rounded-md"
-                                                value={line.debit}
+                                                className="w-full text-sm text-right border-gray-300 rounded-md bg-green-50"
+                                                value={line.txDebit || ''}
                                                 onChange={(e) => {
-                                                    updateLine(index, 'debit', parseFloat(e.target.value));
-                                                    if (parseFloat(e.target.value) > 0) updateLine(index, 'credit', 0);
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    updateLine(index, 'txDebit', val);
+                                                    updateLine(index, 'baseDebit', Number((val * (line.exchangeRate || 1)).toFixed(2)));
+                                                    if (val > 0) {
+                                                        updateLine(index, 'txCredit', 0);
+                                                        updateLine(index, 'baseCredit', 0);
+                                                    }
                                                 }}
                                             />
                                         </td>
@@ -251,11 +297,42 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
                                             <input
                                                 type="number"
                                                 step="0.01"
-                                                className="w-full text-sm text-right border-gray-300 rounded-md"
-                                                value={line.credit}
+                                                className="w-full text-sm text-right border-gray-300 rounded-md bg-green-50"
+                                                value={line.txCredit || ''}
                                                 onChange={(e) => {
-                                                    updateLine(index, 'credit', parseFloat(e.target.value));
-                                                    if (parseFloat(e.target.value) > 0) updateLine(index, 'debit', 0);
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    updateLine(index, 'txCredit', val);
+                                                    updateLine(index, 'baseCredit', Number((val * (line.exchangeRate || 1)).toFixed(2)));
+                                                    if (val > 0) {
+                                                        updateLine(index, 'txDebit', 0);
+                                                        updateLine(index, 'baseDebit', 0);
+                                                    }
+                                                }}
+                                            />
+                                        </td>
+                                        <td className="px-2 py-2 bg-gray-50">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="w-full text-sm text-right border-gray-400 rounded-md font-bold"
+                                                value={line.baseDebit || ''}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    updateLine(index, 'baseDebit', val);
+                                                    if (val > 0) updateLine(index, 'baseCredit', 0);
+                                                }}
+                                            />
+                                        </td>
+                                        <td className="px-2 py-2 bg-gray-50">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="w-full text-sm text-right border-gray-400 rounded-md font-bold"
+                                                value={line.baseCredit || ''}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    updateLine(index, 'baseCredit', val);
+                                                    if (val > 0) updateLine(index, 'baseDebit', 0);
                                                 }}
                                             />
                                         </td>
@@ -271,11 +348,12 @@ export const CreateJournalEntryDialog: React.FC<CreateJournalEntryDialogProps> =
                                     </tr>
                                 ))}
                             </tbody>
-                            <tfoot className="bg-gray-50 font-medium">
+                            <tfoot className="bg-gray-100 font-medium">
                                 <tr>
-                                    <td colSpan={2} className="px-3 py-2 text-right">{t('finance.journalEntries.totals')}:</td>
-                                    <td className="px-3 py-2 text-right text-blue-700">{totals.totalDebit.toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right text-blue-700">{totals.totalCredit.toFixed(2)}</td>
+                                    <td colSpan={2} className="px-3 py-2 text-right">{t('finance.journalEntries.totals')} (Base):</td>
+                                    <td colSpan={2}></td>
+                                    <td className="px-3 py-2 text-right text-blue-700 font-bold">{totals.totalDebit.toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right text-blue-700 font-bold">{totals.totalCredit.toFixed(2)}</td>
                                     <td></td>
                                 </tr>
                             </tfoot>
