@@ -96,6 +96,8 @@ public class SystemCoreDbContext : DbContext
         modelBuilder.Entity<UserRole>().HasQueryFilter(e => e.TenantId == _tenantId);
         modelBuilder.Entity<TenantSetting>().HasQueryFilter(e => e.TenantId == _tenantId);
         modelBuilder.Entity<TenantFeature>().HasQueryFilter(e => e.TenantId == _tenantId);
+        modelBuilder.Entity<Notification>().HasQueryFilter(e => e.TenantId == _tenantId);
+        modelBuilder.Entity<NotificationTemplate>().HasQueryFilter(e => e.TenantId == _tenantId);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

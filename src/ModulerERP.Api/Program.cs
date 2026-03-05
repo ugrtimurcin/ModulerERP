@@ -116,15 +116,31 @@ if (app.Environment.IsDevelopment())
             if (rootTenant == null)
             {
                 context.Tenants.Add(SystemCoreSeeder.GetRootTenant());
+            }
+
+            var adminRole = await context.Roles.IgnoreQueryFilters().FirstOrDefaultAsync(r => r.Id == SystemCoreSeeder.AdminRoleId);
+            if (adminRole == null)
+            {
                 context.Roles.Add(SystemCoreSeeder.GetAdminRole());
+            }
+
+            var adminUser = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == SystemCoreSeeder.AdminUserId);
+            if (adminUser == null)
+            {
                 context.Users.Add(SystemCoreSeeder.GetAdminUser());
-                
-                // Assign role
+            }
+            
+            var userRoleExists = await context.UserRoles.IgnoreQueryFilters().AnyAsync(ur => ur.UserId == SystemCoreSeeder.AdminUserId && ur.RoleId == SystemCoreSeeder.AdminRoleId);
+            if (!userRoleExists)
+            {
                 context.UserRoles.Add(ModulerERP.SystemCore.Domain.Entities.UserRole.Create(
                     SystemCoreSeeder.RootTenantId, 
                     SystemCoreSeeder.AdminUserId, 
                     SystemCoreSeeder.AdminRoleId));
+            }
 
+            if (rootTenant == null || adminRole == null || adminUser == null || !userRoleExists)
+            {
                 try
                 {
                     await context.SaveChangesAsync();
@@ -142,7 +158,7 @@ if (app.Environment.IsDevelopment())
             }
             else
             {
-                 Console.WriteLine("Seeding skipped: Root Tenant already exists.");
+                 Console.WriteLine("Seeding skipped: Root Tenant and Admin User already exist.");
             }
 
             // --- SEED HR MODULE ---
